@@ -1,0 +1,188 @@
+
+{
+  "articles": [
+    {
+      "id": "1",
+      "title": "Global Markets Rally Following Fed Rate Decision",
+      "slug": "global-markets-rally-fed-rate-decision",
+      "content": "Markets around the world surged today after the Federal Reserve announced its decision to maintain current interest rates. Investors responded positively to Chair Jerome Powell's comments suggesting that inflation pressures are easing, though he emphasized that the Fed remains data-dependent for future policy decisions.\n\nThe S&P 500 closed up 1.2%, while the Nasdaq Composite gained 1.6%. European markets also responded favorably, with the STOXX 600 index rising 0.8%. Asian markets are expected to open higher tomorrow, following the positive sentiment.\n\n\"This is exactly what the market wanted to hear,\" said Jane Smith, chief market strategist at Capital Investments. \"The Fed is acknowledging progress on inflation without committing to immediate rate cuts, giving investors confidence that we're moving in the right direction without risking policy mistakes.\"\n\nEconomists now forecast that the central bank might begin reducing rates in the second quarter of next year if economic data continues to show moderating inflation with stable employment figures.",
+      "summary": "Global markets responded positively as the Federal Reserve maintained current interest rates, with investors encouraged by signs that inflation pressures may be easing.",
+      "category": "1",
+      "author": "1",
+      "status": "published",
+      "publishDate": "2023-11-02T14:30:00.000Z",
+      "imageUrl": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+      "tags": ["federal reserve", "interest rates", "stock market", "economic policy"]
+    },
+    {
+      "id": "2",
+      "title": "Tech Sector Faces Regulatory Challenges as New Antitrust Bill Advances",
+      "slug": "tech-sector-regulatory-challenges-antitrust",
+      "content": "The technology sector is bracing for potential regulatory changes as a new antitrust bill cleared a key Senate committee today. The proposed legislation aims to limit the market power of dominant technology platforms and prevent anticompetitive practices.\n\nIf enacted, the bill would empower regulators to break up platforms that operate as marketplaces while also selling products on those same platforms, directly affecting major companies like Amazon, Apple, and Google.\n\n\"This represents the most significant reform of competition law in decades,\" said Senator Maria Rodriguez, one of the bill's sponsors. \"We need to ensure digital markets remain fair and accessible for businesses of all sizes.\"\n\nShares of major tech companies declined following the announcement, with the sector experiencing its largest one-day drop in three months. Industry representatives have voiced concerns about potential unintended consequences for innovation and consumer services.\n\n\"While we support thoughtful regulation, this approach could undermine American competitiveness and limit the services consumers value,\" said the CEO of the Technology Industry Association in a statement.",
+      "summary": "A new antitrust bill targeting dominant technology platforms has advanced in the Senate, sending tech stocks lower and raising concerns within the industry.",
+      "category": "2",
+      "author": "2",
+      "status": "published",
+      "publishDate": "2023-11-01T10:15:00.000Z",
+      "imageUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+      "tags": ["technology", "regulation", "antitrust", "congress"]
+    },
+    {
+      "id": "3",
+      "title": "Cryptocurrencies Surge as Institutional Adoption Accelerates",
+      "slug": "cryptocurrencies-surge-institutional-adoption",
+      "content": "Cryptocurrency markets experienced substantial gains this week, with Bitcoin reaching $68,000 and Ethereum surpassing $3,800. The rally comes amid growing institutional adoption and regulatory developments that investors perceive as increasingly favorable.\n\nA major catalyst for the surge was the announcement by BlackRock, the world's largest asset manager, that it would expand its crypto offerings to include Ethereum-based investment products. Additionally, several central banks have published frameworks for integrating blockchain technology into their payment systems.\n\n\"We're seeing a fundamental shift in how traditional financial institutions view digital assets,\" explained Michael Chen, cryptocurrency analyst at Digital Horizons. \"What was once considered speculative is increasingly viewed as an essential part of a diversified portfolio.\"\n\nTrading volumes have more than doubled compared to last month, with particularly strong activity from institutional investors. However, regulators continue to express concerns about investor protection and market stability as the sector expands.\n\nIndustry experts suggest that improved regulatory clarity could drive the next phase of growth, potentially bringing cryptocurrencies further into mainstream financial services.",
+      "summary": "Bitcoin and other cryptocurrencies have seen significant price increases as major financial institutions continue to expand their presence in the digital asset space.",
+      "category": "3",
+      "author": "3",
+      "status": "published",
+      "publishDate": "2023-10-30T09:45:00.000Z",
+      "imageUrl": "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80",
+      "tags": ["cryptocurrency", "bitcoin", "blockchain", "institutional investment"]
+    }
+  ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "Markets",
+      "slug": "markets",
+      "description": "News and analysis on stock markets, bonds, commodities, and forex"
+    },
+    {
+      "id": "2",
+      "name": "Technology",
+      "slug": "technology",
+      "description": "Latest developments in technology and their impact on the financial world"
+    },
+    {
+      "id": "3",
+      "name": "Cryptocurrency",
+      "slug": "cryptocurrency",
+      "description": "Updates on Bitcoin, Ethereum, and other digital assets"
+    },
+    {
+      "id": "4",
+      "name": "Economy",
+      "slug": "economy",
+      "description": "Macroeconomic trends, policy decisions, and economic indicators"
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "name": "Admin User",
+      "email": "admin@financenews.com",
+      "password": "admin123",
+      "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
+      "role": "admin"
+    },
+    {
+      "id": "2",
+      "name": "Sarah Johnson",
+      "email": "sjohnson@financenews.com",
+      "password": "sarah123",
+      "avatar": "https://randomuser.me/api/portraits/women/44.jpg",
+      "role": "editor"
+    },
+    {
+      "id": "3",
+      "name": "Michael Chen",
+      "email": "mchen@financenews.com",
+      "password": "michael123",
+      "avatar": "https://randomuser.me/api/portraits/men/76.jpg",
+      "role": "editor"
+    },
+    {
+      "id": "4",
+      "name": "Regular User",
+      "email": "user@example.com",
+      "password": "user123",
+      "avatar": "https://randomuser.me/api/portraits/women/63.jpg",
+      "role": "user"
+    }
+  ],
+  "comments": [
+    {
+      "id": "1",
+      "articleId": "1",
+      "userId": "4",
+      "content": "Great analysis! I'm curious how this will affect mortgage rates in the long term.",
+      "createdAt": "2023-11-02T16:30:00.000Z"
+    },
+    {
+      "id": "2",
+      "articleId": "1",
+      "userId": "3",
+      "content": "I think the Fed is being too cautious. Inflation data suggests they could be more aggressive with cuts.",
+      "createdAt": "2023-11-02T17:15:00.000Z"
+    },
+    {
+      "id": "3",
+      "articleId": "2",
+      "userId": "2",
+      "content": "This regulation is long overdue. The tech giants have been operating without proper oversight for too long.",
+      "createdAt": "2023-11-01T12:30:00.000Z"
+    }
+  ],
+  "likes": [
+    {
+      "id": "1",
+      "articleId": "1",
+      "userId": "2"
+    },
+    {
+      "id": "2",
+      "articleId": "1",
+      "userId": "3"
+    },
+    {
+      "id": "3",
+      "articleId": "1",
+      "userId": "4"
+    },
+    {
+      "id": "4",
+      "articleId": "2",
+      "userId": "1"
+    },
+    {
+      "id": "5",
+      "articleId": "3",
+      "userId": "2"
+    }
+  ],
+  "bookmarks": [
+    {
+      "id": "1",
+      "articleId": "1",
+      "userId": "4"
+    },
+    {
+      "id": "2",
+      "articleId": "2",
+      "userId": "3"
+    },
+    {
+      "id": "3",
+      "articleId": "3",
+      "userId": "1"
+    }
+  ],
+  "views": [
+    {
+      "id": "1",
+      "articleId": "1",
+      "count": 1243
+    },
+    {
+      "id": "2",
+      "articleId": "2",
+      "count": 876
+    },
+    {
+      "id": "3",
+      "articleId": "3", 
+      "count": 2156
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface User {
   id: string;
@@ -19,39 +20,26 @@ interface LayoutProps {
 }
 
 const Layout = ({ children, openAuthModal = false }: LayoutProps) => {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, login, logout } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(openAuthModal);
   const navigate = useNavigate();
-  
-  // Check for saved user in localStorage on component mount
-  useEffect(() => {
-    const savedUser = localStorage.getItem("financeNewsUser");
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error("Failed to parse saved user:", e);
-        localStorage.removeItem("financeNewsUser");
-      }
-    }
-  }, []);
   
   const handleLogin = () => {
     setIsAuthModalOpen(true);
   };
   
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("financeNewsUser");
+    logout();
     navigate("/");
   };
   
-  const handleAuthSuccess = (userData: User) => {
-    setIsAuthModalOpen(false);
-    setUser(userData);
-    
-    // Save user to localStorage
-    localStorage.setItem("financeNewsUser", JSON.stringify(userData));
+  const handleAuthSuccess = async (userData: { email: string; password: string }) => {
+    try {
+      await login(userData.email, userData.password);
+      setIsAuthModalOpen(false);
+    } catch (error) {
+      console.error("Authentication failed:", error);
+    }
   };
 
   return (
