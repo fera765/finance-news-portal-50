@@ -6,11 +6,12 @@ import AuthModal from "@/components/AuthModal";
 
 interface LayoutProps {
   children: ReactNode;
+  openAuthModal?: boolean; // Add optional prop to open auth modal from child components
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ children, openAuthModal = false }: LayoutProps) => {
   const [user, setUser] = useState<{ id: string; name: string } | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(openAuthModal);
   
   const handleLogin = () => {
     setIsAuthModalOpen(true);

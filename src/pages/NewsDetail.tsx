@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -201,6 +200,7 @@ const NewsDetail = () => {
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -251,6 +251,12 @@ const NewsDetail = () => {
       title: "Link copied!",
       description: "Article link copied to clipboard",
     });
+  };
+
+  const handleLogin = () => {
+    setIsAuthModalOpen(true);
+    // This would typically trigger the auth modal to open
+    // We'll need to add this to our Layout component
   };
 
   if (loading) {
@@ -399,6 +405,8 @@ const NewsDetail = () => {
           <CommentSection 
             newsId={news.id} 
             comments={comments}
+            onLogin={handleLogin}
+            currentUser={null} // Pass the current user from Layout when available
           />
         </div>
       </div>
