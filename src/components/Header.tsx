@@ -2,8 +2,15 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Bell, Menu, Search, User, X } from "lucide-react";
+import { Bell, Menu, Search, User, X, Settings, LogOut, BookMarked } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   user?: {
@@ -41,9 +48,6 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
               <Link to="/markets" className="text-base font-medium text-gray-700 hover:text-finance-700">Markets</Link>
               <Link to="/business" className="text-base font-medium text-gray-700 hover:text-finance-700">Business</Link>
               <Link to="/economy" className="text-base font-medium text-gray-700 hover:text-finance-700">Economy</Link>
-              {user?.id && (
-                <Link to="/admin" className="text-base font-medium text-gray-700 hover:text-finance-700">Admin</Link>
-              )}
             </nav>
           </div>
 
@@ -66,16 +70,48 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                 >
                   <Bell size={20} />
                 </Button>
-                <div className="relative">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full bg-muted"
-                    onClick={onLogout}
-                  >
-                    <User size={20} />
-                  </Button>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full bg-muted"
+                    >
+                      <User size={20} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="rounded-full bg-muted p-1">
+                        <User size={28} />
+                      </div>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">user@example.com</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="flex w-full cursor-pointer items-center">
+                        <BookMarked className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    {user.id === 'admin-1' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="flex w-full cursor-pointer items-center">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Admin</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onLogout} className="cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <Button variant="outline" onClick={onLogin}>
@@ -127,7 +163,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
             >
               Economy
             </Link>
-            {user?.id && (
+            {user && user.id === 'admin-1' && (
               <Link 
                 to="/admin" 
                 className="text-base font-medium text-gray-700 hover:text-finance-700"
@@ -136,7 +172,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                 Admin
               </Link>
             )}
-            {!user && (
+            {!user ? (
               <Button 
                 variant="outline" 
                 onClick={() => {
@@ -145,6 +181,16 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                 }}
               >
                 Sign In
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  onLogout?.();
+                  setIsMenuOpen(false);
+                }}
+              >
+                Log Out
               </Button>
             )}
           </nav>

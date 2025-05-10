@@ -1,11 +1,10 @@
 
 import { useState } from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Layout from "@/components/Layout";
 import NewsCard, { NewsItem } from "@/components/NewsCard";
 import FeaturedNewsSection from "@/components/FeaturedNewsSection";
-import AuthModal from "@/components/AuthModal";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 // Mock data
 const mockFeaturedNews: NewsItem[] = [
@@ -95,106 +94,60 @@ const mockLatestNews: NewsItem[] = [
   }
 ];
 
-const mockUser = {
-  id: "user-1",
-  name: "John Doe"
-};
-
 const Index = () => {
-  const [user, setUser] = useState<typeof mockUser | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [visibleNews, setVisibleNews] = useState(6);
-  
-  const handleLogin = () => {
-    setIsAuthModalOpen(true);
-  };
-  
-  const handleLogout = () => {
-    setUser(null);
-  };
-  
-  const handleAuthSuccess = () => {
-    setIsAuthModalOpen(false);
-    setUser(mockUser);
-  };
   
   const loadMore = () => {
     setVisibleNews(prev => prev + 3);
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header 
-        user={user} 
-        onLogin={handleLogin} 
-        onLogout={handleLogout} 
-      />
-      
-      <main className="flex-grow">
-        <div className="container mx-auto px-4 py-8">
-          {/* Featured News Carousel */}
-          <FeaturedNewsSection featuredNews={mockFeaturedNews} />
+    <Layout>
+      <div className="container mx-auto px-4 py-8">
+        {/* Featured News Carousel */}
+        <FeaturedNewsSection featuredNews={mockFeaturedNews} />
+        
+        {/* Latest News */}
+        <section className="mt-12">
+          <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <span className="mr-2">Latest News</span>
+            <div className="h-1 w-10 bg-finance-500"></div>
+          </h2>
           
-          {/* Latest News */}
-          <section className="mt-12">
-            <h2 className="text-2xl font-bold mb-6 flex items-center">
-              <span className="mr-2">Latest News</span>
-              <div className="h-1 w-10 bg-finance-500"></div>
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockLatestNews.slice(0, visibleNews).map((news) => (
-                <NewsCard key={news.id} news={news} />
-              ))}
-            </div>
-            
-            {visibleNews < mockLatestNews.length && (
-              <div className="mt-8 text-center">
-                <Button onClick={loadMore} variant="outline">
-                  Load More Articles
-                </Button>
-              </div>
-            )}
-          </section>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mockLatestNews.slice(0, visibleNews).map((news) => (
+              <NewsCard key={news.id} news={news} />
+            ))}
+          </div>
           
-          {/* Newsletter Signup */}
-          <section className="mt-16 bg-finance-50 p-8 rounded-lg">
-            <div className="max-w-2xl mx-auto text-center">
-              <h3 className="text-2xl font-bold mb-2">Stay Informed</h3>
-              <p className="text-gray-600 mb-6">
-                Subscribe to our newsletter for daily financial insights and market updates.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Input 
-                  placeholder="Your email address" 
-                  className="flex-grow"
-                  type="email"
-                />
-                <Button>Subscribe</Button>
-              </div>
+          {visibleNews < mockLatestNews.length && (
+            <div className="mt-8 text-center">
+              <Button onClick={loadMore} variant="outline">
+                Load More Articles
+              </Button>
             </div>
-          </section>
-        </div>
-      </main>
-      
-      <Footer />
-      
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-        onSuccess={handleAuthSuccess}
-      />
-    </div>
-  );
-};
-
-// Add missing Input component
-const Input = ({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { className?: string }) => {
-  return (
-    <input
-      className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-      {...props}
-    />
+          )}
+        </section>
+        
+        {/* Newsletter Signup */}
+        <section className="mt-16 bg-finance-50 p-8 rounded-lg">
+          <div className="max-w-2xl mx-auto text-center">
+            <h3 className="text-2xl font-bold mb-2">Stay Informed</h3>
+            <p className="text-gray-600 mb-6">
+              Subscribe to our newsletter for daily financial insights and market updates.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Input 
+                placeholder="Your email address" 
+                className="flex-grow"
+                type="email"
+              />
+              <Button>Subscribe</Button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </Layout>
   );
 };
 

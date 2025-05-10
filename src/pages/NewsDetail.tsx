@@ -2,13 +2,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Layout from "@/components/Layout";
 import CommentSection, { Comment } from "@/components/CommentSection";
-import AuthModal from "@/components/AuthModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Heart, Share, Eye } from "lucide-react";
+import { NewsItem } from "@/components/NewsCard";
+import { useToast } from "@/components/ui/use-toast";
 
 // Mock news data - in a real app, this would come from an API
 const mockNewsDetails = {
@@ -45,7 +45,9 @@ const mockNewsDetails = {
     category: "Economy",
     publishedDate: "2025-05-05T14:30:00Z",
     author: "Michael Stevens",
-    authorTitle: "Senior Economics Correspondent"
+    authorTitle: "Senior Economics Correspondent",
+    tags: ["Federal Reserve", "Interest Rates", "Inflation", "Economy"],
+    views: 1245
   },
   "2": {
     id: "2",
@@ -86,8 +88,54 @@ const mockNewsDetails = {
     category: "Markets",
     publishedDate: "2025-05-04T10:15:00Z",
     author: "Sarah Johnson",
-    authorTitle: "Global Markets Analyst"
+    authorTitle: "Global Markets Analyst",
+    tags: ["Global Markets", "Trade", "Economy", "Manufacturing"],
+    views: 876
   }
+};
+
+// Related news for each article
+const relatedNews: Record<string, NewsItem[]> = {
+  "1": [
+    {
+      id: "5",
+      title: "Oil Prices Stabilize Following Middle East Production Agreement",
+      summary: "Major oil-producing nations reach consensus on output levels, bringing stability to global energy markets after weeks of volatility.",
+      imageUrl: "https://images.unsplash.com/photo-1582486225644-dab37c8b1d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+      category: "Commodities",
+      publishedDate: "2025-05-04T18:00:00Z",
+      author: "Robert Martinez"
+    },
+    {
+      id: "7",
+      title: "Sustainable Investing Reaches Record Levels as Climate Concerns Grow",
+      summary: "ESG funds see unprecedented inflows as investors increasingly prioritize environmental and social governance factors in their portfolios.",
+      imageUrl: "https://images.unsplash.com/photo-1470790376778-a9f1903c3a4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+      category: "Investing",
+      publishedDate: "2025-05-03T14:15:00Z",
+      author: "Emma Green"
+    },
+  ],
+  "2": [
+    {
+      id: "4",
+      title: "Cryptocurrency Market Faces Regulatory Challenges in Major Economies",
+      summary: "New regulatory frameworks being introduced across Europe and Asia create uncertainty for crypto investors and exchanges.",
+      imageUrl: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+      category: "Cryptocurrency",
+      publishedDate: "2025-05-05T09:20:00Z",
+      author: "Jessica Lee"
+    },
+    {
+      id: "9",
+      title: "Major Retailer Announces Expansion Plans Following Strong Q1 Performance",
+      summary: "Company plans to open 50 new locations and enhance e-commerce capabilities after exceeding revenue and profit forecasts.",
+      imageUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
+      category: "Business",
+      publishedDate: "2025-05-02T10:45:00Z",
+      author: "Patricia Anderson"
+    },
+  ]
 };
 
 // Mock comments data
@@ -149,15 +197,21 @@ const NewsDetail = () => {
   const navigate = useNavigate();
   const [news, setNews] = useState<typeof mockNewsDetails[keyof typeof mockNewsDetails] | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [related, setRelated] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string; name: string; } | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const { toast } = useToast();
   
   useEffect(() => {
     // In a real app, this would be an API call
     if (id && mockNewsDetails[id]) {
       setNews(mockNewsDetails[id]);
       setComments(mockComments[id] || []);
+      setRelated(relatedNews[id] || []);
+      // Reset interaction states
+      setLiked(false);
+      setBookmarked(false);
     } else {
       // Handle news not found
       navigate("/not-found", { replace: true });
@@ -166,27 +220,49 @@ const NewsDetail = () => {
     setLoading(false);
   }, [id, navigate]);
   
-  const handleLogin = () => {
-    setIsAuthModalOpen(true);
+  const handleLike = () => {
+    if (!news) return;
+    
+    setLiked(!liked);
+    toast({
+      title: liked ? "Removed from likes" : "Added to likes",
+      description: liked ? "Article removed from your liked articles" : "Article added to your liked articles",
+    });
   };
   
-  const handleLogout = () => {
-    setUser(null);
+  const handleBookmark = () => {
+    if (!news) return;
+    
+    setBookmarked(!bookmarked);
+    toast({
+      title: bookmarked ? "Removed from bookmarks" : "Bookmarked",
+      description: bookmarked 
+        ? "Article removed from your bookmarks" 
+        : "Article saved to your bookmarks for later reading",
+    });
   };
   
-  const handleAuthSuccess = () => {
-    setIsAuthModalOpen(false);
-    setUser({ id: "user-1", name: "John Doe" });
+  const handleShare = () => {
+    if (!news) return;
+    
+    // In a real implementation, this would open a sharing dialog or use the Web Share API
+    navigator.clipboard.writeText(window.location.href);
+    toast({
+      title: "Link copied!",
+      description: "Article link copied to clipboard",
+    });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-48 bg-gray-200 mb-4 rounded"></div>
-          <div className="h-6 w-32 bg-gray-200 rounded"></div>
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="h-12 w-48 bg-gray-200 mb-4 rounded"></div>
+            <div className="h-6 w-32 bg-gray-200 rounded"></div>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
@@ -195,29 +271,30 @@ const NewsDetail = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header 
-        user={user} 
-        onLogin={handleLogin} 
-        onLogout={handleLogout} 
-      />
-      
-      <main className="flex-grow">
-        <article className="container mx-auto px-4 py-8 max-w-5xl">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate(-1)} 
-            className="mb-6 flex items-center text-gray-600 hover:text-finance-700"
-          >
-            <ChevronLeft size={20} className="mr-1" />
-            Back
-          </Button>
-          
-          <Badge className="mb-4">{news.category}</Badge>
-          
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">{news.title}</h1>
-          
-          <div className="flex items-center text-gray-500 mb-6">
+    <Layout>
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate(-1)} 
+          className="mb-6 flex items-center text-gray-600 hover:text-finance-700"
+        >
+          <ChevronLeft size={20} className="mr-1" />
+          Back
+        </Button>
+        
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Badge className="bg-finance-700">{news.category}</Badge>
+          {news.tags?.map((tag) => (
+            <Badge key={tag} variant="outline" className="bg-gray-100">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+        
+        <h1 className="text-3xl md:text-4xl font-bold mb-4">{news.title}</h1>
+        
+        <div className="flex items-center justify-between text-gray-500 mb-6">
+          <div className="flex items-center">
             <div className="mr-4">
               By <span className="font-medium text-gray-700">{news.author}</span>
               {news.authorTitle && (
@@ -230,39 +307,102 @@ const NewsDetail = () => {
               {format(new Date(news.publishedDate), "MMMM d, yyyy")}
             </div>
           </div>
-          
-          <div className="mb-8">
-            <img 
-              src={news.imageUrl} 
-              alt={news.title} 
-              className="w-full h-auto rounded-lg" 
-            />
+          <div className="flex items-center space-x-2 text-sm">
+            <div className="flex items-center">
+              <Eye size={16} className="mr-1" />
+              <span>{news.views}</span>
+            </div>
           </div>
-          
-          <div 
-            className="news-content mb-10"
-            dangerouslySetInnerHTML={{ __html: news.content }} 
+        </div>
+        
+        <div className="mb-8">
+          <img 
+            src={news.imageUrl} 
+            alt={news.title} 
+            className="w-full h-auto rounded-lg" 
           />
+        </div>
+        
+        <div className="flex gap-3 mb-6">
+          <Button
+            variant={liked ? "default" : "outline"}
+            className={`flex items-center gap-2 ${liked ? "bg-finance-600 hover:bg-finance-700" : ""}`}
+            onClick={handleLike}
+          >
+            <Heart size={16} fill={liked ? "white" : "none"} />
+            {liked ? "Liked" : "Like"}
+          </Button>
           
-          <div className="border-t border-gray-200 pt-10">
-            <CommentSection 
-              newsId={news.id} 
-              comments={comments}
-              currentUser={user}
-              onLogin={handleLogin}
-            />
+          <Button
+            variant={bookmarked ? "default" : "outline"}
+            className={`flex items-center gap-2 ${bookmarked ? "bg-finance-600 hover:bg-finance-700" : ""}`}
+            onClick={handleBookmark}
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill={bookmarked ? "white" : "none"} 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+            </svg>
+            {bookmarked ? "Saved" : "Save"}
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={handleShare}
+          >
+            <Share size={16} />
+            Share
+          </Button>
+        </div>
+        
+        <div 
+          className="news-content mb-10"
+          dangerouslySetInnerHTML={{ __html: news.content }} 
+        />
+        
+        {related.length > 0 && (
+          <div className="mb-10">
+            <h3 className="text-xl font-bold mb-4">Related Articles</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {related.map((article) => (
+                <div key={article.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <a href={`/news/${article.id}`} className="flex h-32">
+                    <div className="w-1/3">
+                      <img 
+                        src={article.imageUrl} 
+                        alt={article.title} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="w-2/3 p-3">
+                      <Badge className="mb-2 text-xs" variant="outline">{article.category}</Badge>
+                      <h4 className="font-semibold text-sm line-clamp-2 mb-1">{article.title}</h4>
+                      <p className="text-gray-500 text-xs">{format(new Date(article.publishedDate), "MMM d, yyyy")}</p>
+                    </div>
+                  </a>
+                </div>
+              ))}
+            </div>
           </div>
-        </article>
-      </main>
-      
-      <Footer />
-      
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-        onSuccess={handleAuthSuccess}
-      />
-    </div>
+        )}
+        
+        <div className="border-t border-gray-200 pt-10">
+          <CommentSection 
+            newsId={news.id} 
+            comments={comments}
+          />
+        </div>
+      </div>
+    </Layout>
   );
 };
 
