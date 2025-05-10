@@ -1,13 +1,15 @@
+
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
 import Layout from "@/components/Layout";
 import CommentSection, { Comment } from "@/components/CommentSection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Heart, Share, Eye } from "lucide-react";
+import { ChevronLeft, Heart, Share, Eye, Bookmark } from "lucide-react";
 import { NewsItem } from "@/components/NewsCard";
 import { useToast } from "@/components/ui/use-toast";
+import { User } from "@/components/Layout";
 
 // Mock news data - in a real app, this would come from an API
 const mockNewsDetails = {
@@ -201,27 +203,78 @@ const NewsDetail = () => {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [viewCount, setViewCount] = useState(0);
   const { toast } = useToast();
+  
+  // Load user from localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem("financeNewsUser");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse saved user:", e);
+      }
+    }
+  }, []);
   
   useEffect(() => {
     // In a real app, this would be an API call
     if (id && mockNewsDetails[id]) {
-      setNews(mockNewsDetails[id]);
+      const newsData = mockNewsDetails[id];
+      setNews(newsData);
       setComments(mockComments[id] || []);
       setRelated(relatedNews[id] || []);
-      // Reset interaction states
-      setLiked(false);
-      setBookmarked(false);
+      
+      // Handle view counter
+      const viewKey = `article-${id}-viewed`;
+      const hasViewed = sessionStorage.getItem(viewKey);
+      
+      if (!hasViewed) {
+        // In a real app, this would be an API call to increment the view count
+        setViewCount(newsData.views + 1);
+        sessionStorage.setItem(viewKey, 'true');
+      } else {
+        setViewCount(newsData.views);
+      }
+      
+      // Check if user has liked or bookmarked this article
+      if (user) {
+        // In a real app, these would be API calls to check user's likes and bookmarks
+        const likedArticles = JSON.parse(localStorage.getItem("likedArticles") || "[]");
+        const bookmarkedArticles = JSON.parse(localStorage.getItem("bookmarkedArticles") || "[]");
+        
+        setLiked(likedArticles.includes(id));
+        setBookmarked(bookmarkedArticles.includes(id));
+      }
     } else {
       // Handle news not found
       navigate("/not-found", { replace: true });
     }
     
     setLoading(false);
-  }, [id, navigate]);
+  }, [id, navigate, user]);
   
   const handleLike = () => {
+    if (!user) {
+      handleLogin();
+      return;
+    }
+    
     if (!news) return;
+    
+    const likedArticles = JSON.parse(localStorage.getItem("likedArticles") || "[]");
+    
+    if (liked) {
+      // Unlike
+      const updatedLikes = likedArticles.filter((articleId: string) => articleId !== id);
+      localStorage.setItem("likedArticles", JSON.stringify(updatedLikes));
+    } else {
+      // Like
+      likedArticles.push(id);
+      localStorage.setItem("likedArticles", JSON.stringify(likedArticles));
+    }
     
     setLiked(!liked);
     toast({
@@ -231,7 +284,24 @@ const NewsDetail = () => {
   };
   
   const handleBookmark = () => {
+    if (!user) {
+      handleLogin();
+      return;
+    }
+    
     if (!news) return;
+    
+    const bookmarkedArticles = JSON.parse(localStorage.getItem("bookmarkedArticles") || "[]");
+    
+    if (bookmarked) {
+      // Remove bookmark
+      const updatedBookmarks = bookmarkedArticles.filter((articleId: string) => articleId !== id);
+      localStorage.setItem("bookmarkedArticles", JSON.stringify(updatedBookmarks));
+    } else {
+      // Add bookmark
+      bookmarkedArticles.push(id);
+      localStorage.setItem("bookmarkedArticles", JSON.stringify(bookmarkedArticles));
+    }
     
     setBookmarked(!bookmarked);
     toast({
@@ -242,21 +312,49 @@ const NewsDetail = () => {
     });
   };
   
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!news) return;
     
-    // In a real implementation, this would open a sharing dialog or use the Web Share API
-    navigator.clipboard.writeText(window.location.href);
-    toast({
-      title: "Link copied!",
-      description: "Article link copied to clipboard",
-    });
+    // Try to use the Web Share API if available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: news.title,
+          text: news.summary,
+          url: window.location.href,
+        });
+        
+        toast({
+          title: "Shared successfully",
+          description: "Article shared successfully",
+        });
+        return;
+      } catch (error) {
+        console.error("Error sharing:", error);
+      }
+    }
+    
+    // Fallback to clipboard if Web Share API is not available
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      
+      toast({
+        title: "Link copied!",
+        description: "Article link copied to clipboard",
+      });
+    } catch (error) {
+      console.error("Failed to copy:", error);
+      
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy the link to clipboard",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleLogin = () => {
     setIsAuthModalOpen(true);
-    // This would typically trigger the auth modal to open
-    // We'll need to add this to our Layout component
   };
 
   if (loading) {
@@ -277,7 +375,7 @@ const NewsDetail = () => {
   }
 
   return (
-    <Layout>
+    <Layout openAuthModal={isAuthModalOpen}>
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <Button 
           variant="ghost" 
@@ -316,7 +414,7 @@ const NewsDetail = () => {
           <div className="flex items-center space-x-2 text-sm">
             <div className="flex items-center">
               <Eye size={16} className="mr-1" />
-              <span>{news.views}</span>
+              <span>{viewCount}</span>
             </div>
           </div>
         </div>
@@ -344,19 +442,7 @@ const NewsDetail = () => {
             className={`flex items-center gap-2 ${bookmarked ? "bg-finance-600 hover:bg-finance-700" : ""}`}
             onClick={handleBookmark}
           >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="16" 
-              height="16" 
-              viewBox="0 0 24 24" 
-              fill={bookmarked ? "white" : "none"} 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
-            </svg>
+            <Bookmark size={16} fill={bookmarked ? "white" : "none"} />
             {bookmarked ? "Saved" : "Save"}
           </Button>
           
@@ -371,7 +457,7 @@ const NewsDetail = () => {
         </div>
         
         <div 
-          className="news-content mb-10"
+          className="news-content mb-10 prose prose-slate max-w-none"
           dangerouslySetInnerHTML={{ __html: news.content }} 
         />
         
@@ -381,7 +467,7 @@ const NewsDetail = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {related.map((article) => (
                 <div key={article.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                  <a href={`/news/${article.id}`} className="flex h-32">
+                  <Link to={`/news/${article.id}`} className="flex h-32">
                     <div className="w-1/3">
                       <img 
                         src={article.imageUrl} 
@@ -394,7 +480,7 @@ const NewsDetail = () => {
                       <h4 className="font-semibold text-sm line-clamp-2 mb-1">{article.title}</h4>
                       <p className="text-gray-500 text-xs">{format(new Date(article.publishedDate), "MMM d, yyyy")}</p>
                     </div>
-                  </a>
+                  </Link>
                 </div>
               ))}
             </div>
@@ -406,7 +492,7 @@ const NewsDetail = () => {
             newsId={news.id} 
             comments={comments}
             onLogin={handleLogin}
-            currentUser={null} // Pass the current user from Layout when available
+            currentUser={user}
           />
         </div>
       </div>

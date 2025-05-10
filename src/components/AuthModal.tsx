@@ -1,193 +1,230 @@
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
   DialogTitle,
+  DialogDescription,
+  DialogFooter
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { User } from "@/components/Layout";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (user: User) => void;
 }
 
 const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   const [activeTab, setActiveTab] = useState("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  
-  // Login form state
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  
-  // Register form state
-  const [registerName, setRegisterName] = useState("");
-  const [registerEmail, setRegisterEmail] = useState("");
-  const [registerPassword, setRegisterPassword] = useState("");
-  const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false);
   
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoggingIn(true);
+    setIsLoading(true);
     
-    // In a real app, this would call an authentication API
+    // Simulating login API call
     setTimeout(() => {
-      setIsLoggingIn(false);
+      setIsLoading(false);
       
-      // Success scenario for demo
-      toast({
-        title: "Logged in successfully",
-        description: "Welcome back!",
-      });
-      
-      onSuccess();
+      // Mock login validation
+      if (email === "admin@example.com" && password === "admin") {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back, Admin!",
+        });
+        
+        onSuccess({
+          id: "admin-1",
+          name: "Admin User",
+          email: "admin@example.com",
+          role: "admin",
+          avatar: "https://i.pravatar.cc/150?u=admin"
+        });
+      } else if (email && password) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!",
+        });
+        
+        onSuccess({
+          id: "user-1",
+          name: name || "John Doe",
+          email: email,
+          role: "user",
+          avatar: `https://i.pravatar.cc/150?u=${email}`
+        });
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid email or password.",
+          variant: "destructive"
+        });
+      }
     }, 1000);
   };
   
-  const handleRegister = (e: React.FormEvent) => {
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    if (registerPassword !== registerConfirmPassword) {
-      toast({
-        title: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsRegistering(true);
-    
-    // In a real app, this would call an authentication API
+    // Simulating signup API call
     setTimeout(() => {
-      setIsRegistering(false);
+      setIsLoading(false);
       
-      // Success scenario for demo
-      toast({
-        title: "Account created successfully",
-        description: "Welcome to Finance News!",
-      });
-      
-      onSuccess();
+      if (name && email && password) {
+        toast({
+          title: "Account Created",
+          description: "Your account has been created successfully!",
+        });
+        
+        onSuccess({
+          id: `user-${Date.now()}`,
+          name: name,
+          email: email,
+          role: "user",
+          avatar: `https://i.pravatar.cc/150?u=${email}`
+        });
+      } else {
+        toast({
+          title: "Signup Failed",
+          description: "Please fill all required fields.",
+          variant: "destructive"
+        });
+      }
     }, 1000);
+  };
+  
+  const handleReset = () => {
+    setEmail("");
+    setPassword("");
+    setName("");
+    setActiveTab("login");
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        handleReset();
+        onClose();
+      }
+    }}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold">
-            {activeTab === "login" ? "Welcome back" : "Create an account"}
-          </DialogTitle>
+          <DialogTitle>Authentication</DialogTitle>
+          <DialogDescription>
+            Login or create an account to access all features.
+          </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab} className="mt-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
-            <form onSubmit={handleLogin} className="space-y-4 mt-4">
+            <form onSubmit={handleLogin} className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input 
-                  id="email"
-                  type="email" 
-                  placeholder="your@email.com"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
+                  id="email" 
+                  placeholder="your@email.com" 
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Button variant="link" className="p-0 h-auto text-xs">
-                    Forgot password?
-                  </Button>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input 
-                  id="password"
-                  type="password" 
-                  placeholder="••••••••"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
+                  id="password" 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoggingIn}
-              >
-                {isLoggingIn ? "Signing in..." : "Sign In"}
-              </Button>
+              
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : "Login"}
+                </Button>
+              </div>
+              
+              <div className="text-sm text-center text-muted-foreground">
+                <p className="mt-2">Demo accounts:</p>
+                <p>Admin: admin@example.com / admin</p>
+                <p>User: user@example.com / user</p>
+              </div>
             </form>
           </TabsContent>
           
-          <TabsContent value="register">
-            <form onSubmit={handleRegister} className="space-y-4 mt-4">
+          <TabsContent value="signup">
+            <form onSubmit={handleSignup} className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">Name</Label>
                 <Input 
-                  id="name"
-                  placeholder="John Doe"
-                  value={registerName}
-                  onChange={(e) => setRegisterName(e.target.value)}
+                  id="name" 
+                  placeholder="Your Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="register-email">Email</Label>
+                <Label htmlFor="signup-email">Email</Label>
                 <Input 
-                  id="register-email"
-                  type="email" 
-                  placeholder="your@email.com"
-                  value={registerEmail}
-                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  id="signup-email" 
+                  placeholder="your@email.com" 
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="register-password">Password</Label>
+                <Label htmlFor="signup-password">Password</Label>
                 <Input 
-                  id="register-password"
-                  type="password" 
-                  placeholder="••••••••"
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  id="signup-password" 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input 
-                  id="confirm-password"
-                  type="password" 
-                  placeholder="••••••••"
-                  value={registerConfirmPassword}
-                  onChange={(e) => setRegisterConfirmPassword(e.target.value)}
-                  required
-                />
+              
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating account..." : "Sign Up"}
+                </Button>
               </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isRegistering}
-              >
-                {isRegistering ? "Creating account..." : "Create Account"}
-              </Button>
             </form>
           </TabsContent>
         </Tabs>
+        
+        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

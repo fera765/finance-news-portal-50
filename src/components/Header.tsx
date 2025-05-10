@@ -11,12 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User as UserType } from "./Layout";
 
 interface HeaderProps {
-  user?: {
-    id: string;
-    name: string;
-  } | null;
+  user?: UserType | null;
   onLogin?: () => void;
   onLogout?: () => void;
 }
@@ -32,6 +31,15 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
       title: "Search",
       description: "Search functionality will be implemented in the next version.",
     });
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   return (
@@ -74,20 +82,23 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="rounded-full bg-muted"
+                      className="rounded-full h-10 w-10 p-0"
                     >
-                      <User size={20} />
+                      <Avatar>
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                      </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="flex items-center justify-start gap-2 p-2">
-                      <div className="rounded-full bg-muted p-1">
-                        <User size={28} />
-                      </div>
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                      </Avatar>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">user@example.com</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user.email || "user@example.com"}</p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
@@ -97,7 +108,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                         <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
-                    {user.id === 'admin-1' && (
+                    {user.role === 'admin' && (
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="flex w-full cursor-pointer items-center">
                           <Settings className="mr-2 h-4 w-4" />
@@ -163,13 +174,22 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
             >
               Economy
             </Link>
-            {user && user.id === 'admin-1' && (
+            {user && user.role === 'admin' && (
               <Link 
                 to="/admin" 
                 className="text-base font-medium text-gray-700 hover:text-finance-700"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Admin
+              </Link>
+            )}
+            {user && (
+              <Link
+                to="/profile"
+                className="text-base font-medium text-gray-700 hover:text-finance-700"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Profile
               </Link>
             )}
             {!user ? (
