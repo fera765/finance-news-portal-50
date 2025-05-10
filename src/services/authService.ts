@@ -2,10 +2,15 @@
 import { api } from './api';
 import { User } from '@/components/Layout';
 
+// Extended User type for auth operations that include password
+interface UserWithPassword extends User {
+  password: string;
+}
+
 // Simple login service that works with JSON Server
 export const login = async (email: string, password: string) => {
   // With JSON Server, we need to manually match credentials
-  const { data: users } = await api.get<User[]>('/users', {
+  const { data: users } = await api.get<UserWithPassword[]>('/users', {
     params: { email }
   });
 
@@ -38,7 +43,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
   const userId = token.replace('demo-token-', '');
   
   try {
-    const { data } = await api.get<User>(`/users/${userId}`);
+    const { data } = await api.get<UserWithPassword>(`/users/${userId}`);
     // Remove password before returning
     const { password: _, ...userWithoutPassword } = data;
     return userWithoutPassword;

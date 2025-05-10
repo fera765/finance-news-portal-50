@@ -18,7 +18,7 @@ import { User } from "@/components/Layout";
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (user: User) => void;
+  onSuccess: (userData: { email: string; password: string }) => void;
 }
 
 const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {

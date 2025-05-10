@@ -33,6 +33,7 @@ const Layout = ({ children, openAuthModal = false }: LayoutProps) => {
     navigate("/");
   };
   
+  // Updated to match the expected type structure from AuthModal
   const handleAuthSuccess = async (userData: { email: string; password: string }) => {
     try {
       await login(userData.email, userData.password);
