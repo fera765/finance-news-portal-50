@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Dialog, 
@@ -45,11 +44,8 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         });
         
         onSuccess({
-          id: "admin-1",
-          name: "Admin User",
           email: "admin@example.com",
-          role: "admin",
-          avatar: "https://i.pravatar.cc/150?u=admin"
+          password: "admin"
         });
       } else if (email && password) {
         toast({
@@ -58,11 +54,8 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         });
         
         onSuccess({
-          id: "user-1",
-          name: name || "John Doe",
           email: email,
-          role: "user",
-          avatar: `https://i.pravatar.cc/150?u=${email}`
+          password: password
         });
       } else {
         toast({
@@ -89,11 +82,8 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         });
         
         onSuccess({
-          id: `user-${Date.now()}`,
-          name: name,
           email: email,
-          role: "user",
-          avatar: `https://i.pravatar.cc/150?u=${email}`
+          password: password
         });
       } else {
         toast({
