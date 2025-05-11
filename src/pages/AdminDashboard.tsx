@@ -129,7 +129,6 @@ const AdminDashboard = () => {
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
       />
       
       {/* Main Content */}
