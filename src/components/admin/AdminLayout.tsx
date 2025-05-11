@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,6 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
           collapsed={collapsed} 
           setCollapsed={setCollapsed} 
           activeTab={activeTab}
-          setActiveTab={() => {}} // This is handled by the navigate function in AdminSidebar
         />
         
         <div className="flex-1 overflow-auto">

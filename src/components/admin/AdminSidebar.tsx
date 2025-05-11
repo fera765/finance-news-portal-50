@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -38,20 +37,23 @@ interface AdminSidebarProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   activeTab: string;
-  setActiveTab: (tab: string) => void;
 }
 
 const AdminSidebar = ({ 
   collapsed, 
   setCollapsed, 
-  activeTab, 
-  setActiveTab 
+  activeTab
 }: AdminSidebarProps) => {
   const navigate = useNavigate();
   const { open, setOpen } = useSidebar();
   
+  // Sincronize o estado local com o contexto do sidebar
+  const handleToggleSidebar = () => {
+    setOpen(!open);
+    setCollapsed(!collapsed);
+  };
+  
   const handleNavigate = (tab: string, path: string) => {
-    setActiveTab(tab);
     navigate(path);
   };
   
@@ -74,7 +76,7 @@ const AdminSidebar = ({
             variant="ghost" 
             size="sm"
             className="text-gray-600 hover:bg-gray-100"
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={handleToggleSidebar}
           >
             <X size={22} />
           </Button>
