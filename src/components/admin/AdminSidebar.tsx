@@ -47,7 +47,7 @@ const AdminSidebar = ({
   const navigate = useNavigate();
   const { open, setOpen } = useSidebar();
   
-  // Sincronize o estado local com o contexto do sidebar
+  // Synchronize the local state with the sidebar context
   const handleToggleSidebar = () => {
     setOpen(!open);
     setCollapsed(!collapsed);
@@ -61,9 +61,12 @@ const AdminSidebar = ({
     navigate("/");
   };
 
+  // Use the sidebar's open state to determine if the sidebar is collapsed
+  const sidebarStyle = open ? 'w-64' : 'w-0';
+
   return (
-    <Sidebar 
-      className={`${open ? 'w-64' : 'w-0'} transition-all duration-300 ease-in-out`}
+    <Sidebar
+      className={`${sidebarStyle} transition-all duration-300 ease-in-out`}
       collapsible="offcanvas"
     >
       <SidebarHeader>
