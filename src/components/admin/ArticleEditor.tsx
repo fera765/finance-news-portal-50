@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { CalendarIcon, Save, Upload, ExternalLink, X } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { Article } from "@/services/articleService";
 
 interface Category {
   id: string;
@@ -20,20 +20,6 @@ interface Author {
   id: string;
   name: string;
   role: string;
-}
-
-interface Article {
-  id?: string;
-  title: string;
-  slug: string;
-  content: string;
-  category: string;
-  author: string;
-  status: 'draft' | 'published' | 'scheduled';
-  publishDate?: Date;
-  imageUrl?: string;
-  summary?: string;
-  tags?: string[];
 }
 
 interface ArticleEditorProps {
@@ -67,7 +53,11 @@ const ArticleEditor = ({
   });
   
   const [publishDate, setPublishDate] = useState<Date | undefined>(
-    article?.publishDate ? new Date(article.publishDate) : undefined
+    article?.publishDate 
+      ? (typeof article.publishDate === 'string' 
+          ? new Date(article.publishDate) 
+          : article.publishDate)
+      : undefined
   );
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -75,7 +65,13 @@ const ArticleEditor = ({
   useEffect(() => {
     if (article) {
       setFormData(article);
-      setPublishDate(article.publishDate ? new Date(article.publishDate) : undefined);
+      setPublishDate(
+        article.publishDate 
+          ? (typeof article.publishDate === 'string' 
+              ? new Date(article.publishDate) 
+              : article.publishDate)
+          : undefined
+      );
     } else {
       setFormData({
         title: "",

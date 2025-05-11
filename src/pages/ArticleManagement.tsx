@@ -6,6 +6,7 @@ import ArticleEditor from "@/components/admin/ArticleEditor";
 import { useArticles } from "@/hooks/useArticles";
 import { getCategories } from "@/services/categoryService";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { Article } from "@/services/articleService";
 
 const ArticleManagement = () => {
   const {
@@ -34,7 +35,7 @@ const ArticleManagement = () => {
   ];
 
   // View article handler
-  const handleViewArticle = (article: any) => {
+  const handleViewArticle = (article: Article) => {
     window.open(`/news/${article.slug}`, '_blank');
   };
 
