@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import NewsDetail from "./pages/NewsDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import CategoryManagement from "./pages/CategoryManagement";
+import ArticleManagement from "./pages/ArticleManagement";  // Add this import
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 
@@ -30,6 +31,7 @@ const App: React.FC = () => {
                 <Route path="/news/:id" element={<NewsDetail />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/categories" element={<CategoryManagement />} />
+                <Route path="/admin/articles" element={<ArticleManagement />} />  {/* Add this route */}
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

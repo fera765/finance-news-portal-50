@@ -1,15 +1,15 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Save, Upload, ExternalLink, X } from "lucide-react";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface Category {
   id: string;
@@ -69,6 +69,27 @@ const ArticleEditor = ({
   const [publishDate, setPublishDate] = useState<Date | undefined>(
     article?.publishDate ? new Date(article.publishDate) : undefined
   );
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (article) {
+      setFormData(article);
+      setPublishDate(article.publishDate ? new Date(article.publishDate) : undefined);
+    } else {
+      setFormData({
+        title: "",
+        slug: "",
+        content: "",
+        category: "",
+        author: "",
+        status: 'draft',
+        summary: "",
+        tags: []
+      });
+      setPublishDate(undefined);
+    }
+  }, [article, isOpen]);
   
   const generateSlug = (title: string) => {
     return title
@@ -133,6 +154,17 @@ const ArticleEditor = ({
       status: 'scheduled',
       publishDate
     });
+  };
+
+  const handlePreview = () => {
+    // In a real app, this would open a preview in a new tab or modal
+    // For now, we'll just set a flag to show a message
+    setPreviewUrl(`/preview/${formData.slug}`);
+    
+    // Simulate opening a preview window
+    setTimeout(() => {
+      setPreviewUrl(null);
+    }, 3000);
   };
 
   return (
@@ -212,12 +244,11 @@ const ArticleEditor = ({
           {/* Summary */}
           <div className="space-y-2">
             <Label htmlFor="summary">Summary</Label>
-            <Textarea
+            <Input
               id="summary"
               value={formData.summary || ''}
               onChange={(e) => handleInputChange('summary', e.target.value)}
               placeholder="Brief summary of the article"
-              className="h-20"
             />
           </div>
           
@@ -243,15 +274,13 @@ const ArticleEditor = ({
             />
           </div>
           
-          {/* Content */}
+          {/* Content with Rich Text Editor */}
           <div className="space-y-2">
             <Label htmlFor="content">Content</Label>
-            <Textarea
-              id="content"
+            <RichTextEditor
               value={formData.content}
-              onChange={(e) => handleInputChange('content', e.target.value)}
-              placeholder="Article content in Markdown format"
-              className="min-h-[300px]"
+              onChange={(value) => handleInputChange('content', value)}
+              placeholder="Write your article content here..."
             />
             <p className="text-xs text-muted-foreground">
               Supports Markdown formatting. Use # for headings, * for italic, ** for bold, etc.
@@ -283,20 +312,34 @@ const ArticleEditor = ({
               </Popover>
             </div>
           </div>
+          
+          {previewUrl && (
+            <div className="p-3 bg-muted rounded-md">
+              <p>Preview URL: {previewUrl}</p>
+            </div>
+          )}
         </div>
         
         <DialogFooter className="flex justify-between">
           <Button variant="outline" onClick={onClose}>
+            <X className="mr-2 h-4 w-4" />
             Cancel
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleSaveDraft}>
+              <Save className="mr-2 h-4 w-4" />
               Save as Draft
             </Button>
+            <Button variant="outline" onClick={handlePreview}>
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Preview
+            </Button>
             <Button variant="outline" onClick={handleSchedule} disabled={!publishDate}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
               Schedule
             </Button>
             <Button onClick={handlePublish}>
+              <Upload className="mr-2 h-4 w-4" />
               Publish Now
             </Button>
           </div>
