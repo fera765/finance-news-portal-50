@@ -6,7 +6,8 @@ import {
   Users,
   TagIcon,
   LogOut,
-  X
+  X,
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,8 +18,12 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar
+  useSidebar,
+  SidebarGroup,
+  SidebarGroupLabel
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 type SidebarItem = {
   name: string;
@@ -31,6 +36,7 @@ const sidebarItems: SidebarItem[] = [
   { name: "Articles", icon: FileText, path: "/admin/articles" },
   { name: "Categories", icon: TagIcon, path: "/admin/categories" },
   { name: "Users", icon: Users, path: "/admin/users" },
+  { name: "Settings", icon: Settings, path: "/admin/settings" },
 ];
 
 interface AdminSidebarProps {
@@ -48,12 +54,16 @@ const AdminSidebar = ({
   const { open, setOpen } = useSidebar();
   
   // Synchronize the local state with the sidebar context
+  useEffect(() => {
+    setOpen(!collapsed);
+  }, [collapsed, setOpen]);
+
   const handleToggleSidebar = () => {
     setOpen(!open);
     setCollapsed(!collapsed);
   };
   
-  const handleNavigate = (tab: string, path: string) => {
+  const handleNavigate = (path: string, tab: string) => {
     navigate(path);
   };
   
@@ -61,56 +71,80 @@ const AdminSidebar = ({
     navigate("/");
   };
 
-  // Use the sidebar's open state to determine if the sidebar is collapsed
-  const sidebarStyle = open ? 'w-64' : 'w-0';
-
   return (
     <Sidebar
-      className={`${sidebarStyle} transition-all duration-300 ease-in-out`}
-      collapsible="offcanvas"
+      className={cn(
+        "border-r border-border transition-all duration-300",
+        open ? "w-64" : "w-0 md:w-[70px]"
+      )}
+      collapsible={open ? "none" : "icon"}
     >
       <SidebarHeader>
-        <div className="p-4 border-b border-finance-800 flex justify-between items-center">
-          <div className="flex items-center">
-            <span className="text-xl font-bold">Finance</span>
-            <span className="text-xl font-normal text-gold-500">News</span>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="text-gray-600 hover:bg-gray-100"
-            onClick={handleToggleSidebar}
-          >
-            <X size={22} />
-          </Button>
+        <div className={cn(
+          "p-4 border-b border-border flex justify-between items-center",
+          !open && "md:justify-center"
+        )}>
+          {open ? (
+            <div className="flex items-center">
+              <span className="text-xl font-bold">Finance</span>
+              <span className="text-xl font-normal text-gold-500">News</span>
+            </div>
+          ) : (
+            <div className="hidden md:flex justify-center items-center h-10 w-10 rounded-md bg-finance-900 text-white font-bold">
+              F
+            </div>
+          )}
+          {open && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-gray-600 hover:bg-gray-100"
+              onClick={handleToggleSidebar}
+            >
+              <X size={20} />
+            </Button>
+          )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarMenu>
-          {sidebarItems.map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton
-                isActive={activeTab === item.name.toLowerCase()}
-                onClick={() => handleNavigate(item.name.toLowerCase(), item.path)}
-              >
-                <item.icon className="h-5 w-5 mr-2" />
-                <span>{item.name}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+      <SidebarContent className="px-2 py-4">
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-3 mb-1">
+            Main
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            {sidebarItems.map((item) => (
+              <SidebarMenuItem key={item.name}>
+                <SidebarMenuButton
+                  tooltip={!open ? item.name : undefined}
+                  isActive={activeTab === item.name.toLowerCase()}
+                  onClick={() => handleNavigate(item.path, item.name.toLowerCase())}
+                  className={cn(
+                    activeTab === item.name.toLowerCase() ? "bg-finance-50 text-finance-800" : "",
+                    "hover:bg-finance-50 hover:text-finance-800 transition-colors"
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {open && <span>{item.name}</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
         <div className="p-4 border-t border-gray-200">
           <Button 
             variant="ghost"
-            className="w-full justify-start text-gray-600 hover:bg-gray-100"
+            className={cn(
+              "w-full justify-start text-gray-600 hover:bg-gray-100",
+              !open && "justify-center"
+            )}
             onClick={handleLogout}
           >
-            <LogOut className="h-5 w-5 mr-2" />
-            <span>Logout</span>
+            <LogOut className="h-5 w-5" />
+            {open && <span className="ml-2">Logout</span>}
           </Button>
         </div>
       </SidebarFooter>
