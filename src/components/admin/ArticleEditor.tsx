@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -47,9 +48,7 @@ const ArticleEditor = ({
     content: "",
     category: "",
     author: "",
-    status: 'draft',
-    summary: "",
-    tags: []
+    status: 'draft'
   });
   
   const [publishDate, setPublishDate] = useState<Date | undefined>(
@@ -79,9 +78,7 @@ const ArticleEditor = ({
         content: "",
         category: "",
         author: "",
-        status: 'draft',
-        summary: "",
-        tags: []
+        status: 'draft'
       });
       setPublishDate(undefined);
     }
@@ -117,14 +114,6 @@ const ArticleEditor = ({
     });
   };
   
-  const handleTagsChange = (value: string) => {
-    const tags = value.split(',').map(tag => tag.trim()).filter(Boolean);
-    setFormData({
-      ...formData,
-      tags
-    });
-  };
-  
   const handleSaveDraft = () => {
     onSave({
       ...formData,
@@ -153,8 +142,6 @@ const ArticleEditor = ({
   };
 
   const handlePreview = () => {
-    // In a real app, this would open a preview in a new tab or modal
-    // For now, we'll just set a flag to show a message
     setPreviewUrl(`/preview/${formData.slug}`);
     
     // Simulate opening a preview window
@@ -165,33 +152,47 @@ const ArticleEditor = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto sm:max-w-[95vw] md:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Article' : 'Create New Article'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Editar Artigo' : 'Criar Novo Artigo'}</DialogTitle>
         </DialogHeader>
         
         <div className="grid grid-cols-1 gap-6 py-4">
-          {/* Title */}
+          {/* Título */}
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Título</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => handleTitleChange(e.target.value)}
-              placeholder="Article title"
+              placeholder="Título do artigo"
             />
           </div>
           
-          {/* Category & Author */}
+          {/* Slug */}
+          <div className="space-y-2">
+            <Label htmlFor="slug">URL Slug</Label>
+            <Input
+              id="slug"
+              value={formData.slug}
+              onChange={(e) => handleSlugChange(e.target.value)}
+              placeholder="artigo-url-slug"
+            />
+            <p className="text-sm text-muted-foreground">
+              Será usado na URL: example.com/news/{formData.slug || 'artigo-slug'}
+            </p>
+          </div>
+          
+          {/* Categoria & Autor em uma linha para telas maiores, em coluna para telas menores */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Categoria</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => handleInputChange('category', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
@@ -204,13 +205,13 @@ const ArticleEditor = ({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="author">Author</Label>
+              <Label htmlFor="author">Autor</Label>
               <Select
                 value={formData.author}
                 onValueChange={(value) => handleInputChange('author', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select author" />
+                  <SelectValue placeholder="Selecione o autor" />
                 </SelectTrigger>
                 <SelectContent>
                   {authors.map((author) => (
@@ -223,69 +224,19 @@ const ArticleEditor = ({
             </div>
           </div>
           
-          {/* Slug */}
+          {/* Editor de texto rico */}
           <div className="space-y-2">
-            <Label htmlFor="slug">URL Slug</Label>
-            <Input
-              id="slug"
-              value={formData.slug}
-              onChange={(e) => handleSlugChange(e.target.value)}
-              placeholder="article-url-slug"
-            />
-            <p className="text-sm text-muted-foreground">
-              This will be used in the URL: example.com/news/{formData.slug || 'article-slug'}
-            </p>
-          </div>
-          
-          {/* Summary */}
-          <div className="space-y-2">
-            <Label htmlFor="summary">Summary</Label>
-            <Input
-              id="summary"
-              value={formData.summary || ''}
-              onChange={(e) => handleInputChange('summary', e.target.value)}
-              placeholder="Brief summary of the article"
-            />
-          </div>
-          
-          {/* Image URL */}
-          <div className="space-y-2">
-            <Label htmlFor="imageUrl">Featured Image URL</Label>
-            <Input
-              id="imageUrl"
-              value={formData.imageUrl || ''}
-              onChange={(e) => handleInputChange('imageUrl', e.target.value)}
-              placeholder="https://example.com/image.jpg"
-            />
-          </div>
-          
-          {/* Tags */}
-          <div className="space-y-2">
-            <Label htmlFor="tags">Tags (comma separated)</Label>
-            <Input
-              id="tags"
-              value={formData.tags?.join(', ') || ''}
-              onChange={(e) => handleTagsChange(e.target.value)}
-              placeholder="economy, finance, markets"
-            />
-          </div>
-          
-          {/* Content with Rich Text Editor */}
-          <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
+            <Label htmlFor="content">Conteúdo</Label>
             <RichTextEditor
               value={formData.content}
               onChange={(value) => handleInputChange('content', value)}
-              placeholder="Write your article content here..."
+              placeholder="Escreva o conteúdo do artigo aqui..."
             />
-            <p className="text-xs text-muted-foreground">
-              Supports Markdown formatting. Use # for headings, * for italic, ** for bold, etc.
-            </p>
           </div>
           
-          {/* Schedule Publication */}
+          {/* Agendar Publicação */}
           <div className="space-y-2">
-            <Label>Schedule Publication</Label>
+            <Label>Agendar Publicação</Label>
             <div className="flex flex-col sm:flex-row gap-4">
               <Popover>
                 <PopoverTrigger asChild>
@@ -294,7 +245,7 @@ const ArticleEditor = ({
                     className="w-full sm:w-[240px] justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {publishDate ? format(publishDate, "PPP") : "Pick a date"}
+                    {publishDate ? format(publishDate, "PPP") : "Escolha uma data"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -311,32 +262,32 @@ const ArticleEditor = ({
           
           {previewUrl && (
             <div className="p-3 bg-muted rounded-md">
-              <p>Preview URL: {previewUrl}</p>
+              <p>URL de Preview: {previewUrl}</p>
             </div>
           )}
         </div>
         
-        <DialogFooter className="flex justify-between">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="flex flex-col sm:flex-row justify-between gap-2">
+          <Button variant="outline" onClick={onClose} className="sm:order-1 w-full sm:w-auto">
             <X className="mr-2 h-4 w-4" />
-            Cancel
+            Cancelar
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleSaveDraft}>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={handleSaveDraft} className="w-full sm:w-auto">
               <Save className="mr-2 h-4 w-4" />
-              Save as Draft
+              Salvar Rascunho
             </Button>
-            <Button variant="outline" onClick={handlePreview}>
+            <Button variant="outline" onClick={handlePreview} className="w-full sm:w-auto">
               <ExternalLink className="mr-2 h-4 w-4" />
               Preview
             </Button>
-            <Button variant="outline" onClick={handleSchedule} disabled={!publishDate}>
+            <Button variant="outline" onClick={handleSchedule} disabled={!publishDate} className="w-full sm:w-auto">
               <CalendarIcon className="mr-2 h-4 w-4" />
-              Schedule
+              Agendar
             </Button>
-            <Button onClick={handlePublish}>
+            <Button onClick={handlePublish} className="w-full sm:w-auto">
               <Upload className="mr-2 h-4 w-4" />
-              Publish Now
+              Publicar Agora
             </Button>
           </div>
         </DialogFooter>

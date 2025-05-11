@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -9,21 +12,37 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   
   return (
-    <div className="flex h-screen bg-gray-50">
-      <AdminSidebar 
-        collapsed={collapsed} 
-        setCollapsed={setCollapsed} 
-        activeTab={activeTab}
-        setActiveTab={() => {}} // This is handled by the navigate function in AdminSidebar
-      />
-      
-      <div className="flex-1 overflow-auto">
-        {children}
+    <SidebarProvider defaultOpen={false}>
+      <div className="flex h-screen bg-gray-50 w-full">
+        <AdminSidebar 
+          collapsed={collapsed} 
+          setCollapsed={setCollapsed} 
+          activeTab={activeTab}
+          setActiveTab={() => {}} // This is handled by the navigate function in AdminSidebar
+        />
+        
+        <div className="flex-1 overflow-auto">
+          {/* Menu trigger that is always visible */}
+          <div className="p-4 border-b bg-white flex items-center">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setCollapsed(!collapsed)}
+              className="mr-4"
+            >
+              <Menu size={22} />
+            </Button>
+            <h1 className="text-xl font-bold">Admin Dashboard</h1>
+          </div>
+          <div className="p-6">
+            {children}
+          </div>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 

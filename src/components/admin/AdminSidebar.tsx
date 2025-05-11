@@ -7,9 +7,9 @@ import {
   Users,
   TagIcon,
   LogOut,
-  MenuIcon,
   X
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -17,9 +17,9 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton
+  SidebarMenuButton,
+  useSidebar
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 
 type SidebarItem = {
   name: string;
@@ -48,6 +48,7 @@ const AdminSidebar = ({
   setActiveTab 
 }: AdminSidebarProps) => {
   const navigate = useNavigate();
+  const { open, setOpen } = useSidebar();
   
   const handleNavigate = (tab: string, path: string) => {
     setActiveTab(tab);
@@ -59,59 +60,56 @@ const AdminSidebar = ({
   };
 
   return (
-    <div className={`${collapsed ? 'w-20' : 'w-64'} transition-width duration-300 ease-in-out h-screen bg-finance-900 text-white`}>
-      <div className="flex flex-col h-full">
-        {/* Sidebar Header */}
+    <Sidebar 
+      className={`${open ? 'w-64' : 'w-0'} transition-all duration-300 ease-in-out`}
+      collapsible="offcanvas"
+    >
+      <SidebarHeader>
         <div className="p-4 border-b border-finance-800 flex justify-between items-center">
-          {!collapsed && (
-            <div className="flex items-center">
-              <span className="text-xl font-bold">Finance</span>
-              <span className="text-xl font-normal text-gold-500">News</span>
-            </div>
-          )}
+          <div className="flex items-center">
+            <span className="text-xl font-bold">Finance</span>
+            <span className="text-xl font-normal text-gold-500">News</span>
+          </div>
           <Button 
             variant="ghost" 
             size="sm"
-            className="text-white hover:bg-finance-800"
+            className="text-gray-600 hover:bg-gray-100"
             onClick={() => setCollapsed(!collapsed)}
           >
-            {collapsed ? <MenuIcon size={22} /> : <X size={22} />}
+            <X size={22} />
           </Button>
         </div>
+      </SidebarHeader>
 
-        {/* Sidebar Content */}
-        <div className="flex-1 py-6">
-          <nav>
-            <ul className="space-y-2 px-3">
-              {sidebarItems.map((item) => (
-                <li key={item.name}>
-                  <Button 
-                    variant="ghost"
-                    className={`w-full justify-${collapsed ? 'center' : 'start'} text-white hover:bg-finance-800 ${activeTab === item.name.toLowerCase() ? 'bg-finance-800' : ''}`}
-                    onClick={() => handleNavigate(item.name.toLowerCase(), item.path)}
-                  >
-                    <item.icon className={`h-5 w-5 ${!collapsed && 'mr-2'}`} />
-                    {!collapsed && <span>{item.name}</span>}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
+      <SidebarContent>
+        <SidebarMenu>
+          {sidebarItems.map((item) => (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton
+                isActive={activeTab === item.name.toLowerCase()}
+                onClick={() => handleNavigate(item.name.toLowerCase(), item.path)}
+              >
+                <item.icon className="h-5 w-5 mr-2" />
+                <span>{item.name}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
 
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-finance-800">
+      <SidebarFooter>
+        <div className="p-4 border-t border-gray-200">
           <Button 
             variant="ghost"
-            className={`w-full justify-${collapsed ? 'center' : 'start'} text-white hover:bg-finance-800`}
+            className="w-full justify-start text-gray-600 hover:bg-gray-100"
             onClick={handleLogout}
           >
-            <LogOut className={`h-5 w-5 ${!collapsed && 'mr-2'}`} />
-            {!collapsed && <span>Logout</span>}
+            <LogOut className="h-5 w-5 mr-2" />
+            <span>Logout</span>
           </Button>
         </div>
-      </div>
-    </div>
+      </SidebarFooter>
+    </Sidebar>
   );
 };
 
