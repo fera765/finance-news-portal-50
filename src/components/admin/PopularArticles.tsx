@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Heart } from "lucide-react";
+import { Eye, Heart, LucideIcon } from "lucide-react";
 import { format } from "date-fns";
 
 export interface ArticleSummary {
@@ -11,6 +11,7 @@ export interface ArticleSummary {
   publishedDate: string;
   views: number;
   likes: number;
+  bookmarks?: number;
 }
 
 interface PopularArticlesProps {
@@ -18,13 +19,17 @@ interface PopularArticlesProps {
   description: string;
   articles: ArticleSummary[];
   type: 'views' | 'likes';
+  icon?: LucideIcon;
 }
 
-const PopularArticles = ({ title, description, articles, type }: PopularArticlesProps) => {
+const PopularArticles = ({ title, description, articles, type, icon: Icon }: PopularArticlesProps) => {
   return (
     <Card className="col-span-1">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          <span>{title}</span>
+          {Icon && <Icon className="h-5 w-5 text-finance-600" />}
+        </CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="px-2">
