@@ -44,13 +44,13 @@ const Layout = ({ children, openAuthModal = false }: LayoutProps) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
       <Header 
         user={user}
         onLogin={handleLogin}
         onLogout={handleLogout}
       />
-      <main className="flex-grow">
+      <main className="flex-grow w-full">
         {children}
       </main>
       <Footer />

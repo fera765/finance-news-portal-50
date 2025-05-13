@@ -114,13 +114,13 @@ const Index = () => {
   return (
     <Layout>
       {/* Stock Ticker */}
-      <div className="w-full border-b border-gray-200">
-        <div className="container mx-auto">
+      <div className="w-full border-b border-gray-200 overflow-hidden">
+        <div className="max-w-screen-2xl mx-auto">
           <StockTicker />
         </div>
       </div>
       
-      <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="max-w-screen-2xl mx-auto px-4 py-6 md:py-8">
         {/* Featured News Carousel */}
         <FeaturedNewsSection featuredNews={mockFeaturedNews} />
         
