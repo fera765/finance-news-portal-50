@@ -128,3 +128,27 @@
 .hover-grow:hover {
   transform: scale(1.02);
 }
+
+/* Stock ticker animation */
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker 30s linear infinite;
+}
+
+.ticker-track {
+  min-width: 100%;
+}
+
+/* Hide scrollbar for ticker */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}

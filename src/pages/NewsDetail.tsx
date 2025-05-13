@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -10,6 +9,7 @@ import { ChevronLeft, Heart, Share, Eye, Bookmark } from "lucide-react";
 import { NewsItem } from "@/components/NewsCard";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@/components/Layout";
+import StockTicker from "@/components/StockTicker";
 
 // Mock news data - in a real app, this would come from an API
 const mockNewsDetails = {
@@ -48,7 +48,8 @@ const mockNewsDetails = {
     author: "Michael Stevens",
     authorTitle: "Senior Economics Correspondent",
     tags: ["Federal Reserve", "Interest Rates", "Inflation", "Economy"],
-    views: 1245
+    views: 1245,
+    slug: "federal-reserve-signals-possible-interest-rate-cuts"
   },
   "2": {
     id: "2",
@@ -91,7 +92,8 @@ const mockNewsDetails = {
     author: "Sarah Johnson",
     authorTitle: "Global Markets Analyst",
     tags: ["Global Markets", "Trade", "Economy", "Manufacturing"],
-    views: 876
+    views: 876,
+    slug: "global-markets-rally-trade-tensions-ease"
   }
 };
 
@@ -105,7 +107,8 @@ const relatedNews: Record<string, NewsItem[]> = {
       imageUrl: "https://images.unsplash.com/photo-1582486225644-dab37c8b1d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
       category: "Commodities",
       publishedDate: "2025-05-04T18:00:00Z",
-      author: "Robert Martinez"
+      author: "Robert Martinez",
+      slug: "oil-prices-stabilize-middle-east-production-agreement"
     },
     {
       id: "7",
@@ -114,7 +117,8 @@ const relatedNews: Record<string, NewsItem[]> = {
       imageUrl: "https://images.unsplash.com/photo-1470790376778-a9f1903c3a4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
       category: "Investing",
       publishedDate: "2025-05-03T14:15:00Z",
-      author: "Emma Green"
+      author: "Emma Green",
+      slug: "sustainable-investing-reaches-record-levels"
     },
   ],
   "2": [
@@ -125,7 +129,8 @@ const relatedNews: Record<string, NewsItem[]> = {
       imageUrl: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
       category: "Cryptocurrency",
       publishedDate: "2025-05-05T09:20:00Z",
-      author: "Jessica Lee"
+      author: "Jessica Lee",
+      slug: "cryptocurrency-market-faces-regulatory-challenges"
     },
     {
       id: "9",
@@ -134,7 +139,8 @@ const relatedNews: Record<string, NewsItem[]> = {
       imageUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
       category: "Business",
       publishedDate: "2025-05-02T10:45:00Z",
-      author: "Patricia Anderson"
+      author: "Patricia Anderson",
+      slug: "major-retailer-announces-expansion-plans"
     },
   ]
 };
@@ -194,7 +200,7 @@ const mockComments: Record<string, Comment[]> = {
 };
 
 const NewsDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, slug } = useParams<{ id: string, slug: string }>();
   const navigate = useNavigate();
   const [news, setNews] = useState<typeof mockNewsDetails[keyof typeof mockNewsDetails] | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -223,6 +229,13 @@ const NewsDetail = () => {
     // In a real app, this would be an API call
     if (id && mockNewsDetails[id]) {
       const newsData = mockNewsDetails[id];
+      
+      // Check if the URL slug matches the news slug
+      if (slug !== newsData.slug) {
+        navigate(`/news/${id}/${newsData.slug}`, { replace: true });
+        return;
+      }
+      
       setNews(newsData);
       setComments(mockComments[id] || []);
       setRelated(relatedNews[id] || []);
@@ -254,7 +267,7 @@ const NewsDetail = () => {
     }
     
     setLoading(false);
-  }, [id, navigate, user]);
+  }, [id, navigate, user, slug]);
   
   const handleLike = () => {
     if (!user) {
@@ -376,11 +389,18 @@ const NewsDetail = () => {
 
   return (
     <Layout openAuthModal={isAuthModalOpen}>
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      {/* Stock Ticker */}
+      <div className="w-full border-b border-gray-200 mb-4">
+        <div className="container mx-auto">
+          <StockTicker />
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-4 md:py-8 max-w-5xl">
         <Button 
           variant="ghost" 
           onClick={() => navigate(-1)} 
-          className="mb-6 flex items-center text-gray-600 hover:text-finance-700"
+          className="mb-4 md:mb-6 flex items-center text-gray-600 hover:text-finance-700"
         >
           <ChevronLeft size={20} className="mr-1" />
           Back
@@ -395,10 +415,10 @@ const NewsDetail = () => {
           ))}
         </div>
         
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">{news.title}</h1>
+        <h1 className="text-2xl md:text-4xl font-bold mb-4">{news.title}</h1>
         
-        <div className="flex items-center justify-between text-gray-500 mb-6">
-          <div className="flex items-center">
+        <div className="flex items-center justify-between text-gray-500 mb-6 flex-wrap gap-y-2">
+          <div className="flex items-center flex-wrap">
             <div className="mr-4">
               By <span className="font-medium text-gray-700">{news.author}</span>
               {news.authorTitle && (
@@ -419,7 +439,7 @@ const NewsDetail = () => {
           </div>
         </div>
         
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <img 
             src={news.imageUrl} 
             alt={news.title} 
@@ -427,7 +447,7 @@ const NewsDetail = () => {
           />
         </div>
         
-        <div className="flex gap-3 mb-6">
+        <div className="flex gap-3 mb-6 flex-wrap">
           <Button
             variant={liked ? "default" : "outline"}
             className={`flex items-center gap-2 ${liked ? "bg-finance-600 hover:bg-finance-700" : ""}`}
@@ -457,17 +477,17 @@ const NewsDetail = () => {
         </div>
         
         <div 
-          className="news-content mb-10 prose prose-slate max-w-none"
+          className="news-content mb-8 md:mb-10 prose prose-slate max-w-none"
           dangerouslySetInnerHTML={{ __html: news.content }} 
         />
         
         {related.length > 0 && (
-          <div className="mb-10">
+          <div className="mb-8 md:mb-10">
             <h3 className="text-xl font-bold mb-4">Related Articles</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {related.map((article) => (
                 <div key={article.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                  <Link to={`/news/${article.id}`} className="flex h-32">
+                  <Link to={`/news/${article.id}/${article.slug}`} className="flex h-32">
                     <div className="w-1/3">
                       <img 
                         src={article.imageUrl} 
@@ -487,7 +507,7 @@ const NewsDetail = () => {
           </div>
         )}
         
-        <div className="border-t border-gray-200 pt-10">
+        <div className="border-t border-gray-200 pt-6 md:pt-10">
           <CommentSection 
             newsId={news.id} 
             comments={comments}

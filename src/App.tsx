@@ -32,7 +32,7 @@ const App: React.FC = () => {
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Index />} />
-                  <Route path="/news/:id" element={<NewsDetail />} />
+                  <Route path="/news/:id/:slug" element={<NewsDetail />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/categories" element={<CategoryManagement />} />
                   <Route path="/admin/articles" element={<ArticleManagement />} />

@@ -13,6 +13,7 @@ export interface NewsItem {
   publishedDate: string;
   author: string;
   isFeatured?: boolean;
+  slug: string;
 }
 
 interface NewsCardProps {
@@ -22,6 +23,7 @@ interface NewsCardProps {
 
 const NewsCard = ({ news, featured = false }: NewsCardProps) => {
   const publishedAgo = formatDistanceToNow(new Date(news.publishedDate), { addSuffix: true });
+  const articleUrl = `/news/${news.id}/${news.slug}`;
 
   if (featured) {
     return (
@@ -42,7 +44,7 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
                 </Badge>
                 <span className="text-xs text-gray-500">{publishedAgo}</span>
               </div>
-              <Link to={`/news/${news.id}`}>
+              <Link to={articleUrl}>
                 <h2 className="text-2xl font-bold mb-2 hover:text-finance-700">{news.title}</h2>
               </Link>
               <p className="text-gray-600 line-clamp-3">{news.summary}</p>
@@ -72,7 +74,7 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
           </Badge>
           <span className="text-xs text-gray-500">{publishedAgo}</span>
         </div>
-        <Link to={`/news/${news.id}`}>
+        <Link to={articleUrl}>
           <h3 className="text-lg font-semibold mb-2 line-clamp-2 hover:text-finance-700">
             {news.title}
           </h3>
