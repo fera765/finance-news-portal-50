@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -20,7 +19,8 @@ const mockSavedArticles: NewsItem[] = [
     imageUrl: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
     category: "Economy",
     publishedDate: "2025-05-05T14:30:00Z",
-    author: "Michael Stevens"
+    author: "Michael Stevens",
+    slug: "federal-reserve-signals-possible-interest-rate-cuts"
   },
   {
     id: "3",
@@ -29,7 +29,8 @@ const mockSavedArticles: NewsItem[] = [
     imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
     category: "Technology",
     publishedDate: "2025-05-03T16:45:00Z",
-    author: "David Wong"
+    author: "David Wong",
+    slug: "tech-giant-unveils-revolutionary-ai-powered-financial-analysis-platform"
   }
 ];
 
@@ -42,7 +43,8 @@ const mockLikedArticles: NewsItem[] = [
     imageUrl: "https://images.unsplash.com/photo-1460472178825-e5240623afd5?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
     category: "Markets",
     publishedDate: "2025-05-04T10:15:00Z",
-    author: "Sarah Johnson"
+    author: "Sarah Johnson",
+    slug: "global-markets-rally-as-trade-tensions-ease"
   },
   {
     id: "5",
@@ -51,7 +53,8 @@ const mockLikedArticles: NewsItem[] = [
     imageUrl: "https://images.unsplash.com/photo-1582486225644-dab37c8b1d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
     category: "Commodities",
     publishedDate: "2025-05-04T18:00:00Z",
-    author: "Robert Martinez"
+    author: "Robert Martinez",
+    slug: "oil-prices-stabilize-following-middle-east-production-agreement"
   },
   {
     id: "1",
@@ -60,7 +63,8 @@ const mockLikedArticles: NewsItem[] = [
     imageUrl: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80",
     category: "Economy",
     publishedDate: "2025-05-05T14:30:00Z",
-    author: "Michael Stevens"
+    author: "Michael Stevens",
+    slug: "federal-reserve-signals-possible-interest-rate-cuts"
   }
 ];
 

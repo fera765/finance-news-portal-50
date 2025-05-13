@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import GrowthMetrics from "@/components/admin/GrowthMetrics";
@@ -52,7 +51,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-05T14:30:00Z",
             views: 1245,
             likes: 87,
-            bookmarks: 45
+            bookmarks: 45,
+            slug: "federal-reserve-signals-possible-interest-rate-cuts"
           },
           {
             id: "2",
@@ -61,7 +61,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-04T10:15:00Z",
             views: 876,
             likes: 56,
-            bookmarks: 32
+            bookmarks: 32,
+            slug: "global-markets-rally-as-trade-tensions-ease"
           },
           {
             id: "3",
@@ -70,7 +71,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-03T16:45:00Z",
             views: 765,
             likes: 92,
-            bookmarks: 61
+            bookmarks: 61,
+            slug: "tech-giant-unveils-revolutionary-ai-powered-financial-analysis-platform"
           },
           {
             id: "4",
@@ -79,7 +81,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-05T09:20:00Z",
             views: 682,
             likes: 43,
-            bookmarks: 28
+            bookmarks: 28,
+            slug: "cryptocurrency-market-faces-regulatory-challenges"
           },
           {
             id: "5",
@@ -88,7 +91,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-04T18:00:00Z",
             views: 587,
             likes: 35,
-            bookmarks: 19
+            bookmarks: 19,
+            slug: "oil-prices-stabilize-following-middle-east-production-agreement"
           }
         ];
         
@@ -101,7 +105,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-03T16:45:00Z",
             views: 765,
             likes: 92,
-            bookmarks: 61
+            bookmarks: 61,
+            slug: "tech-giant-unveils-revolutionary-ai-powered-financial-analysis-platform"
           },
           {
             id: "1",
@@ -110,7 +115,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-05T14:30:00Z",
             views: 1245,
             likes: 87,
-            bookmarks: 45
+            bookmarks: 45,
+            slug: "federal-reserve-signals-possible-interest-rate-cuts"
           },
           {
             id: "2",
@@ -119,7 +125,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-04T10:15:00Z",
             views: 876,
             likes: 56,
-            bookmarks: 32
+            bookmarks: 32,
+            slug: "global-markets-rally-as-trade-tensions-ease"
           },
           {
             id: "4",
@@ -128,7 +135,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-05T09:20:00Z",
             views: 682,
             likes: 43,
-            bookmarks: 28
+            bookmarks: 28,
+            slug: "cryptocurrency-market-faces-regulatory-challenges"
           },
           {
             id: "5",
@@ -137,7 +145,8 @@ const AdminDashboard = () => {
             publishedDate: "2025-05-04T18:00:00Z",
             views: 587,
             likes: 35,
-            bookmarks: 19
+            bookmarks: 19,
+            slug: "oil-prices-stabilize-following-middle-east-production-agreement"
           }
         ];
         
@@ -186,7 +195,7 @@ const AdminDashboard = () => {
   
   if (loading) {
     return (
-      <AdminLayout>
+      <AdminLayout activeTab="dashboard">
         <div className="p-6">
           <div className="flex flex-col gap-4">
             {/* Loading skeletons */}
@@ -228,7 +237,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <AdminLayout>
+    <AdminLayout activeTab="dashboard">
       <div className="w-full border-b border-gray-200 mb-4">
         <StockTicker />
       </div>

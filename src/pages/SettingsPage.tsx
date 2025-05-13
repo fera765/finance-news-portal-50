@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -277,7 +276,7 @@ const SettingsPage = () => {
   };
   
   return (
-    <AdminLayout>
+    <AdminLayout activeTab="settings">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Site Settings</h1>
@@ -568,9 +567,9 @@ const SettingsPage = () => {
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">Enable Stock Ticker</FormLabel>
-                            <FormDescription>
+                            <CardDescription>
                               Show the stock ticker on the website
-                            </FormDescription>
+                            </CardDescription>
                           </div>
                           <FormControl>
                             <Switch
