@@ -10,9 +10,12 @@ import Index from "./pages/Index";
 import NewsDetail from "./pages/NewsDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import CategoryManagement from "./pages/CategoryManagement";
-import ArticleManagement from "./pages/ArticleManagement";  // Add this import
+import ArticleManagement from "./pages/ArticleManagement";
+import UserManagement from "./pages/UserManagement";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -25,17 +28,21 @@ const App: React.FC = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/news/:id" element={<NewsDetail />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/categories" element={<CategoryManagement />} />
-                <Route path="/admin/articles" element={<ArticleManagement />} />  {/* Add this route */}
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            <SidebarProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/news/:id" element={<NewsDetail />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/categories" element={<CategoryManagement />} />
+                  <Route path="/admin/articles" element={<ArticleManagement />} />
+                  <Route path="/admin/users" element={<UserManagement />} />
+                  <Route path="/admin/settings" element={<SettingsPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </SidebarProvider>
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>

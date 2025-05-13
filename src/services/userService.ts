@@ -2,10 +2,15 @@
 import { api } from './api';
 import { User } from '@/components/Layout';
 
+export interface ExtendedUser extends User {
+  password?: string;
+  status?: 'active' | 'banned';
+}
+
 export const getUsers = async (params = {}) => {
   const { data } = await api.get('/users', { params });
   // Remove passwords before returning
-  return data.map((user: User & { password: string }) => {
+  return data.map((user: ExtendedUser) => {
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   });
@@ -18,14 +23,17 @@ export const getUserById = async (id: string) => {
   return userWithoutPassword;
 };
 
-export const createUser = async (user: User & { password: string }) => {
-  const { data } = await api.post('/users', user);
+export const createUser = async (user: ExtendedUser) => {
+  // Set default status as active for new users
+  const newUser = { ...user, status: user.status || 'active' };
+  
+  const { data } = await api.post('/users', newUser);
   // Remove password before returning
   const { password, ...userWithoutPassword } = data;
   return userWithoutPassword;
 };
 
-export const updateUser = async (user: Partial<User> & { id: string }) => {
+export const updateUser = async (user: Partial<ExtendedUser> & { id: string }) => {
   const { data } = await api.put(`/users/${user.id}`, user);
   // Remove password before returning
   const { password, ...userWithoutPassword } = data;
@@ -35,4 +43,16 @@ export const updateUser = async (user: Partial<User> & { id: string }) => {
 export const deleteUser = async (id: string) => {
   await api.delete(`/users/${id}`);
   return true;
+};
+
+export const banUser = async (id: string) => {
+  const { data } = await api.patch(`/users/${id}`, { status: 'banned' });
+  const { password, ...userWithoutPassword } = data;
+  return userWithoutPassword;
+};
+
+export const unbanUser = async (id: string) => {
+  const { data } = await api.patch(`/users/${id}`, { status: 'active' });
+  const { password, ...userWithoutPassword } = data;
+  return userWithoutPassword;
 };

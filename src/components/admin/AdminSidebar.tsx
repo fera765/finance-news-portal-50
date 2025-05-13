@@ -20,7 +20,8 @@ import {
   SidebarMenuButton,
   useSidebar,
   SidebarGroup,
-  SidebarGroupLabel
+  SidebarGroupLabel,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
@@ -63,7 +64,7 @@ const AdminSidebar = ({
     setCollapsed(!collapsed);
   };
   
-  const handleNavigate = (path: string, tab: string) => {
+  const handleNavigate = (path: string) => {
     navigate(path);
   };
   
@@ -77,7 +78,7 @@ const AdminSidebar = ({
         "border-r border-border transition-all duration-300",
         open ? "w-64" : "w-0 md:w-[70px]"
       )}
-      collapsible={open ? "none" : "icon"}
+      collapsible="none"
     >
       <SidebarHeader>
         <div className={cn(
@@ -118,7 +119,7 @@ const AdminSidebar = ({
                 <SidebarMenuButton
                   tooltip={!open ? item.name : undefined}
                   isActive={activeTab === item.name.toLowerCase()}
-                  onClick={() => handleNavigate(item.path, item.name.toLowerCase())}
+                  onClick={() => handleNavigate(item.path)}
                   className={cn(
                     activeTab === item.name.toLowerCase() ? "bg-finance-50 text-finance-800" : "",
                     "hover:bg-finance-50 hover:text-finance-800 transition-colors"
@@ -148,6 +149,14 @@ const AdminSidebar = ({
           </Button>
         </div>
       </SidebarFooter>
+      
+      {/* Add a trigger that's visible when sidebar is collapsed */}
+      {!open && (
+        <SidebarTrigger 
+          className="absolute top-4 right-0 transform translate-x-1/2 bg-white border border-gray-200 rounded-full p-1 shadow-sm"
+          onClick={handleToggleSidebar}
+        />
+      )}
     </Sidebar>
   );
 };
