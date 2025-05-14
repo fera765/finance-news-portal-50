@@ -2,7 +2,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { User } from '@/components/Layout';
 import * as authService from '@/services/authService';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -37,9 +37,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const loggedInUser = await authService.login(email, password);
       setUser(loggedInUser);
-      toast.success('Successfully logged in');
+      toast.success('Login realizado com sucesso');
+      return loggedInUser;
     } catch (error) {
-      toast.error('Failed to login. Please check your credentials.');
+      toast.error('Falha no login. Verifique suas credenciais.');
       throw error;
     }
   };
@@ -47,7 +48,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     authService.logout();
     setUser(null);
-    toast.success('Successfully logged out');
+    toast.success('Logout realizado com sucesso');
   };
 
   return (

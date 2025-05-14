@@ -10,9 +10,11 @@ import {
   deleteArticle 
 } from "@/services/articleService";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export function useArticles() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   
@@ -20,7 +22,8 @@ export function useArticles() {
   const { 
     data: articles = [],
     isLoading,
-    isError
+    isError,
+    refetch
   } = useQuery({
     queryKey: ['articles'],
     queryFn: () => getArticles(),
@@ -29,13 +32,16 @@ export function useArticles() {
   // Create article mutation
   const createArticleMutation = useMutation({
     mutationFn: createArticle,
-    onSuccess: () => {
+    onSuccess: (newArticle) => {
       queryClient.invalidateQueries({ queryKey: ['articles'] });
-      toast.success('Article created successfully');
+      toast.success('Artigo criado com sucesso');
       setIsEditorOpen(false);
+      
+      // Navigate to the new article page
+      navigate(`/news/${newArticle.id}/${newArticle.slug}`);
     },
     onError: (error) => {
-      toast.error('Failed to create article');
+      toast.error('Falha ao criar artigo');
       console.error('Error creating article:', error);
     }
   });
@@ -43,13 +49,16 @@ export function useArticles() {
   // Update article mutation
   const updateArticleMutation = useMutation({
     mutationFn: updateArticle,
-    onSuccess: () => {
+    onSuccess: (updatedArticle) => {
       queryClient.invalidateQueries({ queryKey: ['articles'] });
-      toast.success('Article updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['article', updatedArticle.id] });
+      queryClient.invalidateQueries({ queryKey: ['article', 'slug', updatedArticle.slug] });
+      
+      toast.success('Artigo atualizado com sucesso');
       setIsEditorOpen(false);
     },
     onError: (error) => {
-      toast.error('Failed to update article');
+      toast.error('Falha ao atualizar artigo');
       console.error('Error updating article:', error);
     }
   });
@@ -59,10 +68,10 @@ export function useArticles() {
     mutationFn: (id: string) => deleteArticle(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['articles'] });
-      toast.success('Article deleted successfully');
+      toast.success('Artigo excluído com sucesso');
     },
     onError: (error) => {
-      toast.error('Failed to delete article');
+      toast.error('Falha ao excluir artigo');
       console.error('Error deleting article:', error);
     }
   });
@@ -97,7 +106,9 @@ export function useArticles() {
   // Handle article delete
   const handleDeleteArticle = (article: Article) => {
     if (article.id) {
-      deleteArticleMutation.mutate(article.id);
+      if (window.confirm(`Tem certeza que deseja excluir o artigo "${article.title}"?`)) {
+        deleteArticleMutation.mutate(article.id);
+      }
     }
   };
   
@@ -105,6 +116,7 @@ export function useArticles() {
     articles,
     isLoading,
     isError,
+    refetch,
     selectedArticle,
     isEditorOpen,
     openNewArticleEditor,
@@ -112,5 +124,8 @@ export function useArticles() {
     closeEditor,
     handleSaveArticle,
     handleDeleteArticle,
+    isCreating: createArticleMutation.isPending,
+    isUpdating: updateArticleMutation.isPending,
+    isDeleting: deleteArticleMutation.isPending
   };
 }

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { api } from "@/services/api";
 
 interface SignupFormProps {
   onSuccess: (userData: { email: string; password: string }) => void;
@@ -16,41 +17,65 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulating signup API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Verificar se o email já existe
+      const { data: existingUsers } = await api.get('/users', {
+        params: { email }
+      });
       
-      if (name && email && password) {
+      if (existingUsers.length > 0) {
         toast({
-          title: "Account Created",
-          description: "Your account has been created successfully!",
-        });
-        
-        onSuccess({
-          email: email,
-          password: password
-        });
-      } else {
-        toast({
-          title: "Signup Failed",
-          description: "Please fill all required fields.",
+          title: "Erro no cadastro",
+          description: "Este email já está em uso.",
           variant: "destructive"
         });
+        setIsLoading(false);
+        return;
       }
-    }, 1000);
+      
+      // Criar novo usuário
+      const { data: newUser } = await api.post('/users', {
+        name,
+        email,
+        password,
+        role: 'user',
+        status: 'active',
+        createdAt: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Conta criada",
+        description: "Sua conta foi criada com sucesso!",
+      });
+      
+      onSuccess({
+        email,
+        password
+      });
+      
+    } catch (error) {
+      console.error("Erro ao cadastrar:", error);
+      toast({
+        title: "Erro no cadastro",
+        description: "Ocorreu um erro ao criar sua conta. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSignup} className="space-y-4 py-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">Nome</Label>
         <Input 
           id="name" 
-          placeholder="Your Name"
+          placeholder="Seu Nome"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -60,7 +85,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
         <Label htmlFor="signup-email">Email</Label>
         <Input 
           id="signup-email" 
-          placeholder="your@email.com" 
+          placeholder="seu@email.com" 
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -68,7 +93,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="signup-password">Password</Label>
+        <Label htmlFor="signup-password">Senha</Label>
         <Input 
           id="signup-password" 
           type="password"
@@ -83,7 +108,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
           type="submit" 
           disabled={isLoading}
         >
-          {isLoading ? "Creating account..." : "Sign Up"}
+          {isLoading ? "Criando conta..." : "Cadastrar"}
         </Button>
       </div>
     </form>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LoginFormProps {
   onSuccess: (userData: { email: string; password: string }) => void;
@@ -14,44 +15,23 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { login } = useAuth();
   
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulating login API call
-    setTimeout(() => {
+    try {
+      await login(email, password);
+      onSuccess({
+        email,
+        password
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
       setIsLoading(false);
-      
-      // Mock login validation
-      if (email === "admin@example.com" && password === "admin") {
-        toast({
-          title: "Login Successful",
-          description: "Welcome back, Admin!",
-        });
-        
-        onSuccess({
-          email: "admin@example.com",
-          password: "admin"
-        });
-      } else if (email && password) {
-        toast({
-          title: "Login Successful",
-          description: "Welcome back!",
-        });
-        
-        onSuccess({
-          email: email,
-          password: password
-        });
-      } else {
-        toast({
-          title: "Login Failed",
-          description: "Invalid email or password.",
-          variant: "destructive"
-        });
-      }
-    }, 1000);
+    }
   };
 
   return (
@@ -60,7 +40,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
         <Label htmlFor="email">Email</Label>
         <Input 
           id="email" 
-          placeholder="your@email.com" 
+          placeholder="seu@email.com" 
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -68,7 +48,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Senha</Label>
         <Input 
           id="password" 
           type="password"
@@ -83,14 +63,14 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
           type="submit" 
           disabled={isLoading}
         >
-          {isLoading ? "Logging in..." : "Login"}
+          {isLoading ? "Entrando..." : "Entrar"}
         </Button>
       </div>
       
       <div className="text-sm text-center text-muted-foreground">
-        <p className="mt-2">Demo accounts:</p>
+        <p className="mt-2">Contas de demonstração:</p>
         <p>Admin: admin@example.com / admin</p>
-        <p>User: user@example.com / user</p>
+        <p>Usuário: user@example.com / user</p>
       </div>
     </form>
   );

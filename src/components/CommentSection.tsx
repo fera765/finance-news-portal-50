@@ -1,20 +1,28 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useComments } from "@/hooks/useComments";
-import { Comment } from "@/services/commentService";
+import { Comment, likeComment, isCommentLiked } from "@/services/commentService";
 import { User } from "@/components/Layout";
 import { useToast } from "@/components/ui/use-toast";
+import { api } from "@/services/api";
 
 interface CommentSectionProps {
   newsId: string;
   comments: Comment[];
   currentUser?: User | null;
   onLogin: () => void;
+}
+
+interface CommentAuthor {
+  id: string;
+  name: string;
+  avatar?: string;
 }
 
 const CommentSection = ({ 
@@ -26,10 +34,68 @@ const CommentSection = ({
   const [commentText, setCommentText] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [commentAuthors, setCommentAuthors] = useState<Record<string, CommentAuthor>>({});
+  const [likedComments, setLikedComments] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   
   // Use our comments hook
-  const { addComment, isAddingComment } = useComments(newsId);
+  const { addComment, replyToComment, isAddingComment, isReplyingToComment } = useComments(newsId);
+
+  // Fetch user information for all commenters
+  useEffect(() => {
+    const fetchCommentAuthors = async () => {
+      if (comments.length === 0) return;
+      
+      const userIds = [...new Set(comments.map(comment => comment.userId))];
+      const authors: Record<string, CommentAuthor> = {};
+      
+      for (const userId of userIds) {
+        try {
+          const { data: user } = await api.get(`/users/${userId}`);
+          authors[userId] = {
+            id: userId,
+            name: user.name || `User ${userId.slice(0, 4)}`,
+            avatar: user.avatar
+          };
+        } catch (error) {
+          console.error(`Error fetching user ${userId}:`, error);
+          authors[userId] = {
+            id: userId,
+            name: `User ${userId.slice(0, 4)}`,
+            avatar: undefined
+          };
+        }
+      }
+      
+      setCommentAuthors(authors);
+    };
+    
+    fetchCommentAuthors();
+  }, [comments]);
+
+  // Check if comments are liked by the current user
+  useEffect(() => {
+    const checkLikedComments = async () => {
+      if (!currentUser || comments.length === 0) return;
+      
+      const liked: Record<string, boolean> = {};
+      
+      for (const comment of comments) {
+        if (comment.id) {
+          try {
+            const isLiked = await isCommentLiked(comment.id, currentUser.id);
+            liked[comment.id] = isLiked;
+          } catch (error) {
+            console.error(`Error checking if comment ${comment.id} is liked:`, error);
+          }
+        }
+      }
+      
+      setLikedComments(liked);
+    };
+    
+    checkLikedComments();
+  }, [comments, currentUser]);
 
   const handleComment = () => {
     if (!currentUser) {
@@ -39,7 +105,7 @@ const CommentSection = ({
     
     if (!commentText.trim()) {
       toast({
-        title: "Comment cannot be empty",
+        title: "O comentário não pode estar vazio",
         variant: "destructive",
       });
       return;
@@ -58,34 +124,46 @@ const CommentSection = ({
     
     if (!replyText.trim()) {
       toast({
-        title: "Reply cannot be empty",
+        title: "A resposta não pode estar vazia",
         variant: "destructive",
       });
       return;
     }
     
-    // In a real app with reply support, you would call the API here
-    toast({
-      title: "Reply submitted",
-      description: "Your reply has been submitted and will appear soon.",
-    });
-    
+    // Add the reply using our hook
+    replyToComment({ commentId, content: replyText });
     setReplyingTo(null);
     setReplyText("");
   };
 
-  const handleLike = (commentId: string, isLiked: boolean) => {
+  const handleLike = async (commentId: string) => {
     if (!currentUser) {
       onLogin();
       return;
     }
     
-    // In a real app, you would call the API to like/unlike comments
-    toast({
-      description: isLiked 
-        ? "You unliked this comment" 
-        : "You liked this comment",
-    });
+    try {
+      const isLiked = await likeComment(commentId, currentUser.id);
+      
+      // Update the local state
+      setLikedComments(prev => ({
+        ...prev,
+        [commentId]: isLiked
+      }));
+      
+      toast({
+        description: isLiked 
+          ? "Você curtiu este comentário" 
+          : "Você descurtiu este comentário",
+      });
+    } catch (error) {
+      console.error("Error liking comment:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua solicitação",
+        variant: "destructive"
+      });
+    }
   };
 
   const getInitials = (name: string) => {
@@ -96,10 +174,8 @@ const CommentSection = ({
       .toUpperCase();
   };
 
-  const formatCommentAuthor = (userId: string) => {
-    // This would typically be fetched from a users service
-    // For now we'll just return a placeholder
-    return {
+  const getAuthorInfo = (userId: string): CommentAuthor => {
+    return commentAuthors[userId] || {
       id: userId,
       name: `User ${userId.slice(0, 4)}`,
       avatar: `https://i.pravatar.cc/150?u=${userId}`
@@ -108,11 +184,11 @@ const CommentSection = ({
 
   return (
     <div className="mt-10">
-      <h3 className="text-xl font-bold mb-6">Comments</h3>
+      <h3 className="text-xl font-bold mb-6">Comentários</h3>
       
       <div className="mb-6">
         <Textarea
-          placeholder={currentUser ? "Add a comment..." : "Sign in to comment"}
+          placeholder={currentUser ? "Adicione um comentário..." : "Entre para comentar"}
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           disabled={!currentUser || isAddingComment}
@@ -124,7 +200,7 @@ const CommentSection = ({
             onClick={handleComment} 
             disabled={!currentUser || !commentText.trim() || isAddingComment}
           >
-            {!currentUser ? "Sign In to Comment" : isAddingComment ? "Posting..." : "Comment"}
+            {!currentUser ? "Entre para comentar" : isAddingComment ? "Enviando..." : "Comentar"}
           </Button>
         </div>
       </div>
@@ -132,11 +208,12 @@ const CommentSection = ({
       <div className="space-y-6">
         {comments.length === 0 ? (
           <p className="text-center text-gray-500 py-6">
-            Be the first to comment on this article!
+            Seja o primeiro a comentar neste artigo!
           </p>
         ) : (
           comments.map((comment) => {
-            const author = formatCommentAuthor(comment.userId);
+            const author = getAuthorInfo(comment.userId);
+            const isLiked = likedComments[comment.id || ''] || false;
             
             return (
               <div key={comment.id} className="bg-gray-50 p-4 rounded-lg">
@@ -149,7 +226,10 @@ const CommentSection = ({
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-medium">{author.name}</span>
                       <span className="text-xs text-gray-500">
-                        {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(comment.createdAt), { 
+                          addSuffix: true,
+                          locale: ptBR
+                        })}
                       </span>
                     </div>
                     <p className="text-gray-700">{comment.content}</p>
@@ -158,10 +238,13 @@ const CommentSection = ({
                         variant="ghost"
                         size="sm"
                         className="p-0 h-auto"
-                        onClick={() => handleLike(comment.id || '', false)}
+                        onClick={() => comment.id && handleLike(comment.id)}
                       >
-                        <Heart size={18} className="text-gray-500" />
-                        <span className="ml-1 text-sm">0</span>
+                        <Heart 
+                          size={18} 
+                          className={isLiked ? "text-red-500 fill-red-500" : "text-gray-500"} 
+                        />
+                        <span className="ml-1 text-sm">{comment.likes || 0}</span>
                       </Button>
                       <Button
                         variant="ghost"
@@ -169,18 +252,19 @@ const CommentSection = ({
                         className="text-xs h-auto p-0"
                         onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                       >
-                        Reply
+                        Responder
                       </Button>
                     </div>
                     
                     {replyingTo === comment.id && (
                       <div className="mt-3">
                         <Textarea
-                          placeholder="Write a reply..."
+                          placeholder="Escreva uma resposta..."
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                           className="resize-none text-sm mb-2"
                           rows={2}
+                          disabled={isReplyingToComment}
                         />
                         <div className="flex justify-end space-x-2">
                           <Button
@@ -188,14 +272,14 @@ const CommentSection = ({
                             size="sm"
                             onClick={() => setReplyingTo(null)}
                           >
-                            Cancel
+                            Cancelar
                           </Button>
                           <Button
                             size="sm"
-                            onClick={() => handleReply(comment.id || '')}
-                            disabled={!replyText.trim()}
+                            onClick={() => comment.id && handleReply(comment.id)}
+                            disabled={!replyText.trim() || isReplyingToComment}
                           >
-                            Reply
+                            {isReplyingToComment ? "Enviando..." : "Responder"}
                           </Button>
                         </div>
                       </div>

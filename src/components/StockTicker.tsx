@@ -4,6 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Separator } from "@/components/ui/separator";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/services/api";
 
 interface StockData {
   symbol: string;
@@ -26,12 +27,6 @@ const sampleStockData: StockData[] = [
   { symbol: "V", price: 278.92, change: 1.23, changePercent: 0.44 }
 ];
 
-// Stock symbols to fetch
-const stockSymbols = "AAPL,MSFT,GOOGL,AMZN,TSLA,META,NVDA,JPM,BAC,V";
-
-// API URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
 const StockTicker = () => {
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,27 +37,19 @@ const StockTicker = () => {
       try {
         setLoading(true);
         
-        // Make a request to our JSON Server API
-        // In a real app, this would fetch from a real stock API
-        // For this demo, we'll use a simplified endpoint in our JSON Server
-        const response = await fetch(`${API_URL}/stock-data`);
+        // Fazer requisição ao nosso servidor JSON
+        const response = await api.get('/stock-data');
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch stock data');
-        }
-        
-        const data = await response.json();
-        
-        if (Array.isArray(data) && data.length > 0) {
-          setStocks(data);
+        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+          setStocks(response.data);
         } else {
-          console.log('Using sample stock data as fallback');
+          console.log('Usando dados de ações de exemplo como fallback');
           setStocks(sampleStockData);
         }
         
       } catch (err) {
-        console.error('Error fetching stock data:', err);
-        // Fall back to sample data
+        console.error('Erro ao buscar dados das ações:', err);
+        // Usar dados de exemplo em caso de erro
         setStocks(sampleStockData);
       } finally {
         setLoading(false);
@@ -71,7 +58,7 @@ const StockTicker = () => {
     
     fetchStockData();
     
-    // Set up a refresh interval (every 5 minutes)
+    // Configurar um intervalo de atualização (a cada 5 minutos)
     const intervalId = setInterval(fetchStockData, 5 * 60 * 1000);
     
     return () => {
@@ -112,7 +99,7 @@ const StockTicker = () => {
     );
   }
   
-  // For mobile, we'll use a scrollable ticker
+  // Para mobile, usaremos um ticker de rolagem
   if (isMobile) {
     return (
       <div className="py-2 overflow-x-auto scrollbar-hide max-w-full">
@@ -123,7 +110,7 @@ const StockTicker = () => {
     );
   }
   
-  // For desktop, we'll use an animated ticker that moves automatically
+  // Para desktop, usaremos um ticker animado que se move automaticamente
   return (
     <div className="py-2 overflow-hidden relative max-w-full">
       <div className="ticker-track flex animate-ticker min-w-max">

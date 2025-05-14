@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   likeArticle, 
   unlikeArticle, 
@@ -50,6 +50,8 @@ export function useArticleInteractions(articleId: string | undefined) {
         } catch (error) {
           console.error('Error checking like status:', error);
         }
+      } else {
+        setIsLiked(false);
       }
     };
 
@@ -66,6 +68,8 @@ export function useArticleInteractions(articleId: string | undefined) {
         } catch (error) {
           console.error('Error checking bookmark status:', error);
         }
+      } else {
+        setIsBookmarked(false);
       }
     };
 
@@ -75,8 +79,8 @@ export function useArticleInteractions(articleId: string | undefined) {
   // Like/unlike mutation
   const likeMutation = useMutation({
     mutationFn: async () => {
-      if (!userId) throw new Error('User not authenticated');
-      if (!articleId) throw new Error('No article selected');
+      if (!userId) throw new Error('Usuário não autenticado');
+      if (!articleId) throw new Error('Nenhum artigo selecionado');
       
       if (isLiked) {
         await unlikeArticle(articleId, userId);
@@ -88,11 +92,11 @@ export function useArticleInteractions(articleId: string | undefined) {
     },
     onSuccess: (newLikedState) => {
       setIsLiked(newLikedState);
-      toast(newLikedState ? 'Article liked' : 'Article unliked');
+      toast(newLikedState ? 'Artigo curtido' : 'Curtida removida');
       queryClient.invalidateQueries({ queryKey: ['likes', articleId] });
     },
     onError: (error) => {
-      toast.error('Failed to update like status');
+      toast.error('Falha ao atualizar status de curtida');
       console.error('Like error:', error);
     }
   });
@@ -100,8 +104,8 @@ export function useArticleInteractions(articleId: string | undefined) {
   // Bookmark mutation
   const bookmarkMutation = useMutation({
     mutationFn: async () => {
-      if (!userId) throw new Error('User not authenticated');
-      if (!articleId) throw new Error('No article selected');
+      if (!userId) throw new Error('Usuário não autenticado');
+      if (!articleId) throw new Error('Nenhum artigo selecionado');
       
       if (isBookmarked) {
         await removeBookmark(articleId, userId);
@@ -113,11 +117,11 @@ export function useArticleInteractions(articleId: string | undefined) {
     },
     onSuccess: (newBookmarkedState) => {
       setIsBookmarked(newBookmarkedState);
-      toast(newBookmarkedState ? 'Article bookmarked' : 'Bookmark removed');
+      toast(newBookmarkedState ? 'Artigo salvo' : 'Artigo removido dos salvos');
       queryClient.invalidateQueries({ queryKey: ['bookmarks', userId] });
     },
     onError: () => {
-      toast.error('Failed to update bookmark');
+      toast.error('Falha ao atualizar status de salvamento');
     }
   });
 

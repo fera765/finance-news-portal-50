@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import StockTicker from "@/components/StockTicker";
 import { useFeaturedArticles, useArticleList } from "@/hooks/useNews";
 import { Article } from "@/services/articleService";
+import { useNewsletter } from "@/hooks/useNewsletter";
 
 // Convert API article to NewsItem format
 const mapArticleToNewsItem = (article: Article): NewsItem => ({
@@ -25,6 +26,9 @@ const mapArticleToNewsItem = (article: Article): NewsItem => ({
 
 const Index = () => {
   const [visibleNews, setVisibleNews] = useState(6);
+  
+  // Newsletter state com hook
+  const { email, setEmail, isLoading: isNewsletterLoading, handleSubscribe } = useNewsletter();
   
   // Use React Query hooks to fetch data
   const { data: featuredArticles = [], isLoading: featuredLoading } = useFeaturedArticles();
@@ -58,7 +62,7 @@ const Index = () => {
         {/* Latest News */}
         <section className="mt-8 md:mt-12">
           <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
-            <span className="mr-2">Latest News</span>
+            <span className="mr-2">Últimas Notícias</span>
             <div className="h-1 w-10 bg-finance-500"></div>
           </h2>
           
@@ -79,7 +83,7 @@ const Index = () => {
               {visibleNews < latestNews.length && (
                 <div className="mt-6 md:mt-8 text-center">
                   <Button onClick={loadMore} variant="outline">
-                    Load More Articles
+                    Carregar mais artigos
                   </Button>
                 </div>
               )}
@@ -90,17 +94,21 @@ const Index = () => {
         {/* Newsletter Signup */}
         <section className="mt-10 md:mt-16 bg-finance-50 p-4 md:p-8 rounded-lg">
           <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-xl md:text-2xl font-bold mb-2">Stay Informed</h3>
+            <h3 className="text-xl md:text-2xl font-bold mb-2">Fique Informado</h3>
             <p className="text-gray-600 mb-4 md:mb-6">
-              Subscribe to our newsletter for daily financial insights and market updates.
+              Assine nossa newsletter para receber diariamente insights financeiros e atualizações do mercado.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Input 
-                placeholder="Your email address" 
+                placeholder="Seu endereço de email" 
                 className="flex-grow"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
-              <Button>Subscribe</Button>
+              <Button onClick={handleSubscribe} disabled={isNewsletterLoading}>
+                {isNewsletterLoading ? "Processando..." : "Assinar"}
+              </Button>
             </div>
           </div>
         </section>

@@ -8,7 +8,7 @@ export function useComments(articleId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch comments
+  // Buscar comentários
   const {
     data: comments = [],
     isLoading,
@@ -19,10 +19,10 @@ export function useComments(articleId: string | undefined) {
     enabled: !!articleId
   });
 
-  // Add comment mutation
+  // Mutação para adicionar comentário
   const addCommentMutation = useMutation({
     mutationFn: (content: string) => {
-      if (!user || !articleId) throw new Error('Cannot add comment');
+      if (!user || !articleId) throw new Error('Não é possível adicionar comentário');
       return addComment({
         articleId,
         userId: user.id,
@@ -30,23 +30,43 @@ export function useComments(articleId: string | undefined) {
       });
     },
     onSuccess: () => {
-      toast.success('Comment added successfully');
+      toast.success('Comentário adicionado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
     },
     onError: () => {
-      toast.error('Failed to add comment');
+      toast.error('Falha ao adicionar comentário');
     }
   });
 
-  // Delete comment mutation
+  // Mutação para deletar comentário
   const deleteCommentMutation = useMutation({
     mutationFn: (commentId: string) => deleteComment(commentId),
     onSuccess: () => {
-      toast.success('Comment deleted');
+      toast.success('Comentário excluído');
       queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
     },
     onError: () => {
-      toast.error('Failed to delete comment');
+      toast.error('Falha ao excluir comentário');
+    }
+  });
+
+  // Mutação para responder a um comentário
+  const replyToCommentMutation = useMutation({
+    mutationFn: ({ commentId, content }: { commentId: string, content: string }) => {
+      if (!user || !articleId) throw new Error('Não é possível adicionar resposta');
+      return addComment({
+        articleId,
+        userId: user.id,
+        content,
+        parentId: commentId
+      });
+    },
+    onSuccess: () => {
+      toast.success('Resposta adicionada com sucesso');
+      queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
+    },
+    onError: () => {
+      toast.error('Falha ao adicionar resposta');
     }
   });
 
@@ -56,7 +76,9 @@ export function useComments(articleId: string | undefined) {
     isError,
     addComment: addCommentMutation.mutate,
     deleteComment: deleteCommentMutation.mutate,
+    replyToComment: replyToCommentMutation.mutate,
     isAddingComment: addCommentMutation.isPending,
-    isDeletingComment: deleteCommentMutation.isPending
+    isDeletingComment: deleteCommentMutation.isPending,
+    isReplyingToComment: replyToCommentMutation.isPending
   };
 }
