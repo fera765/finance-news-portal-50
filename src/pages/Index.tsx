@@ -16,7 +16,9 @@ const mapArticleToNewsItem = (article: Article): NewsItem => ({
   summary: article.summary || '',
   imageUrl: article.imageUrl || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d',
   category: article.category,
-  publishedDate: article.publishDate || new Date().toISOString(),
+  publishedDate: typeof article.publishDate === 'object' && article.publishDate instanceof Date 
+    ? article.publishDate.toISOString() 
+    : String(article.publishDate) || new Date().toISOString(),
   author: article.author,
   slug: article.slug
 });
