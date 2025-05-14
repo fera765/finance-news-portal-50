@@ -27,11 +27,26 @@ const SavedArticles: React.FC<SavedArticlesProps> = ({
   icon: Icon,
 }) => {
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "numeric",
-      month: "short",
-    }).format(date);
+    try {
+      // Check if dateString is valid
+      if (!dateString) return "Invalid date";
+      
+      // Try to parse the date - this will handle both ISO strings and other date formats
+      const date = new Date(dateString);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return "Invalid date";
+      }
+      
+      return new Intl.DateTimeFormat("pt-BR", {
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    } catch (error) {
+      console.error("Error formatting date:", error, "Date string was:", dateString);
+      return "Invalid date";
+    }
   };
 
   return (

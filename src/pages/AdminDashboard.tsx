@@ -158,7 +158,7 @@ const AdminDashboard = () => {
             category: "Technology",
             views: 765,
             bookmarks: 61,
-            createdAt: "2025-05-03T16:45:00Z"
+            publishedDate: "2025-05-03T16:45:00Z"
           },
           {
             id: "1",
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
             category: "Economy",
             views: 1245,
             bookmarks: 45,
-            createdAt: "2025-05-05T14:30:00Z"
+            publishedDate: "2025-05-05T14:30:00Z"
           },
           {
             id: "2",
@@ -174,7 +174,7 @@ const AdminDashboard = () => {
             category: "Markets",
             views: 876,
             bookmarks: 32,
-            createdAt: "2025-05-04T10:15:00Z"
+            publishedDate: "2025-05-04T10:15:00Z"
           }
         ];
         
