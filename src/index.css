@@ -1,156 +1,92 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 210 20% 98%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 217 90% 24%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 39 100% 51%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 39 100% 51%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 217 90% 24%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 217 90% 24%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 39 100% 51%;
-    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 217 92% 35%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 217 92% 35%;
-    --sidebar-ring: 39 100% 51%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217 92% 35%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 39 100% 51%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 39 100% 51%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 39 100% 51%;
-  }
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 195 100% 33%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 195 100% 33%;
+  --radius: 0.5rem;
+  --finance-50: #F0F9FF;
+  --finance-100: #E0F2FE;
+  --finance-200: #BAE6FD;
+  --finance-300: #7DD3FC;
+  --finance-400: #38BDF8;
+  --finance-500: #0EA5E9;
+  --finance-600: #0284C7;
+  --finance-700: #0369A1;
+  --finance-800: #075985;
+  --finance-900: #0C4A6E;
+  --finance-950: #082F49;
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
-  }
-
-  h1 {
-    @apply text-3xl md:text-4xl;
-  }
-
-  h2 {
-    @apply text-2xl md:text-3xl;
-  }
-
-  h3 {
-    @apply text-xl md:text-2xl;
-  }
-
-  h4 {
-    @apply text-lg;
-  }
 }
 
-.news-content {
-  @apply prose prose-stone max-w-none;
-  @apply prose-headings:font-semibold prose-headings:tracking-tight;
-  @apply prose-a:text-finance-600 prose-a:no-underline hover:prose-a:underline;
-}
-
-.fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.hover-grow {
-  transition: transform 0.2s ease-in-out;
-}
-
-.hover-grow:hover {
-  transform: scale(1.02);
-}
-
-/* Stock ticker animation */
+/* Animation for stock ticker */
 @keyframes ticker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .animate-ticker {
   animation: ticker 30s linear infinite;
-  width: auto;
-  display: flex;
 }
 
-.ticker-track {
-  min-width: 100%;
-  padding-right: 20px;
-}
-
-/* Hide scrollbar for ticker */
+/* Hide scrollbars */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari, Opera */
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Fix layout issues */
+.max-w-screen-2xl {
+  max-width: 1536px;
+}
+
+/* Content styling */
+.news-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.news-content p {
+  margin-bottom: 1rem;
+}
+
+/* Fix ticker track */
+.ticker-track {
+  min-width: max-content;
 }

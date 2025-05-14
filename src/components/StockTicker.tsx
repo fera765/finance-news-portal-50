@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Separator } from "@/components/ui/separator";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { toast } from "sonner";
 
 interface StockData {
   symbol: string;
@@ -25,25 +26,26 @@ const sampleStockData: StockData[] = [
   { symbol: "V", price: 278.92, change: 1.23, changePercent: 0.44 }
 ];
 
+// Stock symbols to fetch
+const stockSymbols = "AAPL,MSFT,GOOGL,AMZN,TSLA,META,NVDA,JPM,BAC,V";
+
+// API URL from environment variable
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 const StockTicker = () => {
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
   useEffect(() => {
     const fetchStockData = async () => {
       try {
         setLoading(true);
-        setError(null);
         
-        // Using Alpha Vantage API as an alternative
-        // For a production app, you would need to register for a key at https://www.alphavantage.co/
-        // For now we'll use a fallback as the demo key has limited requests
-        /* Uncomment this when you have a valid API key
-        const response = await fetch(
-          'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL,MSFT,GOOGL,AMZN,TSLA,META,NVDA,JPM,BAC,V&apikey=demo'
-        );
+        // Make a request to our JSON Server API
+        // In a real app, this would fetch from a real stock API
+        // For this demo, we'll use a simplified endpoint in our JSON Server
+        const response = await fetch(`${API_URL}/stock-data`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch stock data');
@@ -51,18 +53,16 @@ const StockTicker = () => {
         
         const data = await response.json();
         
-        // Process the API response
-        // Implementation would depend on the actual API response format
-        */
-        
-        // For now, always use sample data to ensure consistent display
-        console.log('Using sample stock data');
-        setStocks(sampleStockData);
+        if (Array.isArray(data) && data.length > 0) {
+          setStocks(data);
+        } else {
+          console.log('Using sample stock data as fallback');
+          setStocks(sampleStockData);
+        }
         
       } catch (err) {
         console.error('Error fetching stock data:', err);
-        setError('Could not load stock data');
-        // Always fall back to sample data
+        // Fall back to sample data
         setStocks(sampleStockData);
       } finally {
         setLoading(false);
@@ -102,8 +102,8 @@ const StockTicker = () => {
   
   if (loading) {
     return (
-      <div className="py-2 overflow-hidden">
-        <div className="animate-pulse flex space-x-8">
+      <div className="py-2 overflow-hidden max-w-full">
+        <div className="animate-pulse flex space-x-8 px-4">
           {Array(5).fill(0).map((_, index) => (
             <div key={index} className="h-5 w-24 bg-gray-200 rounded"></div>
           ))}
@@ -116,7 +116,7 @@ const StockTicker = () => {
   if (isMobile) {
     return (
       <div className="py-2 overflow-x-auto scrollbar-hide max-w-full">
-        <div className="flex space-x-3 px-4">
+        <div className="flex space-x-3 px-4 min-w-max">
           {stocks.map((stock, index) => getStockElement(stock, index))}
         </div>
       </div>
@@ -126,7 +126,7 @@ const StockTicker = () => {
   // For desktop, we'll use an animated ticker that moves automatically
   return (
     <div className="py-2 overflow-hidden relative max-w-full">
-      <div className="ticker-track flex animate-ticker">
+      <div className="ticker-track flex animate-ticker min-w-max">
         {stocks.concat(stocks).map((stock, index) => getStockElement(stock, index))}
       </div>
     </div>

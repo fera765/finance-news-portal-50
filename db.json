@@ -184,5 +184,17 @@
       "articleId": "3", 
       "count": 2156
     }
+  ],
+  "stock-data": [
+    { "symbol": "AAPL", "price": 195.34, "change": 2.45, "changePercent": 1.27 },
+    { "symbol": "MSFT", "price": 412.78, "change": -3.21, "changePercent": -0.77 },
+    { "symbol": "GOOGL", "price": 178.56, "change": 1.23, "changePercent": 0.69 },
+    { "symbol": "AMZN", "price": 186.32, "change": -1.67, "changePercent": -0.89 },
+    { "symbol": "TSLA", "price": 245.67, "change": 7.89, "changePercent": 3.32 },
+    { "symbol": "META", "price": 492.64, "change": 8.76, "changePercent": 1.81 },
+    { "symbol": "NVDA", "price": 924.78, "change": 14.32, "changePercent": 1.57 },
+    { "symbol": "JPM", "price": 195.45, "change": -2.34, "changePercent": -1.18 },
+    { "symbol": "BAC", "price": 39.87, "change": -0.56, "changePercent": -1.39 },
+    { "symbol": "V", "price": 278.92, "change": 1.23, "changePercent": 0.44 }
   ]
 }
