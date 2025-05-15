@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { useComments } from "@/hooks/useComments";
 import { Comment, likeComment, isCommentLiked } from "@/services/commentService";
 import { User } from "@/components/Layout";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { api } from "@/services/api";
 
 interface CommentSectionProps {
@@ -104,10 +103,7 @@ const CommentSection = ({
     }
     
     if (!commentText.trim()) {
-      toast({
-        title: "O comentário não pode estar vazio",
-        variant: "destructive",
-      });
+      toast("O comentário não pode estar vazio");
       return;
     }
     
@@ -123,10 +119,7 @@ const CommentSection = ({
     }
     
     if (!replyText.trim()) {
-      toast({
-        title: "A resposta não pode estar vazia",
-        variant: "destructive",
-      });
+      toast("A resposta não pode estar vazia");
       return;
     }
     
@@ -151,18 +144,12 @@ const CommentSection = ({
         [commentId]: isLiked
       }));
       
-      toast({
-        description: isLiked 
-          ? "Você curtiu este comentário" 
-          : "Você descurtiu este comentário",
-      });
+      toast(isLiked 
+        ? "Você curtiu este comentário" 
+        : "Você descurtiu este comentário");
     } catch (error) {
       console.error("Error liking comment:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível processar sua solicitação",
-        variant: "destructive"
-      });
+      toast("Erro: Não foi possível processar sua solicitação");
     }
   };
 

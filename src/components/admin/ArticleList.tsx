@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Table, 
@@ -75,10 +74,7 @@ export function ArticleList({
   const handleDeleteClick = (article: Article) => {
     if (confirm(`Are you sure you want to delete "${article.title}"?`)) {
       onDelete(article);
-      toast({
-        title: "Article deleted",
-        description: `"${article.title}" has been deleted`,
-      });
+      toast(`"${article.title}" has been deleted`);
     }
   };
 

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Heart, Share, Eye, Bookmark } from "lucide-react";
 import { NewsItem } from "@/components/NewsCard";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import StockTicker from "@/components/StockTicker";
 import { useArticleBySlug } from "@/hooks/useNews";
@@ -58,10 +57,7 @@ const NewsDetail = () => {
           url: window.location.href,
         });
         
-        toast({
-          title: "Shared successfully",
-          description: "Article shared successfully",
-        });
+        toast("Article shared successfully");
         return;
       } catch (error) {
         console.error("Error sharing:", error);
@@ -72,18 +68,11 @@ const NewsDetail = () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       
-      toast({
-        title: "Link copied!",
-        description: "Article link copied to clipboard",
-      });
+      toast("Article link copied to clipboard");
     } catch (error) {
       console.error("Failed to copy:", error);
       
-      toast({
-        title: "Failed to copy",
-        description: "Could not copy the link to clipboard",
-        variant: "destructive"
-      });
+      toast("Could not copy the link to clipboard");
     }
   };
 

@@ -1,9 +1,8 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Bell, Menu, Search, User, X, Settings, LogOut, BookMarked } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Bell, Menu, Search, X, Settings, LogOut, BookMarked } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,15 +21,11 @@ interface HeaderProps {
 
 export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { toast } = useToast();
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
   const handleSearch = () => {
-    toast({
-      title: "Search",
-      description: "Search functionality will be implemented in the next version.",
-    });
+    toast("Search functionality will be implemented in the next version.");
   };
 
   const getInitials = (name: string) => {

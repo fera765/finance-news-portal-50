@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Edit,
@@ -25,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -88,8 +87,6 @@ const CategoryManagement = () => {
   const [newCategory, setNewCategory] = useState({ name: "", slug: "", active: true });
   const [searchQuery, setSearchQuery] = useState("");
   
-  const { toast } = useToast();
-  
   const generateSlug = (name: string) => {
     return name.toLowerCase()
       .replace(/[^\w\s-]/g, '')
@@ -121,11 +118,7 @@ const CategoryManagement = () => {
   
   const handleAddCategory = () => {
     if (!newCategory.name) {
-      toast({
-        title: "Error",
-        description: "Category name is required",
-        variant: "destructive"
-      });
+      toast("Category name is required");
       return;
     }
     
@@ -145,10 +138,7 @@ const CategoryManagement = () => {
     setIsAddDialogOpen(false);
     setNewCategory({ name: "", slug: "", active: true });
     
-    toast({
-      title: "Category Added",
-      description: `Category "${newCategory.name}" has been created.`
-    });
+    toast(`Category "${newCategory.name}" has been created.`);
   };
   
   const openEditDialog = (category: Category) => {
@@ -178,10 +168,7 @@ const CategoryManagement = () => {
     setIsEditDialogOpen(false);
     setNewCategory({ name: "", slug: "", active: true });
     
-    toast({
-      title: "Category Updated",
-      description: `Category "${newCategory.name}" has been updated.`
-    });
+    toast(`Category "${newCategory.name}" has been updated.`);
   };
   
   const openDeleteDialog = (category: Category) => {
@@ -195,10 +182,7 @@ const CategoryManagement = () => {
     setCategories(categories.filter(cat => cat.id !== selectedCategory.id));
     setIsDeleteDialogOpen(false);
     
-    toast({
-      title: "Category Deleted",
-      description: `Category "${selectedCategory.name}" has been deleted.`
-    });
+    toast(`Category "${selectedCategory.name}" has been deleted.`);
   };
 
   // Filter categories by search query

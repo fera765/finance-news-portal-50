@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { api } from "@/services/api";
 
 interface SignupFormProps {
@@ -15,7 +14,6 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,11 +26,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
       });
       
       if (existingUsers.length > 0) {
-        toast({
-          title: "Erro no cadastro",
-          description: "Este email já está em uso.",
-          variant: "destructive"
-        });
+        toast("Este email já está em uso.");
         setIsLoading(false);
         return;
       }
@@ -47,10 +41,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
         createdAt: new Date().toISOString()
       });
       
-      toast({
-        title: "Conta criada",
-        description: "Sua conta foi criada com sucesso!",
-      });
+      toast("Sua conta foi criada com sucesso!");
       
       onSuccess({
         email,
@@ -59,11 +50,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
       
     } catch (error) {
       console.error("Erro ao cadastrar:", error);
-      toast({
-        title: "Erro no cadastro",
-        description: "Ocorreu um erro ao criar sua conta. Tente novamente.",
-        variant: "destructive"
-      });
+      toast("Ocorreu um erro ao criar sua conta. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
