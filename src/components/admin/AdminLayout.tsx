@@ -1,9 +1,10 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; 
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Menu, Bell, User } from "lucide-react";
+import { Menu, Bell, LogOut } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,7 @@ import {
   AvatarImage
 } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -26,6 +28,23 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+  
+  // Pegar as iniciais do nome do usuário
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
   
   return (
     <SidebarProvider defaultOpen={!collapsed}>
@@ -88,19 +107,22 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center gap-2">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src="https://github.com/shadcn.png" />
-                      <AvatarFallback>AD</AvatarFallback>
+                      <AvatarImage src={user?.avatar} />
+                      <AvatarFallback>{user ? getInitials(user.name) : "UN"}</AvatarFallback>
                     </Avatar>
-                    <span className="hidden md:inline">Admin User</span>
+                    <span className="hidden md:inline">{user?.name || "Admin User"}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>Perfil</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/admin/settings")}>Configurações</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-500">Logout</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-500">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sair
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

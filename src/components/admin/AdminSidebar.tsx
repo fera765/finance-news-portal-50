@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 type SidebarItem = {
   name: string;
@@ -53,6 +54,7 @@ const AdminSidebar = ({
 }: AdminSidebarProps) => {
   const navigate = useNavigate();
   const { open, setOpen } = useSidebar();
+  const { logout } = useAuth();
   
   // Synchronize the local state with the sidebar context
   useEffect(() => {
@@ -69,6 +71,7 @@ const AdminSidebar = ({
   };
   
   const handleLogout = () => {
+    logout();
     navigate("/");
   };
 

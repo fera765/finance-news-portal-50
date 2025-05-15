@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { NewsItem } from "@/components/NewsCard";
-import { User } from "@/components/Layout";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserArticles } from "@/hooks/useUserArticles";
 import { Loader2 } from "lucide-react";
@@ -50,7 +48,7 @@ const ArticleList = ({ articles, isLoading }: { articles: NewsItem[], isLoading:
       
       {!isLoading && articles.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No articles found</p>
+          <p className="text-gray-500">Nenhum artigo encontrado</p>
         </div>
       )}
     </div>
