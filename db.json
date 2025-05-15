@@ -74,7 +74,8 @@
       "email": "admin@financenews.com",
       "password": "admin123",
       "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
-      "role": "admin"
+      "role": "admin",
+      "status": "active"
     },
     {
       "id": "2",
@@ -82,7 +83,8 @@
       "email": "sjohnson@financenews.com",
       "password": "sarah123",
       "avatar": "https://randomuser.me/api/portraits/women/44.jpg",
-      "role": "editor"
+      "role": "editor",
+      "status": "active"
     },
     {
       "id": "3",
@@ -90,7 +92,8 @@
       "email": "mchen@financenews.com",
       "password": "michael123",
       "avatar": "https://randomuser.me/api/portraits/men/76.jpg",
-      "role": "editor"
+      "role": "editor",
+      "status": "active"
     },
     {
       "id": "4",
@@ -98,7 +101,8 @@
       "email": "user@example.com",
       "password": "user123",
       "avatar": "https://randomuser.me/api/portraits/women/63.jpg",
-      "role": "user"
+      "role": "user",
+      "status": "active"
     }
   ],
   "comments": [
@@ -107,21 +111,47 @@
       "articleId": "1",
       "userId": "4",
       "content": "Great analysis! I'm curious how this will affect mortgage rates in the long term.",
-      "createdAt": "2023-11-02T16:30:00.000Z"
+      "createdAt": "2023-11-02T16:30:00.000Z",
+      "likes": 2,
+      "parentId": null
     },
     {
       "id": "2",
       "articleId": "1",
       "userId": "3",
       "content": "I think the Fed is being too cautious. Inflation data suggests they could be more aggressive with cuts.",
-      "createdAt": "2023-11-02T17:15:00.000Z"
+      "createdAt": "2023-11-02T17:15:00.000Z",
+      "likes": 0,
+      "parentId": null
     },
     {
       "id": "3",
       "articleId": "2",
       "userId": "2",
       "content": "This regulation is long overdue. The tech giants have been operating without proper oversight for too long.",
-      "createdAt": "2023-11-01T12:30:00.000Z"
+      "createdAt": "2023-11-01T12:30:00.000Z",
+      "likes": 1,
+      "parentId": null
+    }
+  ],
+  "comment-likes": [
+    {
+      "id": "1",
+      "commentId": "1",
+      "userId": "1",
+      "createdAt": "2023-11-02T18:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "commentId": "1",
+      "userId": "2",
+      "createdAt": "2023-11-02T19:15:00.000Z"
+    },
+    {
+      "id": "3",
+      "commentId": "3",
+      "userId": "4",
+      "createdAt": "2023-11-01T14:45:00.000Z"
     }
   ],
   "likes": [
@@ -183,6 +213,32 @@
       "id": "3",
       "articleId": "3", 
       "count": 2156
+    }
+  ],
+  "settings": [
+    {
+      "id": "1",
+      "seo": {
+        "siteTitle": "Finance News",
+        "siteDescription": "O melhor portal de notícias financeiras do Brasil",
+        "siteKeywords": "finanças, economia, investimentos, mercado de ações",
+        "siteFavicon": "/favicon.ico",
+        "siteImage": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3"
+      },
+      "social": {
+        "facebook": "https://facebook.com/financenews",
+        "instagram": "https://instagram.com/financenews",
+        "twitter": "https://twitter.com/financenews",
+        "youtube": "https://youtube.com/financenews",
+        "linkedin": "https://linkedin.com/company/financenews"
+      },
+      "tracking": {
+        "googleAnalytics": "G-XXXXXXXXXX",
+        "facebookPixel": "123456789012345",
+        "tiktokPixel": "TTXXXXXXXXXXXXXXXX",
+        "customHeadCode": "<meta name=\"verification\" content=\"finance-news-verification\">",
+        "customBodyCode": "<script>console.log('Finance News loaded');</script>"
+      }
     }
   ],
   "stock-data": [
