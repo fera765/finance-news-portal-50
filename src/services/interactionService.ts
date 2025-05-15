@@ -1,4 +1,3 @@
-
 import { api } from './api';
 
 export interface Like {
@@ -14,10 +13,13 @@ export interface Bookmark {
 }
 
 // Like related operations
-export const getLikes = async (articleId: string) => {
-  const { data } = await api.get('/likes', {
-    params: { articleId },
-  });
+export const getLikes = async (articleId?: string | null, userId?: string | null) => {
+  const params: Record<string, string> = {};
+  
+  if (articleId) params.articleId = articleId;
+  if (userId) params.userId = userId;
+  
+  const { data } = await api.get('/likes', { params });
   return data;
 };
 

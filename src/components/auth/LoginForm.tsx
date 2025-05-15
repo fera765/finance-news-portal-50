@@ -22,13 +22,22 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      const loggedInUser = await login(email, password);
       onSuccess({
         email,
         password
       });
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${loggedInUser.name}!`,
+      });
     } catch (error) {
       console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: "Please check your email and password.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +49,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
         <Label htmlFor="email">Email</Label>
         <Input 
           id="email" 
-          placeholder="seu@email.com" 
+          placeholder="your@email.com" 
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -48,7 +57,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
+        <Label htmlFor="password">Password</Label>
         <Input 
           id="password" 
           type="password"
@@ -63,14 +72,14 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
           type="submit" 
           disabled={isLoading}
         >
-          {isLoading ? "Entrando..." : "Entrar"}
+          {isLoading ? "Logging in..." : "Login"}
         </Button>
       </div>
       
       <div className="text-sm text-center text-muted-foreground">
-        <p className="mt-2">Contas de demonstração:</p>
-        <p>Admin: admin@example.com / admin</p>
-        <p>Usuário: user@example.com / user</p>
+        <p className="mt-2">Demo accounts:</p>
+        <p>Admin: admin@example.com / user123</p>
+        <p>User: user@example.com / user123</p>
       </div>
     </form>
   );
