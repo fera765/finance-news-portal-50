@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +14,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import StockSearch from "@/components/StockSearch";
+import { X } from "lucide-react";
+import { type StockSymbolSearchResult } from "@/services/stockService";
 
 interface StockSymbol {
   id: string;
@@ -103,7 +107,6 @@ const popularStocks: StockSymbol[] = [
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("seo");
   const [stockSymbols, setStockSymbols] = useState<StockSymbol[]>(popularStocks);
-  const [newSymbol, setNewSymbol] = useState("");
   const [saving, setSaving] = useState(false);
   
   // SEO Form
@@ -216,28 +219,30 @@ const SettingsPage = () => {
     );
   };
   
-  // Add new stock symbol
-  const addNewSymbol = () => {
-    if (!newSymbol) return;
+  // Add new stock from search
+  const addStockFromSearch = (result: StockSymbolSearchResult) => {
+    const symbol = result.symbol.trim();
     
-    const symbol = newSymbol.trim().toUpperCase();
-    
-    // Check if symbol already exists
+    // Verificar se o símbolo já existe
     if (stockSymbols.some(stock => stock.symbol === symbol)) {
-      toast("Duplicate Symbol - The symbol \"" + symbol + "\" is already in the list.");
+      toast(`A ação ${symbol} já está na lista`);
       return;
     }
     
-    // Add new symbol
+    // Adicionar novo símbolo
     const newId = `custom-${Date.now()}`;
     setStockSymbols(prev => [
       ...prev, 
-      { id: newId, symbol, name: symbol, enabled: true }
+      { id: newId, symbol, name: result.name, enabled: true }
     ]);
     
-    setNewSymbol("");
-    
-    toast("Symbol Added - Added \"" + symbol + "\" to the stock ticker.");
+    toast(`Ação ${symbol} - ${result.name} adicionada com sucesso`);
+  };
+  
+  // Remover ação
+  const removeStock = (id: string) => {
+    setStockSymbols(prev => prev.filter(stock => stock.id !== id));
+    toast("Ação removida com sucesso");
   };
   
   return (
@@ -532,9 +537,9 @@ const SettingsPage = () => {
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">Enable Stock Ticker</FormLabel>
-                            <CardDescription>
+                            <FormDescription>
                               Show the stock ticker on the website
-                            </CardDescription>
+                            </FormDescription>
                           </div>
                           <FormControl>
                             <Switch
@@ -581,38 +586,47 @@ const SettingsPage = () => {
                     <div>
                       <Label className="text-base font-medium mb-2 block">Stock Symbols</Label>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Select the stock symbols to display in the ticker.
+                        Select the stock symbols to display in the ticker or add new ones by searching.
                       </p>
                       
                       <div className="border rounded-md p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {stockSymbols.map((stock) => (
-                            <div key={stock.id} className="flex items-center space-x-2">
-                              <Switch
-                                id={`stock-${stock.id}`}
-                                checked={stock.enabled}
-                                onCheckedChange={() => toggleStockSymbol(stock.id)}
-                              />
-                              <Label htmlFor={`stock-${stock.id}`} className="font-medium">
-                                {stock.symbol}
-                                <span className="text-muted-foreground ml-1 text-sm">
-                                  ({stock.name})
-                                </span>
-                              </Label>
-                            </div>
-                          ))}
+                        <div className="mb-4">
+                          <Label htmlFor="stock-search" className="mb-2 block">Add New Stock</Label>
+                          <StockSearch
+                            onSelect={addStockFromSearch}
+                            placeholder="Search for stocks by name or symbol..."
+                          />
                         </div>
                         
                         <Separator className="my-4" />
                         
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            placeholder="Add new symbol (e.g. AAPL)"
-                            value={newSymbol}
-                            onChange={(e) => setNewSymbol(e.target.value)}
-                            className="flex-1"
-                          />
-                          <Button type="button" onClick={addNewSymbol} disabled={!newSymbol}>Add</Button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {stockSymbols.map((stock) => (
+                            <div key={stock.id} className="flex items-center justify-between border rounded-md p-2 bg-background">
+                              <div className="flex items-center space-x-2">
+                                <Switch
+                                  id={`stock-${stock.id}`}
+                                  checked={stock.enabled}
+                                  onCheckedChange={() => toggleStockSymbol(stock.id)}
+                                />
+                                <Label htmlFor={`stock-${stock.id}`} className="cursor-pointer">
+                                  <span className="font-medium">{stock.symbol}</span>
+                                  <span className="text-muted-foreground ml-1 text-sm truncate max-w-[120px] inline-block">
+                                    ({stock.name})
+                                  </span>
+                                </Label>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0" 
+                                onClick={() => removeStock(stock.id)}
+                              >
+                                <X className="h-4 w-4" />
+                                <span className="sr-only">Remove {stock.symbol}</span>
+                              </Button>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>

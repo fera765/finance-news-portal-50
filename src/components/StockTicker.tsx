@@ -5,13 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/services/api";
-
-interface StockData {
-  symbol: string;
-  price: number;
-  change: number;
-  changePercent: number;
-}
+import { getMultipleStockData, StockData } from "@/services/stockService";
 
 // Sample fallback data
 const sampleStockData: StockData[] = [
