@@ -3,7 +3,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -140,17 +140,10 @@ const SettingsPage = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast({
-        title: "SEO Settings Saved",
-        description: "Your SEO settings have been updated successfully.",
-      });
+      toast("SEO Settings Saved - Your SEO settings have been updated successfully.");
     } catch (error) {
       console.error("Error saving SEO settings:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save SEO settings. Please try again.",
-      });
+      toast("Error - Failed to save SEO settings. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -166,17 +159,10 @@ const SettingsPage = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast({
-        title: "Social Media Settings Saved",
-        description: "Your social media settings have been updated successfully.",
-      });
+      toast("Social Media Settings Saved - Your social media settings have been updated successfully.");
     } catch (error) {
       console.error("Error saving social media settings:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save social media settings. Please try again.",
-      });
+      toast("Error - Failed to save social media settings. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -192,17 +178,10 @@ const SettingsPage = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast({
-        title: "Tracking Settings Saved",
-        description: "Your tracking settings have been updated successfully.",
-      });
+      toast("Tracking Settings Saved - Your tracking settings have been updated successfully.");
     } catch (error) {
       console.error("Error saving tracking settings:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save tracking settings. Please try again.",
-      });
+      toast("Error - Failed to save tracking settings. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -219,17 +198,10 @@ const SettingsPage = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast({
-        title: "Stock Ticker Settings Saved",
-        description: "Your stock ticker settings have been updated successfully.",
-      });
+      toast("Stock Ticker Settings Saved - Your stock ticker settings have been updated successfully.");
     } catch (error) {
       console.error("Error saving stock ticker settings:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save stock ticker settings. Please try again.",
-      });
+      toast("Error - Failed to save stock ticker settings. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -252,11 +224,7 @@ const SettingsPage = () => {
     
     // Check if symbol already exists
     if (stockSymbols.some(stock => stock.symbol === symbol)) {
-      toast({
-        variant: "destructive",
-        title: "Duplicate Symbol",
-        description: `The symbol "${symbol}" is already in the list.`,
-      });
+      toast("Duplicate Symbol - The symbol \"" + symbol + "\" is already in the list.");
       return;
     }
     
@@ -269,10 +237,7 @@ const SettingsPage = () => {
     
     setNewSymbol("");
     
-    toast({
-      title: "Symbol Added",
-      description: `Added "${symbol}" to the stock ticker.`,
-    });
+    toast("Symbol Added - Added \"" + symbol + "\" to the stock ticker.");
   };
   
   return (

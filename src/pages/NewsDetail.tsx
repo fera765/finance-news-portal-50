@@ -19,7 +19,6 @@ const NewsDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { toast } = useToast();
 
   // Fetch article data
   const { data: article, isLoading, isError } = useArticleBySlug(slug);

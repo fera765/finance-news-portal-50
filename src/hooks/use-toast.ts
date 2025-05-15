@@ -1,7 +1,5 @@
 
-import { toast as sonnerToast, type Toast } from "sonner";
-
-type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
+import { toast as sonnerToast } from "sonner";
 
 // Re-export the toast function from sonner
 export const toast = sonnerToast;
@@ -13,4 +11,4 @@ export function useToast() {
   };
 }
 
-export type { ToastProps };
+export type ToastProps = Parameters<typeof sonnerToast>[1];

@@ -35,7 +35,6 @@ const CommentSection = ({
   const [replyText, setReplyText] = useState("");
   const [commentAuthors, setCommentAuthors] = useState<Record<string, CommentAuthor>>({});
   const [likedComments, setLikedComments] = useState<Record<string, boolean>>({});
-  const { toast } = useToast();
   
   // Use our comments hook
   const { addComment, replyToComment, isAddingComment, isReplyingToComment } = useComments(newsId);
