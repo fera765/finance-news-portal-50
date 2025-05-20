@@ -9,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 
 interface DeleteCommentDialogProps {
   open: boolean;
@@ -33,12 +34,20 @@ export const DeleteCommentDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
           <AlertDialogAction 
             onClick={onConfirm}
             className="bg-red-500 hover:bg-red-600"
+            disabled={isDeleting}
           >
-            {isDeleting ? "Excluindo..." : "Excluir"}
+            {isDeleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Excluindo...
+              </>
+            ) : (
+              "Excluir"
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
