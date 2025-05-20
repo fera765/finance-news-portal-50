@@ -15,6 +15,7 @@ export function useArticleList() {
     queryKey: ['articles'],
     queryFn: () => getArticles(),
     staleTime: 300000, // 5 minutes
+    retry: 3,
     meta: {
       onError: (error: any) => {
         console.error("Error loading articles:", error);
@@ -29,6 +30,7 @@ export function useArticleById(id: string | undefined) {
     queryKey: ['article', id],
     queryFn: () => id ? getArticleById(id) : null,
     enabled: !!id,
+    retry: 3,
     meta: {
       onSuccess: (data: Article | null) => {
         if (data?.id) {
@@ -49,6 +51,7 @@ export function useArticleBySlug(slug: string | undefined) {
     queryKey: ['article', 'slug', slug],
     queryFn: () => slug ? getArticleBySlug(slug) : null,
     enabled: !!slug,
+    retry: 3,
     meta: {
       onSuccess: (data: Article | null) => {
         if (data?.id) {
@@ -69,13 +72,12 @@ export function useFeaturedArticles() {
     queryKey: ['articles', 'featured'],
     queryFn: getFeaturedArticles,
     staleTime: 300000, // 5 minutes
+    retry: 3,
     meta: {
       onError: (error: any) => {
-        console.error("Error loading featured articles:", error);
+        console.error("Error fetching featured articles:", error);
         toast.error("Não foi possível carregar os artigos em destaque.");
       }
-    },
-    // Fallback to empty array to avoid errors
-    placeholderData: []
+    }
   });
 }

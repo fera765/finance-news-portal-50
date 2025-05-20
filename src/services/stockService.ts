@@ -1,18 +1,7 @@
 
 import { api } from './api';
 
-export interface StockSymbolSearchResult {
-  symbol: string;
-  name: string;
-  type: string;
-  region: string;
-  marketOpen: string;
-  marketClose: string;
-  timezone: string;
-  currency: string;
-  matchScore: string;
-}
-
+// Define stock data type
 export interface StockData {
   symbol: string;
   price: number;
@@ -20,77 +9,46 @@ export interface StockData {
   changePercent: number;
 }
 
-// Função para buscar símbolos de ações
-export const searchStockSymbols = async (query: string): Promise<StockSymbolSearchResult[]> => {
-  if (!query || query.length < 2) return [];
-  
+// Mock data for fallbacks
+const MOCK_STOCK_DATA: StockData[] = [
+  { symbol: "AAPL", price: 175.05, change: 1.25, changePercent: 0.72 },
+  { symbol: "MSFT", price: 350.12, change: 0.85, changePercent: 0.24 },
+  { symbol: "GOOGL", price: 136.10, change: -0.32, changePercent: -0.23 },
+  { symbol: "AMZN", price: 178.35, change: 2.41, changePercent: 1.37 },
+  { symbol: "META", price: 487.95, change: -1.15, changePercent: -0.23 },
+  { symbol: "TSLA", price: 172.63, change: -3.82, changePercent: -2.16 },
+  { symbol: "NVDA", price: 950.02, change: 15.30, changePercent: 1.64 },
+  { symbol: "JPM", price: 198.48, change: 0.37, changePercent: 0.19 }
+];
+
+// Fetch data for a single stock
+export const getStockData = async (symbol: string): Promise<StockData> => {
   try {
-    const response = await api.get(`/stock-search?query=${encodeURIComponent(query)}`);
-    
-    if (response.data && response.data.bestMatches) {
-      return response.data.bestMatches.map((match: any) => ({
-        symbol: match['1. symbol'],
-        name: match['2. name'],
-        type: match['3. type'],
-        region: match['4. region'],
-        marketOpen: match['5. marketOpen'],
-        marketClose: match['6. marketClose'],
-        timezone: match['7. timezone'],
-        currency: match['8. currency'],
-        matchScore: match['9. matchScore'],
-      }));
-    }
-    return [];
+    const { data } = await api.get(`/stocks/${symbol}`);
+    return data;
   } catch (error) {
-    console.error('Erro ao buscar símbolos de ações:', error);
-    return [];
+    console.error(`Error fetching stock data for ${symbol}:`, error);
+    // Return mock data for the requested symbol
+    const mockStock = MOCK_STOCK_DATA.find(stock => stock.symbol === symbol);
+    return mockStock || { 
+      symbol, 
+      price: 100 + Math.random() * 200, 
+      change: (Math.random() * 10) - 5,
+      changePercent: (Math.random() * 2) - 1 
+    };
   }
 };
 
-// Obter dados completos de uma ação específica
-export const getStockData = async (symbol: string): Promise<StockData | null> => {
-  try {
-    const response = await api.get(`/stock-data/${symbol}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Erro ao obter dados da ação ${symbol}:`, error);
-    return null;
-  }
-};
-
-// Obter dados de várias ações - Adicionando pontos de retentativa e fallback
+// Fetch data for multiple stocks at once
 export const getMultipleStockData = async (symbols: string[]): Promise<StockData[]> => {
-  if (!symbols || symbols.length === 0) {
-    // Retornar alguns dados de exemplo se nenhum símbolo for fornecido
-    return [
-      { symbol: "AAPL", price: 169.25, change: 2.15, changePercent: 1.29 },
-      { symbol: "MSFT", price: 349.80, change: 1.23, changePercent: 0.35 },
-      { symbol: "GOOGL", price: 134.40, change: -0.42, changePercent: -0.31 },
-      { symbol: "TSLA", price: 215.65, change: 3.28, changePercent: 1.54 }
-    ];
-  }
-  
   try {
-    const response = await api.get('/stock-data', { params: { symbols: symbols.join(',') } });
-    
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    }
-    
-    // Fallback básico se a API retornar um formato inesperado
-    return [
-      { symbol: "AAPL", price: 169.25, change: 2.15, changePercent: 1.29 },
-      { symbol: "MSFT", price: 349.80, change: 1.23, changePercent: 0.35 },
-      { symbol: "GOOGL", price: 134.40, change: -0.42, changePercent: -0.31 }
-    ];
+    // In a real API you might have a batch endpoint, here we're simulating it
+    const requests = symbols.map(symbol => getStockData(symbol));
+    const results = await Promise.all(requests);
+    return results;
   } catch (error) {
-    console.error('Erro ao obter dados de múltiplas ações:', error);
-    
-    // Retornar dados simulados em caso de erro
-    return [
-      { symbol: "AAPL", price: 169.25, change: 2.15, changePercent: 1.29 },
-      { symbol: "MSFT", price: 349.80, change: 1.23, changePercent: 0.35 },
-      { symbol: "GOOGL", price: 134.40, change: -0.42, changePercent: -0.31 }
-    ];
+    console.error('Error fetching multiple stock data:', error);
+    // Filter mock data to only return the requested symbols
+    return MOCK_STOCK_DATA.filter(stock => symbols.includes(stock.symbol));
   }
 };

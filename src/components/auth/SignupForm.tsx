@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { api } from "@/services/api";
+import { register } from "@/services/authService"; 
 
 interface SignupFormProps {
   onSuccess: (userData: { email: string; password: string }) => void;
@@ -18,40 +18,31 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
   
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password || !name) {
+      toast.error("Todos os campos são obrigatórios");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      // Verificar se o email já existe
-      const { data: existingUsers } = await api.get('/users', {
-        params: { email }
-      });
-      
-      if (existingUsers.length > 0) {
-        toast("Este email já está em uso.");
-        setIsLoading(false);
-        return;
-      }
-      
-      // Criar novo usuário
-      const { data: newUser } = await api.post('/users', {
+      await register({
         name,
         email,
-        password,
-        role: 'user',
-        status: 'active',
-        createdAt: new Date().toISOString()
+        password
       });
       
-      toast("Sua conta foi criada com sucesso!");
+      toast.success("Conta criada com sucesso!");
       
       onSuccess({
         email,
         password
       });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao cadastrar:", error);
-      toast("Ocorreu um erro ao criar sua conta. Tente novamente.");
+      toast.error(error.message || "Ocorreu um erro ao criar sua conta. Tente novamente.");
     } finally {
       setIsLoading(false);
     }

@@ -2,6 +2,49 @@
 import { api } from './api';
 import { toast } from "sonner";
 
+// Mock data for fallback when API is unavailable
+const MOCK_ARTICLES = [
+  {
+    id: "mock-1",
+    title: "Mercados financeiros em alta após decisão do Banco Central",
+    slug: "mercados-financeiros-em-alta",
+    content: "<p>Os mercados financeiros globais registraram ganhos significativos após a recente decisão do Banco Central de manter as taxas de juros inalteradas.</p>",
+    summary: "Os mercados financeiros globais registraram ganhos significativos após a recente decisão do Banco Central.",
+    category: "Mercados",
+    author: "Ana Silva",
+    status: "published",
+    publishDate: new Date().toISOString(),
+    imageUrl: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f",
+    tags: ["Mercados", "Banco Central", "Investimentos"]
+  },
+  {
+    id: "mock-2",
+    title: "Nova tecnologia promete revolucionar pagamentos digitais",
+    slug: "nova-tecnologia-pagamentos-digitais",
+    content: "<p>Uma startup brasileira desenvolveu uma nova tecnologia que promete transformar a maneira como realizamos pagamentos digitais.</p>",
+    summary: "Startup brasileira desenvolve solução inovadora para pagamentos digitais.",
+    category: "Tecnologia",
+    author: "Carlos Mendes",
+    status: "published",
+    publishDate: new Date().toISOString(),
+    imageUrl: "https://images.unsplash.com/photo-1563013544-824ae1b704d3",
+    tags: ["Fintech", "Pagamentos", "Tecnologia"]
+  },
+  {
+    id: "mock-3",
+    title: "Análise: Os impactos da inflação na economia brasileira",
+    slug: "impactos-inflacao-economia-brasileira",
+    content: "<p>Especialistas analisam como a recente alta da inflação tem afetado diversos setores da economia brasileira.</p>",
+    summary: "Especialistas discutem os efeitos da inflação na economia do país.",
+    category: "Economia",
+    author: "Paula Rodrigues",
+    status: "published",
+    publishDate: new Date().toISOString(),
+    imageUrl: "https://images.unsplash.com/photo-1611324586758-1ff1534d217b",
+    tags: ["Economia", "Inflação", "Brasil"]
+  }
+];
+
 export interface Article {
   id?: string;
   title: string;
@@ -22,7 +65,8 @@ export const getArticles = async (params = {}) => {
     return data || [];
   } catch (error) {
     console.error("Error fetching articles:", error);
-    return [];
+    // Return mock data as fallback
+    return MOCK_ARTICLES;
   }
 };
 
@@ -32,6 +76,9 @@ export const getArticleById = async (id: string) => {
     return data;
   } catch (error) {
     console.error(`Error fetching article with id ${id}:`, error);
+    // Try to find a mock article with matching ID
+    const mockArticle = MOCK_ARTICLES.find(article => article.id === id);
+    if (mockArticle) return mockArticle;
     throw error;
   }
 };
@@ -46,6 +93,9 @@ export const getArticleBySlug = async (slug: string) => {
     throw new Error(`Article with slug ${slug} not found`);
   } catch (error) {
     console.error(`Error fetching article with slug ${slug}:`, error);
+    // Try to find a mock article with matching slug
+    const mockArticle = MOCK_ARTICLES.find(article => article.slug === slug);
+    if (mockArticle) return mockArticle;
     throw error;
   }
 };
@@ -116,11 +166,11 @@ export const getFeaturedArticles = async () => {
           status: 'published'
         }
       });
-      return data || [];
+      return data || MOCK_ARTICLES;
     }
   } catch (error) {
     console.error("Error fetching featured articles:", error);
-    return [];
+    return MOCK_ARTICLES;
   }
 };
 
