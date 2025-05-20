@@ -1,4 +1,3 @@
-
 import { api } from './api';
 import { User } from '@/components/Layout';
 import { toast } from "sonner";
@@ -44,16 +43,22 @@ export const login = async (email: string, password: string): Promise<User> => {
     console.log('Login attempt for:', email);
     
     // First try to authenticate using JSON Server's limited auth capabilities
-    // In a real API, this would be a single POST request to /login with credentials
-    // But for JSON Server, we need to manually find the user with matching credentials
+    // JSON Server retorna um array de usuários, precisamos verificar isso
     const { data: users } = await api.get<UserWithPassword[]>(AUTH_ENDPOINTS.USERS, {
       params: { 
-        email_like: email,
-        _limit: 1
+        email: email // Usar filtro exato em vez de email_like para melhor precisão
       }
     });
     
-    // Check if user exists and password matches
+    console.log('Users found:', users);
+    
+    // Verificar se o array de usuários tem pelo menos um usuário
+    if (!Array.isArray(users) || users.length === 0) {
+      console.error('No users found with email:', email);
+      throw new Error('Credenciais inválidas ou usuário não encontrado');
+    }
+    
+    // Encontrar o usuário com email e senha correspondentes
     const user = users.find(u => 
       u.email && u.email.toLowerCase() === email.toLowerCase() && 
       u.password === password &&
@@ -61,7 +66,7 @@ export const login = async (email: string, password: string): Promise<User> => {
     );
     
     if (!user) {
-      console.error('Invalid credentials or user not found');
+      console.error('Password mismatch or user is banned');
       throw new Error('Credenciais inválidas ou usuário não encontrado');
     }
 
@@ -119,7 +124,7 @@ export const login = async (email: string, password: string): Promise<User> => {
     if (error.userMessage) {
       throw new Error(error.userMessage);
     }
-    throw error;
+    throw new Error('Falha no login. Verifique suas credenciais.');
   }
 };
 
@@ -217,7 +222,7 @@ export const register = async (userData: {
     
     // Check if email already exists (case insensitive)
     const { data: existingUsers } = await api.get<UserWithPassword[]>(AUTH_ENDPOINTS.USERS, {
-      params: { email_like: userData.email }
+      params: { email: userData.email }
     });
     
     const emailExists = existingUsers.some(user => 

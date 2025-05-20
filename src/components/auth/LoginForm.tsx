@@ -42,6 +42,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
     } catch (error: any) {
       console.error("Login error:", error);
       setErrorMessage(error.message || "Falha no login. Verifique suas credenciais.");
+      toast.error(error.message || "Falha no login. Verifique suas credenciais.");
     } finally {
       setIsLoading(false);
     }
