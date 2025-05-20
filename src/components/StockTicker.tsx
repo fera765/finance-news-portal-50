@@ -31,7 +31,7 @@ const StockTicker = () => {
       try {
         setLoading(true);
         
-        // Fazer requisição ao nosso servidor JSON
+        // Tentar obter dados da API
         const response = await api.get('/stock-data');
         
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {

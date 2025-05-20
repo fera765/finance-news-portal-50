@@ -25,8 +25,6 @@ export const searchStockSymbols = async (query: string): Promise<StockSymbolSear
   if (!query || query.length < 2) return [];
   
   try {
-    // Usamos o nosso próprio backend para fazer o proxy da API Alpha Vantage
-    // para não expor a chave da API no frontend
     const response = await api.get(`/stock-search?query=${encodeURIComponent(query)}`);
     
     if (response.data && response.data.bestMatches) {
