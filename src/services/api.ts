@@ -1,5 +1,13 @@
 
-import axios from 'axios';
+import axios, { InternalAxiosRequestConfig } from 'axios';
+
+// Extend the axios request config type to include our custom properties
+declare module 'axios' {
+  export interface InternalAxiosRequestConfig {
+    _retry?: boolean;
+    _retryCount?: number;
+  }
+}
 
 // Get the API URL from environment variable or use a fallback
 const API_URL = import.meta.env.VITE_API_URL || 'http://38.9.119.167:3000';
