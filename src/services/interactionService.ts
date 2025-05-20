@@ -1,15 +1,18 @@
+
 import { api } from './api';
 
 export interface Like {
   id?: string;
   articleId: string;
   userId: string;
+  createdAt: string;
 }
 
 export interface Bookmark {
   id?: string;
   articleId: string;
   userId: string;
+  createdAt: string;
 }
 
 // Like related operations
@@ -33,10 +36,30 @@ export const likeArticle = async (articleId: string, userId: string) => {
     return existingLikes[0];
   }
 
+  // Create new like with timestamp
   const { data } = await api.post('/likes', {
     articleId,
     userId,
+    createdAt: new Date().toISOString()
   });
+  
+  // Update article metrics if needed
+  try {
+    const { data: viewData } = await api.get('/views', {
+      params: { articleId }
+    });
+    
+    if (viewData && viewData.length > 0) {
+      const currentView = viewData[0];
+      if (!currentView.likes) currentView.likes = 0;
+      currentView.likes++;
+      
+      await api.patch(`/views/${currentView.id}`, currentView);
+    }
+  } catch (error) {
+    console.error('Error updating article metrics:', error);
+  }
+  
   return data;
 };
 
@@ -48,6 +71,23 @@ export const unlikeArticle = async (articleId: string, userId: string) => {
 
   if (likes.length > 0) {
     await api.delete(`/likes/${likes[0].id}`);
+    
+    // Update article metrics if needed
+    try {
+      const { data: viewData } = await api.get('/views', {
+        params: { articleId }
+      });
+      
+      if (viewData && viewData.length > 0) {
+        const currentView = viewData[0];
+        if (currentView.likes && currentView.likes > 0) {
+          currentView.likes--;
+          await api.patch(`/views/${currentView.id}`, currentView);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating article metrics:', error);
+    }
   }
   
   return true;
@@ -78,9 +118,11 @@ export const bookmarkArticle = async (articleId: string, userId: string) => {
     return existingBookmarks[0];
   }
 
+  // Create new bookmark with timestamp
   const { data } = await api.post('/bookmarks', {
     articleId,
     userId,
+    createdAt: new Date().toISOString()
   });
   return data;
 };
@@ -103,4 +145,16 @@ export const checkIfBookmarked = async (articleId: string, userId: string) => {
     params: { articleId, userId },
   });
   return data.length > 0;
+};
+
+// Get all user interactions with articles for efficient display
+export const getUserArticleInteractions = async (userId: string) => {
+  if (!userId) return { likes: [], bookmarks: [] };
+  
+  const [likes, bookmarks] = await Promise.all([
+    getLikes(null, userId),
+    getBookmarks(userId)
+  ]);
+  
+  return { likes, bookmarks };
 };

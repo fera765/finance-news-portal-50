@@ -10,7 +10,7 @@ declare module 'axios' {
 }
 
 // Get the API URL from environment variable or use a fallback
-const API_URL = import.meta.env.VITE_API_URL || 'http://38.9.119.167:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Create axios instance with improved configuration
 export const api = axios.create({
@@ -77,7 +77,7 @@ api.interceptors.response.use(
     
     // User friendly error message based on error type
     if (error.message === 'Network Error') {
-      error.userMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão de internet.';
+      error.userMessage = 'Não foi possível conectar ao servidor. Verifique se o JSON Server está em execução.';
     } else if (error.code === 'ECONNABORTED') {
       error.userMessage = 'A requisição demorou muito tempo. Por favor, tente novamente.';
     } else if (error.response?.status === 401) {

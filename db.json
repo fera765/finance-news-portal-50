@@ -75,7 +75,8 @@
       "password": "admin123",
       "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
       "role": "admin",
-      "status": "active"
+      "status": "active",
+      "createdAt": "2023-01-01T00:00:00.000Z"
     },
     {
       "id": "2",
@@ -84,7 +85,8 @@
       "password": "sarah123",
       "avatar": "https://randomuser.me/api/portraits/women/44.jpg",
       "role": "editor",
-      "status": "active"
+      "status": "active",
+      "createdAt": "2023-01-15T00:00:00.000Z"
     },
     {
       "id": "3",
@@ -93,7 +95,8 @@
       "password": "michael123",
       "avatar": "https://randomuser.me/api/portraits/men/76.jpg",
       "role": "editor",
-      "status": "active"
+      "status": "active",
+      "createdAt": "2023-02-05T00:00:00.000Z"
     },
     {
       "id": "4",
@@ -102,7 +105,18 @@
       "password": "user123",
       "avatar": "https://randomuser.me/api/portraits/women/63.jpg",
       "role": "user",
-      "status": "active"
+      "status": "active",
+      "createdAt": "2023-03-10T00:00:00.000Z"
+    },
+    {
+      "id": "5",
+      "name": "Demo User",
+      "email": "demo@example.com",
+      "password": "password123", 
+      "avatar": "https://randomuser.me/api/portraits/men/42.jpg",
+      "role": "user",
+      "status": "active",
+      "createdAt": "2023-04-15T00:00:00.000Z"
     }
   ],
   "comments": [
@@ -126,11 +140,38 @@
     },
     {
       "id": "3",
+      "articleId": "1",
+      "userId": "4",
+      "content": "I disagree. Given the uncertainty in global markets, this cautious approach seems prudent.",
+      "createdAt": "2023-11-02T17:45:00.000Z",
+      "likes": 1,
+      "parentId": "2"
+    },
+    {
+      "id": "4",
       "articleId": "2",
       "userId": "2",
       "content": "This regulation is long overdue. The tech giants have been operating without proper oversight for too long.",
       "createdAt": "2023-11-01T12:30:00.000Z",
       "likes": 1,
+      "parentId": null
+    },
+    {
+      "id": "5",
+      "articleId": "2",
+      "userId": "5",
+      "content": "I worry that excessive regulation could stifle innovation. There needs to be a balance.",
+      "createdAt": "2023-11-01T13:45:00.000Z",
+      "likes": 2,
+      "parentId": null
+    },
+    {
+      "id": "6",
+      "articleId": "3",
+      "userId": "1",
+      "content": "Interesting to see traditional financial institutions embracing crypto. The landscape has really changed.",
+      "createdAt": "2023-10-30T14:15:00.000Z",
+      "likes": 3,
       "parentId": null
     }
   ],
@@ -151,68 +192,148 @@
       "id": "3",
       "commentId": "3",
       "userId": "4",
+      "createdAt": "2023-11-02T19:45:00.000Z"
+    },
+    {
+      "id": "4",
+      "commentId": "4",
+      "userId": "4",
       "createdAt": "2023-11-01T14:45:00.000Z"
+    },
+    {
+      "id": "5",
+      "commentId": "5",
+      "userId": "2",
+      "createdAt": "2023-11-01T15:30:00.000Z"
+    },
+    {
+      "id": "6",
+      "commentId": "5",
+      "userId": "3",
+      "createdAt": "2023-11-01T16:15:00.000Z"
+    },
+    {
+      "id": "7",
+      "commentId": "6",
+      "userId": "2",
+      "createdAt": "2023-10-30T14:45:00.000Z"
+    },
+    {
+      "id": "8",
+      "commentId": "6",
+      "userId": "3",
+      "createdAt": "2023-10-30T15:30:00.000Z"
+    },
+    {
+      "id": "9",
+      "commentId": "6",
+      "userId": "4",
+      "createdAt": "2023-10-30T16:15:00.000Z"
     }
   ],
   "likes": [
     {
       "id": "1",
       "articleId": "1",
-      "userId": "2"
+      "userId": "2",
+      "createdAt": "2023-11-02T15:45:00.000Z"
     },
     {
       "id": "2",
       "articleId": "1",
-      "userId": "3"
+      "userId": "3",
+      "createdAt": "2023-11-02T16:30:00.000Z"
     },
     {
       "id": "3",
       "articleId": "1",
-      "userId": "4"
+      "userId": "4",
+      "createdAt": "2023-11-02T17:15:00.000Z"
     },
     {
       "id": "4",
       "articleId": "2",
-      "userId": "1"
+      "userId": "1",
+      "createdAt": "2023-11-01T12:45:00.000Z"
     },
     {
       "id": "5",
       "articleId": "3",
-      "userId": "2"
+      "userId": "2",
+      "createdAt": "2023-10-30T10:30:00.000Z"
+    },
+    {
+      "id": "6",
+      "articleId": "3",
+      "userId": "4",
+      "createdAt": "2023-10-30T11:45:00.000Z"
+    },
+    {
+      "id": "7",
+      "articleId": "2",
+      "userId": "5",
+      "createdAt": "2023-11-01T14:30:00.000Z"
     }
   ],
   "bookmarks": [
     {
       "id": "1",
       "articleId": "1",
-      "userId": "4"
+      "userId": "4",
+      "createdAt": "2023-11-02T18:30:00.000Z"
     },
     {
       "id": "2",
       "articleId": "2",
-      "userId": "3"
+      "userId": "3",
+      "createdAt": "2023-11-01T15:15:00.000Z"
     },
     {
       "id": "3",
       "articleId": "3",
-      "userId": "1"
+      "userId": "1",
+      "createdAt": "2023-10-30T12:45:00.000Z"
+    },
+    {
+      "id": "4",
+      "articleId": "2",
+      "userId": "4",
+      "createdAt": "2023-11-01T16:30:00.000Z"
+    },
+    {
+      "id": "5",
+      "articleId": "3",
+      "userId": "5",
+      "createdAt": "2023-10-30T13:45:00.000Z"
     }
   ],
   "views": [
     {
       "id": "1",
       "articleId": "1",
-      "count": 1243
+      "count": 1243,
+      "likes": 3,
+      "bookmarks": 1,
+      "comments": 3,
+      "lastUpdated": "2023-11-03T09:15:00.000Z"
     },
     {
       "id": "2",
       "articleId": "2",
-      "count": 876
+      "count": 876,
+      "likes": 2,
+      "bookmarks": 2,
+      "comments": 2,
+      "lastUpdated": "2023-11-02T08:45:00.000Z"
     },
     {
       "id": "3",
       "articleId": "3", 
-      "count": 2156
+      "count": 2156,
+      "likes": 2,
+      "bookmarks": 2,
+      "comments": 1,
+      "lastUpdated": "2023-10-31T10:30:00.000Z"
     }
   ],
   "settings": [

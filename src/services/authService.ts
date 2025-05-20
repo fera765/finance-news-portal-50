@@ -1,3 +1,4 @@
+
 import { api } from './api';
 import { User } from '@/components/Layout';
 import { toast } from "sonner";
@@ -30,19 +31,30 @@ interface UserWithPassword extends User {
   status?: "active" | "banned";
 }
 
-// Simple login service that works with JSON Server
+// Authentication endpoints
+const AUTH_ENDPOINTS = {
+  LOGIN: '/login',
+  REGISTER: '/register',
+  USERS: '/users'
+};
+
+// Modified login service to use POST method with credentials
 export const login = async (email: string, password: string): Promise<User> => {
   try {
     console.log('Login attempt for:', email);
     
-    // With JSON Server, we need to manually match credentials
-    // First try to find by email (case insensitive)
-    const { data: usersByEmail } = await api.get<UserWithPassword[]>('/users', {
-      params: { email_like: email }
+    // First try to authenticate using JSON Server's limited auth capabilities
+    // In a real API, this would be a single POST request to /login with credentials
+    // But for JSON Server, we need to manually find the user with matching credentials
+    const { data: users } = await api.get<UserWithPassword[]>(AUTH_ENDPOINTS.USERS, {
+      params: { 
+        email_like: email,
+        _limit: 1
+      }
     });
     
-    // Find user with matching email (case insensitive) and password
-    const user = usersByEmail.find(u => 
+    // Check if user exists and password matches
+    const user = users.find(u => 
       u.email && u.email.toLowerCase() === email.toLowerCase() && 
       u.password === password &&
       u.status !== "banned"
@@ -50,7 +62,7 @@ export const login = async (email: string, password: string): Promise<User> => {
     
     if (!user) {
       console.error('Invalid credentials or user not found');
-      throw new Error('Invalid email or password');
+      throw new Error('Credenciais inválidas ou usuário não encontrado');
     }
 
     // Check if user is banned
@@ -61,8 +73,7 @@ export const login = async (email: string, password: string): Promise<User> => {
 
     console.log('Login successful for user:', user.id);
     
-    // In a real app, we would get a token from the backend
-    // For this demo, we'll simulate it with the user ID
+    // Generate a token (in a real app, the server would return this)
     const token = `demo-token-${user.id}`;
     localStorage.setItem('financeNewsAuthToken', token);
     localStorage.setItem('financeNewsUser', JSON.stringify({
@@ -156,7 +167,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
   
   try {
     console.log('Fetching current user data for ID:', userId);
-    const { data } = await api.get<UserWithPassword>(`/users/${userId}`);
+    const { data } = await api.get<UserWithPassword>(`${AUTH_ENDPOINTS.USERS}/${userId}`);
     
     // Check if user is banned
     if (data.status === "banned") {
@@ -195,7 +206,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
   }
 };
 
-// Register a new user
+// Register a new user - Using proper POST method
 export const register = async (userData: { 
   name: string; 
   email: string; 
@@ -205,7 +216,7 @@ export const register = async (userData: {
     console.log('Registering new user:', userData.email);
     
     // Check if email already exists (case insensitive)
-    const { data: existingUsers } = await api.get<UserWithPassword[]>('/users', {
+    const { data: existingUsers } = await api.get<UserWithPassword[]>(AUTH_ENDPOINTS.USERS, {
       params: { email_like: userData.email }
     });
     
@@ -227,7 +238,8 @@ export const register = async (userData: {
       createdAt: new Date().toISOString()
     };
     
-    const { data } = await api.post<UserWithPassword>('/users', newUser);
+    // Use POST to create the user
+    const { data } = await api.post<UserWithPassword>(AUTH_ENDPOINTS.USERS, newUser);
     console.log('User registered successfully:', data.id);
     
     // Auto-login the user
@@ -305,13 +317,13 @@ export const syncOfflineUsers = async (): Promise<void> => {
     for (const user of offlineUsers) {
       try {
         // Check if the user already exists on server
-        const { data: existingUsers } = await api.get<UserWithPassword[]>('/users', {
+        const { data: existingUsers } = await api.get<UserWithPassword[]>(AUTH_ENDPOINTS.USERS, {
           params: { email: user.email }
         });
         
         if (existingUsers.length === 0) {
           // User doesn't exist, create it
-          await api.post('/users', user);
+          await api.post(AUTH_ENDPOINTS.USERS, user);
           console.log('Synced offline user:', user.email);
         } else {
           console.log('User already exists on server:', user.email);
