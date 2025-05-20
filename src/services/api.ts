@@ -1,5 +1,5 @@
 
-import axios, { InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 // Extend the axios request config type to include our custom properties
 declare module 'axios' {
