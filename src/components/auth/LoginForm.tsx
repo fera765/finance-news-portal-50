@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface LoginFormProps {
   onSuccess: (userData: { email: string; password: string }) => void;
@@ -32,6 +33,12 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
     try {
       console.log('Attempting login with email:', email);
       const loggedInUser = await login(email, password);
+      
+      // Check if user status is active (this check is redundant with the one in authService,
+      // but adding it here as a double-check for security)
+      if (loggedInUser.status === "banned") {
+        throw new Error("Esta conta foi suspensa. Entre em contato com o suporte.");
+      }
       
       toast.success(`Bem-vindo, ${loggedInUser.name}!`);
       
@@ -86,9 +93,12 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
       </div>
       
       {errorMessage && (
-        <div className="text-red-500 text-sm px-1">
-          {errorMessage}
-        </div>
+        <Alert variant="destructive" className="py-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-sm px-1">
+            {errorMessage}
+          </AlertDescription>
+        </Alert>
       )}
       
       {import.meta.env.DEV && (

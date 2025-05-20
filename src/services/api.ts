@@ -45,6 +45,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   response => {
     console.log(`API Response: ${response.status} ${response.config.url}`, response.data);
+    
+    // Check if the response is from login or user data and contains a banned status
+    if (
+      (response.config.url?.includes('/login') || 
+       response.config.url?.includes('/users')) && 
+      response.data?.status === 'banned'
+    ) {
+      const error = new Error('Esta conta foi suspensa. Entre em contato com o suporte.');
+      error.name = 'AccountBannedError';
+      return Promise.reject(error);
+    }
+    
     return response;
   },
   async error => {
