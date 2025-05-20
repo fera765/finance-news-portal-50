@@ -11,10 +11,11 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000, // 10 seconds timeout
-  // Retry configuration
-  retries: 3,
-  retryDelay: 1000,
 });
+
+// Custom retry configuration (stored outside axios config)
+const maxRetries = 3;
+const retryDelay = 1000;
 
 // Add a request interceptor to include auth token if available
 api.interceptors.request.use(
@@ -39,13 +40,13 @@ api.interceptors.response.use(
     // If the error is a network error or timeout, retry
     if ((error.message === 'Network Error' || error.code === 'ECONNABORTED') && 
         originalRequest._retry !== true && 
-        originalRequest.retries > 0) {
+        originalRequest._retryCount < maxRetries) {
       
       originalRequest._retry = true;
-      originalRequest.retries -= 1;
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
       
       // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, originalRequest.retryDelay));
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
       
       return api(originalRequest);
     }
@@ -53,5 +54,11 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Initialize the retry count for all requests
+api.interceptors.request.use((config) => {
+  config._retryCount = 0;
+  return config;
+});
 
 export default api;

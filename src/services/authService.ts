@@ -10,7 +10,7 @@ const MOCK_USERS = [
     email: "demo@example.com",
     password: "password123",
     avatar: "https://i.pravatar.cc/150?u=demo",
-    role: "user"
+    role: "user" as "user" | "admin" | "editor"
   },
   {
     id: "mock-admin-1",
@@ -18,7 +18,7 @@ const MOCK_USERS = [
     email: "admin@example.com",
     password: "admin123",
     avatar: "https://i.pravatar.cc/150?u=admin",
-    role: "admin"
+    role: "admin" as "user" | "admin" | "editor"
   }
 ];
 
@@ -28,7 +28,7 @@ interface UserWithPassword extends User {
 }
 
 // Simple login service that works with JSON Server
-export const login = async (email: string, password: string) => {
+export const login = async (email: string, password: string): Promise<User> => {
   try {
     // With JSON Server, we need to manually match credentials
     const { data: users } = await api.get<UserWithPassword[]>('/users', {
@@ -48,7 +48,7 @@ export const login = async (email: string, password: string) => {
     
     // Remove password before returning the user
     const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return userWithoutPassword as User;
   } catch (error) {
     console.error("Login error:", error);
     
@@ -102,7 +102,12 @@ export const getCurrentUser = async (): Promise<User | null> => {
     const { data } = await api.get<UserWithPassword>(`/users/${userId}`);
     // Remove password before returning
     const { password: _, ...userWithoutPassword } = data;
-    return userWithoutPassword;
+    // Ensure role is of the correct type
+    if (userWithoutPassword.role && 
+        !["user", "admin", "editor"].includes(userWithoutPassword.role as string)) {
+      userWithoutPassword.role = "user";
+    }
+    return userWithoutPassword as User;
   } catch (error) {
     console.error("Error getting current user:", error);
     localStorage.removeItem('financeNewsAuthToken');
@@ -126,10 +131,10 @@ export const register = async (userData: {
       throw new Error('Email already registered');
     }
     
-    // Create new user
+    // Create new user with properly typed role
     const newUser = {
       ...userData,
-      role: 'user',
+      role: 'user' as 'user' | 'admin' | 'editor',
       createdAt: new Date().toISOString()
     };
     
@@ -141,7 +146,7 @@ export const register = async (userData: {
     
     // Remove password before returning
     const { password: _, ...userWithoutPassword } = data;
-    return userWithoutPassword;
+    return userWithoutPassword as User;
   } catch (error) {
     console.error("Registration error:", error);
     
@@ -153,7 +158,7 @@ export const register = async (userData: {
         name: userData.name,
         email: userData.email,
         password: userData.password,
-        role: 'user' as const,
+        role: 'user' as 'user' | 'admin' | 'editor',
         avatar: `https://i.pravatar.cc/150?u=${mockId}`
       };
       
