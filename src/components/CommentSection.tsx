@@ -1,15 +1,26 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart } from "lucide-react";
+import { Heart, Edit, Trash2, CornerDownLeft, CornerUpRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useComments } from "@/hooks/useComments";
 import { Comment, likeComment, isCommentLiked } from "@/services/commentService";
 import { User } from "@/components/Layout";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { api } from "@/services/api";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface CommentSectionProps {
   newsId: string;
@@ -32,12 +43,38 @@ const CommentSection = ({
 }: CommentSectionProps) => {
   const [commentText, setCommentText] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [editingComment, setEditingComment] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
   const [replyText, setReplyText] = useState("");
   const [commentAuthors, setCommentAuthors] = useState<Record<string, CommentAuthor>>({});
   const [likedComments, setLikedComments] = useState<Record<string, boolean>>({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   
   // Use our comments hook
-  const { addComment, replyToComment, isAddingComment, isReplyingToComment } = useComments(newsId);
+  const { 
+    addComment, 
+    replyToComment, 
+    deleteComment, 
+    updateComment,
+    isAddingComment, 
+    isReplyingToComment,
+    isDeletingComment,
+    isUpdatingComment
+  } = useComments(newsId);
+
+  // Group comments by parent
+  const commentsByParent = comments.reduce((acc, comment) => {
+    const parentId = comment.parentId || 'root';
+    if (!acc[parentId]) {
+      acc[parentId] = [];
+    }
+    acc[parentId].push(comment);
+    return acc;
+  }, {} as Record<string, Comment[]>);
+
+  // Get root comments
+  const rootComments = commentsByParent['root'] || [];
 
   // Fetch user information for all commenters
   useEffect(() => {
@@ -128,6 +165,52 @@ const CommentSection = ({
     setReplyText("");
   };
 
+  const handleEditComment = (commentId: string) => {
+    if (!currentUser) {
+      onLogin();
+      return;
+    }
+    
+    // Find the comment to edit
+    const comment = comments.find(c => c.id === commentId);
+    if (!comment) return;
+    
+    // Set the edit state
+    setEditingComment(commentId);
+    setEditText(comment.content);
+  };
+
+  const submitEditComment = (commentId: string) => {
+    if (!currentUser) {
+      onLogin();
+      return;
+    }
+    
+    if (!editText.trim()) {
+      toast("O comentário não pode estar vazio");
+      return;
+    }
+    
+    // Update the comment
+    updateComment({ commentId, content: editText });
+    setEditingComment(null);
+    setEditText("");
+  };
+
+  const confirmDeleteComment = (commentId: string) => {
+    setCommentToDelete(commentId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteComment = () => {
+    if (!commentToDelete) return;
+    
+    // Delete the comment
+    deleteComment(commentToDelete);
+    setDeleteDialogOpen(false);
+    setCommentToDelete(null);
+  };
+
   const handleLike = async (commentId: string) => {
     if (!currentUser) {
       onLogin();
@@ -168,6 +251,152 @@ const CommentSection = ({
     };
   };
 
+  // Recursive function to render comments with replies
+  const renderComment = (comment: Comment, level = 0) => {
+    const author = getAuthorInfo(comment.userId);
+    const isLiked = likedComments[comment.id || ''] || false;
+    const isCurrentUserAuthor = currentUser && comment.userId === currentUser.id;
+    const replies = comment.id ? commentsByParent[comment.id] || [] : [];
+    
+    return (
+      <div key={comment.id} 
+        className={`bg-gray-50 p-4 rounded-lg mb-3 ${level > 0 ? 'ml-6 border-l-2 border-gray-200' : ''}`}>
+        <div className="flex items-start gap-3">
+          <Avatar>
+            <AvatarImage src={author.avatar} />
+            <AvatarFallback>{getInitials(author.name)}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-medium">{author.name}</span>
+              <span className="text-xs text-gray-500">
+                {formatDistanceToNow(new Date(comment.createdAt), { 
+                  addSuffix: true,
+                  locale: ptBR
+                })}
+              </span>
+            </div>
+            
+            {editingComment === comment.id ? (
+              <div className="mt-2">
+                <Textarea
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  className="resize-none text-sm mb-2"
+                  rows={3}
+                  disabled={isUpdatingComment}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingComment(null)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => comment.id && submitEditComment(comment.id)}
+                    disabled={!editText.trim() || isUpdatingComment}
+                  >
+                    {isUpdatingComment ? "Salvando..." : "Salvar"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-700">{comment.content}</p>
+            )}
+            
+            <div className="flex items-center gap-4 mt-2 flex-wrap">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-0 h-auto"
+                onClick={() => comment.id && handleLike(comment.id)}
+              >
+                <Heart 
+                  size={18} 
+                  className={isLiked ? "text-red-500 fill-red-500" : "text-gray-500"} 
+                />
+                <span className="ml-1 text-sm">{comment.likes || 0}</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-auto p-0"
+                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+              >
+                <CornerDownLeft size={18} className="mr-1" />
+                Responder
+              </Button>
+              
+              {isCurrentUserAuthor && !editingComment && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-auto p-0"
+                    onClick={() => comment.id && handleEditComment(comment.id)}
+                  >
+                    <Edit size={18} className="mr-1" />
+                    Editar
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-auto p-0 text-red-500"
+                    onClick={() => comment.id && confirmDeleteComment(comment.id)}
+                  >
+                    <Trash2 size={18} className="mr-1" />
+                    Excluir
+                  </Button>
+                </>
+              )}
+            </div>
+            
+            {replyingTo === comment.id && (
+              <div className="mt-3">
+                <Textarea
+                  placeholder="Escreva uma resposta..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  className="resize-none text-sm mb-2"
+                  rows={2}
+                  disabled={isReplyingToComment}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReplyingTo(null)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => comment.id && handleReply(comment.id)}
+                    disabled={!replyText.trim() || isReplyingToComment}
+                  >
+                    {isReplyingToComment ? "Enviando..." : "Responder"}
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Render replies recursively */}
+            {replies.length > 0 && (
+              <div className="mt-3 space-y-3">
+                {replies.map(reply => renderComment(reply, level + 1))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="mt-10">
       <h3 className="text-xl font-bold mb-6">Comentários</h3>
@@ -192,91 +421,35 @@ const CommentSection = ({
       </div>
       
       <div className="space-y-6">
-        {comments.length === 0 ? (
+        {rootComments.length === 0 ? (
           <p className="text-center text-gray-500 py-6">
             Seja o primeiro a comentar neste artigo!
           </p>
         ) : (
-          comments.map((comment) => {
-            const author = getAuthorInfo(comment.userId);
-            const isLiked = likedComments[comment.id || ''] || false;
-            
-            return (
-              <div key={comment.id} className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Avatar>
-                    <AvatarImage src={author.avatar} />
-                    <AvatarFallback>{getInitials(author.name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-medium">{author.name}</span>
-                      <span className="text-xs text-gray-500">
-                        {formatDistanceToNow(new Date(comment.createdAt), { 
-                          addSuffix: true,
-                          locale: ptBR
-                        })}
-                      </span>
-                    </div>
-                    <p className="text-gray-700">{comment.content}</p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-0 h-auto"
-                        onClick={() => comment.id && handleLike(comment.id)}
-                      >
-                        <Heart 
-                          size={18} 
-                          className={isLiked ? "text-red-500 fill-red-500" : "text-gray-500"} 
-                        />
-                        <span className="ml-1 text-sm">{comment.likes || 0}</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs h-auto p-0"
-                        onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                      >
-                        Responder
-                      </Button>
-                    </div>
-                    
-                    {replyingTo === comment.id && (
-                      <div className="mt-3">
-                        <Textarea
-                          placeholder="Escreva uma resposta..."
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          className="resize-none text-sm mb-2"
-                          rows={2}
-                          disabled={isReplyingToComment}
-                        />
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setReplyingTo(null)}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => comment.id && handleReply(comment.id)}
-                            disabled={!replyText.trim() || isReplyingToComment}
-                          >
-                            {isReplyingToComment ? "Enviando..." : "Responder"}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })
+          rootComments.map(comment => renderComment(comment))
         )}
       </div>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir comentário</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este comentário? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteComment}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {isDeletingComment ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Heart, Share, Eye, Bookmark } from "lucide-react";
 import { NewsItem } from "@/components/NewsCard";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import StockTicker from "@/components/StockTicker";
 import { useArticleBySlug } from "@/hooks/useNews";
@@ -28,7 +29,10 @@ const NewsDetail = () => {
     isLiked, 
     isBookmarked, 
     handleLike, 
-    handleBookmark 
+    handleBookmark,
+    likeLoading,
+    bookmarkLoading,
+    pendingAction
   } = useArticleInteractions(article?.id);
   
   // Handle comments
@@ -43,6 +47,14 @@ const NewsDetail = () => {
       navigate(`/news/${article.id}/${article.slug}`, { replace: true });
     }
   }, [article, slug, navigate]);
+
+  // Process any pending interactions after login
+  useEffect(() => {
+    if (user && pendingAction) {
+      console.log("Processing pending action:", pendingAction);
+      // The hooks will handle this automatically
+    }
+  }, [user, pendingAction]);
 
   const handleShare = async () => {
     if (!article) return;
@@ -83,9 +95,9 @@ const NewsDetail = () => {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-pulse flex flex-col items-center">
-            <div className="h-12 w-48 bg-gray-200 mb-4 rounded"></div>
-            <div className="h-6 w-32 bg-gray-200 rounded"></div>
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-12 w-12 border-4 border-t-blue-500 border-b-blue-300 rounded-full animate-spin"></div>
+            <p className="text-gray-600">Carregando artigo...</p>
           </div>
         </div>
       </Layout>
@@ -96,9 +108,9 @@ const NewsDetail = () => {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Article not found</h1>
-          <p className="mb-6">Sorry, the article you're looking for doesn't exist or has been removed.</p>
-          <Button onClick={() => navigate("/")}>Return to Home</Button>
+          <h1 className="text-2xl font-bold mb-4">Artigo não encontrado</h1>
+          <p className="mb-6">Desculpe, o artigo que você procura não existe ou foi removido.</p>
+          <Button onClick={() => navigate("/")}>Voltar para a Página Inicial</Button>
         </div>
       </Layout>
     );
@@ -123,7 +135,7 @@ const NewsDetail = () => {
           className="mb-4 md:mb-6 flex items-center text-gray-600 hover:text-finance-700"
         >
           <ChevronLeft size={20} className="mr-1" />
-          Back
+          Voltar
         </Button>
         
         <div className="mb-4 flex flex-wrap gap-2">
@@ -140,10 +152,10 @@ const NewsDetail = () => {
         <div className="flex items-center justify-between text-gray-500 mb-6 flex-wrap gap-y-2">
           <div className="flex items-center flex-wrap">
             <div className="mr-4">
-              By <span className="font-medium text-gray-700">{article.author}</span>
+              Por <span className="font-medium text-gray-700">{article.author}</span>
             </div>
             <div>
-              {article.publishDate && format(new Date(article.publishDate), "MMMM d, yyyy")}
+              {article.publishDate && format(new Date(article.publishDate), "d 'de' MMMM 'de' yyyy")}
             </div>
           </div>
         </div>
@@ -165,9 +177,11 @@ const NewsDetail = () => {
                 handleLogin();
               }
             }}
+            disabled={likeLoading}
           >
-            <Heart size={16} fill={isLiked ? "white" : "none"} />
-            {isLiked ? "Liked" : "Like"}
+            <Heart size={16} fill={isLiked ? "white" : "none"} 
+              className={likeLoading ? "animate-pulse" : ""} />
+            {isLiked ? "Curtido" : "Curtir"}
           </Button>
           
           <Button
@@ -178,9 +192,11 @@ const NewsDetail = () => {
                 handleLogin();
               }
             }}
+            disabled={bookmarkLoading}
           >
-            <Bookmark size={16} fill={isBookmarked ? "white" : "none"} />
-            {isBookmarked ? "Saved" : "Save"}
+            <Bookmark size={16} fill={isBookmarked ? "white" : "none"}
+              className={bookmarkLoading ? "animate-pulse" : ""} />
+            {isBookmarked ? "Salvo" : "Salvar"}
           </Button>
           
           <Button
@@ -189,7 +205,7 @@ const NewsDetail = () => {
             onClick={handleShare}
           >
             <Share size={16} />
-            Share
+            Compartilhar
           </Button>
         </div>
         
@@ -200,7 +216,7 @@ const NewsDetail = () => {
         
         {related.length > 0 && (
           <div className="mb-8 md:mb-10">
-            <h3 className="text-xl font-bold mb-4">Related Articles</h3>
+            <h3 className="text-xl font-bold mb-4">Artigos Relacionados</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {related.map((article) => (
                 <div key={article.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
@@ -216,7 +232,7 @@ const NewsDetail = () => {
                       <Badge className="mb-2 text-xs" variant="outline">{article.category}</Badge>
                       <h4 className="font-semibold text-sm line-clamp-2 mb-1">{article.title}</h4>
                       <p className="text-gray-500 text-xs">
-                        {format(new Date(article.publishedDate), "MMM d, yyyy")}
+                        {format(new Date(article.publishedDate), "d MMM, yyyy")}
                       </p>
                     </div>
                   </Link>

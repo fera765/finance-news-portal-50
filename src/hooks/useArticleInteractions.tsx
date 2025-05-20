@@ -19,6 +19,7 @@ export function useArticleInteractions(articleId: string | undefined) {
   const queryClient = useQueryClient();
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ type: 'like' | 'bookmark' } | null>(null);
 
   // Track article view
   useEffect(() => {
@@ -47,6 +48,12 @@ export function useArticleInteractions(articleId: string | undefined) {
         try {
           const liked = await checkIfLiked(articleId, userId);
           setIsLiked(liked);
+          
+          // If there was a pending like action and user is now authenticated, execute it
+          if (pendingAction?.type === 'like') {
+            likeMutation.mutate();
+            setPendingAction(null);
+          }
         } catch (error) {
           console.error('Error checking like status:', error);
         }
@@ -65,6 +72,12 @@ export function useArticleInteractions(articleId: string | undefined) {
         try {
           const bookmarked = await checkIfBookmarked(articleId, userId);
           setIsBookmarked(bookmarked);
+          
+          // If there was a pending bookmark action and user is now authenticated, execute it
+          if (pendingAction?.type === 'bookmark') {
+            bookmarkMutation.mutate();
+            setPendingAction(null);
+          }
         } catch (error) {
           console.error('Error checking bookmark status:', error);
         }
@@ -94,6 +107,8 @@ export function useArticleInteractions(articleId: string | undefined) {
       setIsLiked(newLikedState);
       toast(newLikedState ? 'Artigo curtido' : 'Curtida removida');
       queryClient.invalidateQueries({ queryKey: ['likes', articleId] });
+      queryClient.invalidateQueries({ queryKey: ['likes', userId] });
+      queryClient.invalidateQueries({ queryKey: ['articles', 'liked'] });
     },
     onError: (error) => {
       toast.error('Falha ao atualizar status de curtida');
@@ -119,6 +134,7 @@ export function useArticleInteractions(articleId: string | undefined) {
       setIsBookmarked(newBookmarkedState);
       toast(newBookmarkedState ? 'Artigo salvo' : 'Artigo removido dos salvos');
       queryClient.invalidateQueries({ queryKey: ['bookmarks', userId] });
+      queryClient.invalidateQueries({ queryKey: ['articles', 'bookmarked'] });
     },
     onError: () => {
       toast.error('Falha ao atualizar status de salvamento');
@@ -126,13 +142,21 @@ export function useArticleInteractions(articleId: string | undefined) {
   });
 
   const handleLike = () => {
-    if (!user) return false;
+    if (!user) {
+      // Store pending action and return false to trigger login
+      setPendingAction({ type: 'like' });
+      return false;
+    }
     likeMutation.mutate();
     return true;
   };
 
   const handleBookmark = () => {
-    if (!user) return false;
+    if (!user) {
+      // Store pending action and return false to trigger login
+      setPendingAction({ type: 'bookmark' });
+      return false;
+    }
     bookmarkMutation.mutate();
     return true;
   };
@@ -143,6 +167,7 @@ export function useArticleInteractions(articleId: string | undefined) {
     handleLike,
     handleBookmark,
     likeLoading: likeMutation.isPending,
-    bookmarkLoading: bookmarkMutation.isPending
+    bookmarkLoading: bookmarkMutation.isPending,
+    pendingAction
   };
 }

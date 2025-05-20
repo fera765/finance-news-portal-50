@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getComments, addComment, deleteComment, Comment } from '@/services/commentService';
+import { getComments, addComment, deleteComment, Comment, updateComment as updateCommentService } from '@/services/commentService';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -70,6 +70,21 @@ export function useComments(articleId: string | undefined) {
     }
   });
 
+  // Mutação para atualizar um comentário
+  const updateCommentMutation = useMutation({
+    mutationFn: ({ commentId, content }: { commentId: string, content: string }) => {
+      if (!user) throw new Error('Não é possível editar o comentário');
+      return updateCommentService(commentId, content);
+    },
+    onSuccess: () => {
+      toast.success('Comentário atualizado com sucesso');
+      queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
+    },
+    onError: () => {
+      toast.error('Falha ao atualizar comentário');
+    }
+  });
+
   return {
     comments,
     isLoading,
@@ -77,8 +92,10 @@ export function useComments(articleId: string | undefined) {
     addComment: addCommentMutation.mutate,
     deleteComment: deleteCommentMutation.mutate,
     replyToComment: replyToCommentMutation.mutate,
+    updateComment: updateCommentMutation.mutate,
     isAddingComment: addCommentMutation.isPending,
     isDeletingComment: deleteCommentMutation.isPending,
-    isReplyingToComment: replyToCommentMutation.isPending
+    isReplyingToComment: replyToCommentMutation.isPending,
+    isUpdatingComment: updateCommentMutation.isPending
   };
 }

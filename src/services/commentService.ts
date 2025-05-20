@@ -27,6 +27,15 @@ export const addComment = async (comment: Omit<Comment, 'id' | 'createdAt' | 'li
   return data;
 };
 
+export const updateComment = async (id: string, content: string) => {
+  const { data: comment } = await api.get(`/comments/${id}`);
+  const { data } = await api.patch(`/comments/${id}`, {
+    ...comment,
+    content
+  });
+  return data;
+};
+
 export const deleteComment = async (id: string) => {
   await api.delete(`/comments/${id}`);
   return true;
