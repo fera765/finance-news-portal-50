@@ -15,9 +15,11 @@ export function useArticleList() {
     queryKey: ['articles'],
     queryFn: () => getArticles(),
     staleTime: 300000, // 5 minutes
-    onError: (error) => {
-      console.error("Error loading articles:", error);
-      toast.error("Não foi possível carregar os artigos.");
+    meta: {
+      onError: (error: any) => {
+        console.error("Error loading articles:", error);
+        toast.error("Não foi possível carregar os artigos.");
+      }
     }
   });
 }
@@ -27,15 +29,19 @@ export function useArticleById(id: string | undefined) {
     queryKey: ['article', id],
     queryFn: () => id ? getArticleById(id) : null,
     enabled: !!id,
-    onSuccess: (data) => {
-      if (data?.id) {
-        // Track view silently in background
-        trackArticleView(data.id).catch(console.error);
+    meta: {
+      onSuccess: (data: Article | null) => {
+        if (data?.id) {
+          // Track view silently in background
+          trackArticleView(data.id).catch(console.error);
+        }
       }
     },
-    onError: (error) => {
-      console.error(`Error loading article (ID: ${id}):`, error);
-      toast.error("Não foi possível carregar o artigo.");
+    onSettled: (data, error) => {
+      if (error) {
+        console.error(`Error loading article (ID: ${id}):`, error);
+        toast.error("Não foi possível carregar o artigo.");
+      }
     }
   });
 }
@@ -45,15 +51,19 @@ export function useArticleBySlug(slug: string | undefined) {
     queryKey: ['article', 'slug', slug],
     queryFn: () => slug ? getArticleBySlug(slug) : null,
     enabled: !!slug,
-    onSuccess: (data) => {
-      if (data?.id) {
-        // Track view silently in background
-        trackArticleView(data.id).catch(console.error);
+    meta: {
+      onSuccess: (data: Article | null) => {
+        if (data?.id) {
+          // Track view silently in background
+          trackArticleView(data.id).catch(console.error);
+        }
       }
     },
-    onError: (error) => {
-      console.error(`Error loading article (slug: ${slug}):`, error);
-      toast.error("Não foi possível carregar o artigo.");
+    onSettled: (data, error) => {
+      if (error) {
+        console.error(`Error loading article (slug: ${slug}):`, error);
+        toast.error("Não foi possível carregar o artigo.");
+      }
     }
   });
 }
@@ -63,9 +73,11 @@ export function useFeaturedArticles() {
     queryKey: ['articles', 'featured'],
     queryFn: getFeaturedArticles,
     staleTime: 300000, // 5 minutes
-    onError: (error) => {
-      console.error("Error loading featured articles:", error);
-      toast.error("Não foi possível carregar os artigos em destaque.");
+    meta: {
+      onError: (error: any) => {
+        console.error("Error loading featured articles:", error);
+        toast.error("Não foi possível carregar os artigos em destaque.");
+      }
     },
     // Fallback to empty array to avoid errors
     placeholderData: []
