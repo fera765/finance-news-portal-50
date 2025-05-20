@@ -4,6 +4,7 @@ import { ArticleList } from "@/components/admin/ArticleList";
 import ArticleEditor from "@/components/admin/ArticleEditor";
 import { useArticles } from "@/hooks/useArticles";
 import { getCategories } from "@/services/categoryService";
+import { getUsers } from "@/services/userService";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Article } from "@/services/articleService";
 import { Button } from "@/components/ui/button";
@@ -48,20 +49,29 @@ const ArticleManagement = () => {
     queryFn: () => getCategories(),
   });
 
-  // Mock authors data (in a real app, you would fetch this)
-  const authors = [
-    { id: "1", name: "John Doe", role: "Editor" },
-    { id: "2", name: "Jane Smith", role: "Admin" },
-    { id: "3", name: "Bob Johnson", role: "Editor" },
-  ];
+  // Fetch authors
+  const { data: authors = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => getUsers(),
+  });
 
   // View article handler
   const handleViewArticle = (article: Article) => {
+    // Abrindo em nova aba com o slug correto
     window.open(`/news/${article.slug}`, '_blank');
   };
 
   // Filter articles based on search query and filters
-  const filteredArticles = articles.filter(article => {
+  const filteredArticles = articles.map(article => {
+    // Enriquecer artigos com informações de categoria e autor para exibição
+    const category = categories.find(cat => cat.id === article.category);
+    const categoryName = category ? category.name : 'Sem categoria';
+    
+    return {
+      ...article,
+      categoryName // Adicionar nome da categoria para exibição
+    };
+  }).filter(article => {
     // Search filter
     const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           article.content.toLowerCase().includes(searchQuery.toLowerCase());

@@ -1,11 +1,13 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { 
   Edit,
   Trash2,
   PlusCircle,
   CheckCircle,
   XCircle,
-  Search
+  Search,
+  Loader2
 } from "lucide-react";
 import {
   Card,
@@ -24,68 +26,106 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  getCategories, 
+  createCategory, 
+  updateCategory, 
+  deleteCategory,
+  Category
+} from "@/services/categoryService";
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  count: number;
-  active: boolean;
+interface CategoryWithCount extends Category {
+  count?: number;
+  active?: boolean;
 }
 
-// Mock data for categories
-const mockCategories: Category[] = [
-  {
-    id: "1",
-    name: "Economy",
-    slug: "economy",
-    count: 15,
-    active: true
-  },
-  {
-    id: "2",
-    name: "Markets",
-    slug: "markets",
-    count: 12,
-    active: true
-  },
-  {
-    id: "3",
-    name: "Business",
-    slug: "business",
-    count: 8,
-    active: true
-  },
-  {
-    id: "4",
-    name: "Cryptocurrency",
-    slug: "cryptocurrency",
-    count: 6,
-    active: true
-  },
-  {
-    id: "5",
-    name: "Real Estate",
-    slug: "real-estate",
-    count: 4,
-    active: false
-  }
-];
-
 const CategoryManagement = () => {
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
+  const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [newCategory, setNewCategory] = useState({ name: "", slug: "", active: true });
+  const [selectedCategory, setSelectedCategory] = useState<CategoryWithCount | null>(null);
+  const [newCategory, setNewCategory] = useState({ name: "", slug: "", description: "", active: true });
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Fetch categories
+  const { data: categoriesData = [], isLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories,
+  });
+  
+  // Fetch articles to count by category
+  const { data: articlesData = [] } = useQuery({
+    queryKey: ['articles'],
+    queryFn: async () => {
+      const response = await fetch('/articles');
+      return response.json();
+    },
+    meta: {
+      onError: () => {
+        console.error("Failed to fetch articles for category counts");
+      }
+    }
+  });
+  
+  // Enrich categories with article counts
+  const categories: CategoryWithCount[] = categoriesData.map((category: Category) => {
+    const count = articlesData.filter((article: any) => article.category === category.id).length;
+    return {
+      ...category,
+      count,
+      active: true // Assumimos todas as categorias como ativas por padrão
+    };
+  });
+  
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: createCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setIsAddDialogOpen(false);
+      setNewCategory({ name: "", slug: "", description: "", active: true });
+      toast.success(`Categoria "${newCategory.name}" foi criada.`);
+    },
+    onError: (error) => {
+      toast.error(`Erro ao criar categoria: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
+  });
+  
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: updateCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setIsEditDialogOpen(false);
+      toast.success(`Categoria "${newCategory.name}" foi atualizada.`);
+    },
+    onError: (error) => {
+      toast.error(`Erro ao atualizar categoria: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
+  });
+  
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setIsDeleteDialogOpen(false);
+      if (selectedCategory) {
+        toast.success(`Categoria "${selectedCategory.name}" foi excluída.`);
+      }
+    },
+    onError: (error) => {
+      toast.error(`Erro ao excluir categoria: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
+  });
   
   const generateSlug = (name: string) => {
     return name.toLowerCase()
@@ -118,71 +158,47 @@ const CategoryManagement = () => {
   
   const handleAddCategory = () => {
     if (!newCategory.name) {
-      toast("Category name is required");
+      toast.error("Nome da categoria é obrigatório");
       return;
     }
     
-    const newId = (categories.length + 1).toString();
-    
-    setCategories([
-      ...categories,
-      {
-        id: newId,
-        name: newCategory.name,
-        slug: newCategory.slug || generateSlug(newCategory.name),
-        count: 0,
-        active: newCategory.active
-      }
-    ]);
-    
-    setIsAddDialogOpen(false);
-    setNewCategory({ name: "", slug: "", active: true });
-    
-    toast(`Category "${newCategory.name}" has been created.`);
+    createMutation.mutate({
+      name: newCategory.name,
+      slug: newCategory.slug || generateSlug(newCategory.name),
+      description: newCategory.description
+    });
   };
   
-  const openEditDialog = (category: Category) => {
+  const openEditDialog = (category: CategoryWithCount) => {
     setSelectedCategory(category);
     setNewCategory({
       name: category.name,
       slug: category.slug,
-      active: category.active
+      description: category.description || "",
+      active: category.active !== false
     });
     setIsEditDialogOpen(true);
   };
   
   const handleUpdateCategory = () => {
-    if (!selectedCategory) return;
+    if (!selectedCategory?.id) return;
     
-    setCategories(categories.map(cat => 
-      cat.id === selectedCategory.id 
-        ? { 
-            ...cat, 
-            name: newCategory.name, 
-            slug: newCategory.slug,
-            active: newCategory.active
-          } 
-        : cat
-    ));
-    
-    setIsEditDialogOpen(false);
-    setNewCategory({ name: "", slug: "", active: true });
-    
-    toast(`Category "${newCategory.name}" has been updated.`);
+    updateMutation.mutate({
+      id: selectedCategory.id,
+      name: newCategory.name,
+      slug: newCategory.slug,
+      description: newCategory.description
+    });
   };
   
-  const openDeleteDialog = (category: Category) => {
+  const openDeleteDialog = (category: CategoryWithCount) => {
     setSelectedCategory(category);
     setIsDeleteDialogOpen(true);
   };
   
   const handleDeleteCategory = () => {
-    if (!selectedCategory) return;
-    
-    setCategories(categories.filter(cat => cat.id !== selectedCategory.id));
-    setIsDeleteDialogOpen(false);
-    
-    toast(`Category "${selectedCategory.name}" has been deleted.`);
+    if (!selectedCategory?.id) return;
+    deleteMutation.mutate(selectedCategory.id);
   };
 
   // Filter categories by search query
@@ -235,7 +251,16 @@ const CategoryManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCategories.length === 0 ? (
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        <div className="flex justify-center items-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                          <span className="ml-2">Loading categories...</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredCategories.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         No categories found
@@ -246,10 +271,10 @@ const CategoryManagement = () => {
                       <TableRow key={category.id} className="hover:bg-muted/30">
                         <TableCell className="font-medium">{category.name}</TableCell>
                         <TableCell>{category.slug}</TableCell>
-                        <TableCell>{category.count}</TableCell>
+                        <TableCell>{category.count || 0}</TableCell>
                         <TableCell>
-                          <Badge variant={category.active ? "default" : "outline"} className={category.active ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}>
-                            {category.active ? "Active" : "Inactive"}
+                          <Badge variant={category.active !== false ? "default" : "outline"} className={category.active !== false ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}>
+                            {category.active !== false ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right space-x-2">
@@ -301,6 +326,16 @@ const CategoryManagement = () => {
                   This will be used in the URL: example.com/category/{newCategory.slug || 'url-slug'}
                 </p>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input
+                  id="description"
+                  value={newCategory.description}
+                  onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+                  placeholder="Brief description of this category"
+                  className="w-full"
+                />
+              </div>
               <div className="flex items-center gap-2">
                 <Switch
                   id="active"
@@ -311,8 +346,17 @@ const CategoryManagement = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleAddCategory}>Add Category</Button>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={createMutation.isPending}>Cancel</Button>
+              <Button onClick={handleAddCategory} disabled={createMutation.isPending}>
+                {createMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Category"
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -345,6 +389,15 @@ const CategoryManagement = () => {
                   This will be used in the URL: example.com/category/{newCategory.slug || 'url-slug'}
                 </p>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description (Optional)</Label>
+                <Input
+                  id="edit-description"
+                  value={newCategory.description}
+                  onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+                  placeholder="Brief description of this category"
+                />
+              </div>
               <div className="flex items-center gap-2">
                 <Switch
                   id="edit-active"
@@ -355,8 +408,17 @@ const CategoryManagement = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleUpdateCategory}>Update Category</Button>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={updateMutation.isPending}>Cancel</Button>
+              <Button onClick={handleUpdateCategory} disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Category"
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -371,7 +433,7 @@ const CategoryManagement = () => {
               <p className="mb-2">
                 Are you sure you want to delete category "{selectedCategory?.name}"? This action cannot be undone.
               </p>
-              {selectedCategory && selectedCategory.count > 0 && (
+              {selectedCategory && selectedCategory.count && selectedCategory.count > 0 && (
                 <div className="flex items-start gap-2 p-3 bg-amber-50 text-amber-800 rounded-md">
                   <XCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                   <p className="text-sm">
@@ -381,8 +443,17 @@ const CategoryManagement = () => {
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDeleteCategory}>Delete Category</Button>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={deleteMutation.isPending}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDeleteCategory} disabled={deleteMutation.isPending}>
+                {deleteMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Category"
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

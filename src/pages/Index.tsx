@@ -11,26 +11,49 @@ import { Article } from "@/services/articleService";
 import { useNewsletter } from "@/hooks/useNewsletter";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getCategories, Category } from "@/services/categoryService";
+import { getUsers } from "@/services/userService";
+import { User } from "@/components/Layout";
 
-// Convert API article to NewsItem format - Com verificações de dados
-const mapArticleToNewsItem = (article: Article): NewsItem => ({
-  id: article.id || crypto.randomUUID(), // Garante ID único
-  title: article.title || "Sem título",
-  summary: article.summary || 'Sem resumo disponível',
-  imageUrl: article.imageUrl || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d',
-  category: article.category || 'Geral',
-  publishedDate: typeof article.publishDate === 'object' && article.publishDate instanceof Date 
-    ? article.publishDate.toISOString() 
-    : String(article.publishDate) || new Date().toISOString(),
-  author: article.author || 'Equipe Editorial',
-  slug: article.slug || `artigo-${article.id || crypto.randomUUID()}`
-});
+// Convert API article to NewsItem format - Com verificações de dados e busca de nomes
+const mapArticleToNewsItem = (article: Article, categories: Category[] = [], authors: User[] = []): NewsItem => {
+  // Encontrar nome da categoria baseado no ID
+  const categoryName = categories.find(cat => cat.id === article.category)?.name || 'Geral';
+  
+  // Encontrar nome do autor baseado no ID
+  const authorName = authors.find(auth => auth.id === article.author)?.name || 'Equipe Editorial';
+  
+  return {
+    id: article.id || crypto.randomUUID(), // Garante ID único
+    title: article.title || "Sem título",
+    summary: article.summary || 'Sem resumo disponível',
+    imageUrl: article.imageUrl || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d',
+    category: categoryName,
+    publishedDate: typeof article.publishDate === 'object' && article.publishDate instanceof Date 
+      ? article.publishDate.toISOString() 
+      : String(article.publishDate) || new Date().toISOString(),
+    author: authorName,
+    slug: article.slug || `artigo-${article.id || crypto.randomUUID()}`
+  };
+};
 
 const Index = () => {
   const [visibleNews, setVisibleNews] = useState(6);
   
   // Newsletter state com hook
   const { email, setEmail, isLoading: isNewsletterLoading, handleSubscribe } = useNewsletter();
+  
+  // Buscar categorias e autores para exibir nomes em vez de IDs
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories
+  });
+  
+  const { data: authors = [] } = useQuery({
+    queryKey: ['authors'],
+    queryFn: getUsers
+  });
   
   // Use React Query hooks to fetch data
   const { 
@@ -45,13 +68,13 @@ const Index = () => {
     isError: articlesError
   } = useArticleList();
   
-  // Mapeamento de dados seguro, verificando se os arrays não são undefined
+  // Mapeamento de dados seguro com nomes reais em vez de IDs
   const featuredNews = featuredArticles?.length > 0 
-    ? featuredArticles.map(mapArticleToNewsItem) 
+    ? featuredArticles.map(article => mapArticleToNewsItem(article, categories, authors)) 
     : [];
     
   const latestNews = allArticles?.length > 0 
-    ? allArticles.map(mapArticleToNewsItem) 
+    ? allArticles.map(article => mapArticleToNewsItem(article, categories, authors)) 
     : [];
   
   const loadMore = () => {

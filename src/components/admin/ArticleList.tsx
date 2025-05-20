@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Table, 
@@ -20,8 +21,12 @@ import { Article } from "@/services/articleService";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
+interface ArticleWithCategoryName extends Article {
+  categoryName?: string;
+}
+
 interface ArticleListProps {
-  articles: Article[];
+  articles: ArticleWithCategoryName[];
   isLoading: boolean;
   onEdit: (article: Article) => void;
   onDelete: (article: Article) => void;
@@ -74,7 +79,10 @@ export function ArticleList({
   const handleDeleteClick = (article: Article) => {
     if (confirm(`Are you sure you want to delete "${article.title}"?`)) {
       onDelete(article);
-      toast(`"${article.title}" has been deleted`);
+      toast({
+        title: "Article deleted",
+        description: `"${article.title}" has been deleted`
+      });
     }
   };
 
@@ -163,7 +171,7 @@ export function ArticleList({
                       {article.status}
                     </span>
                   </TableCell>
-                  <TableCell>{article.category}</TableCell>
+                  <TableCell>{article.categoryName || "Unknown"}</TableCell>
                   <TableCell>
                     {article.status === "scheduled" ? (
                       <div className="flex items-center gap-2">

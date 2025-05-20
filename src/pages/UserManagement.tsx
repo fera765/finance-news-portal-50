@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { User } from "@/components/Layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getUsers, deleteUser, updateUser } from "@/services/userService";
+import { getUsers, deleteUser, updateUser, banUser, unbanUser } from "@/services/userService";
 import { toast } from "sonner";
 import { MoreVertical, Plus, Ban, Trash, CircleCheck, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -58,19 +58,33 @@ const UserManagement = () => {
       toast.success("Usuário excluído com sucesso");
       setIsDeleteDialogOpen(false);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error deleting user:", error);
       toast.error("Erro ao excluir usuário");
     },
   });
 
-  const updateUserStatusMutation = useMutation({
-    mutationFn: updateUser,
+  const banUserMutation = useMutation({
+    mutationFn: banUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Status do usuário atualizado com sucesso");
+      toast.success("Usuário banido com sucesso");
     },
-    onError: () => {
-      toast.error("Erro ao atualizar status do usuário");
+    onError: (error) => {
+      console.error("Error banning user:", error);
+      toast.error("Erro ao banir usuário");
+    },
+  });
+
+  const unbanUserMutation = useMutation({
+    mutationFn: unbanUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Usuário desbanido com sucesso");
+    },
+    onError: (error) => {
+      console.error("Error unbanning user:", error);
+      toast.error("Erro ao desbanir usuário");
     },
   });
 
@@ -95,14 +109,15 @@ const UserManagement = () => {
     }
   };
 
-  const toggleUserStatus = (user: ExtendedUser) => {
-    const newStatus = user.status === "banned" ? "active" : "banned";
-    
+  const handleBanUser = (user: ExtendedUser) => {
     if (user.id) {
-      updateUserStatusMutation.mutate({
-        id: user.id,
-        status: newStatus,
-      });
+      banUserMutation.mutate(user.id);
+    }
+  };
+
+  const handleUnbanUser = (user: ExtendedUser) => {
+    if (user.id) {
+      unbanUserMutation.mutate(user.id);
     }
   };
 
@@ -194,7 +209,7 @@ const UserManagement = () => {
                       {user.status === "banned" ? (
                         <Badge variant="destructive">Banido</Badge>
                       ) : (
-                        <Badge variant="success" className="bg-green-100 text-green-800 border-green-300">
+                        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
                           Ativo
                         </Badge>
                       )}
@@ -212,12 +227,12 @@ const UserManagement = () => {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {user.status === "banned" ? (
-                            <DropdownMenuItem onClick={() => toggleUserStatus(user)}>
+                            <DropdownMenuItem onClick={() => handleUnbanUser(user)}>
                               <CircleCheck className="mr-2 h-4 w-4" />
                               <span>Desbanir</span>
                             </DropdownMenuItem>
                           ) : (
-                            <DropdownMenuItem onClick={() => toggleUserStatus(user)}>
+                            <DropdownMenuItem onClick={() => handleBanUser(user)}>
                               <Ban className="mr-2 h-4 w-4" />
                               <span>Banir</span>
                             </DropdownMenuItem>
@@ -264,7 +279,12 @@ const UserManagement = () => {
               className="bg-red-600 hover:bg-red-700"
               onClick={confirmDelete}
             >
-              Excluir
+              {deleteUserMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
