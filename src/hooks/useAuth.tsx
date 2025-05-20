@@ -17,14 +17,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Load user data on mount
   useEffect(() => {
     const loadUser = async () => {
       setLoading(true);
       try {
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
+        console.log("Current user loaded:", currentUser?.id || "No user found");
       } catch (error) {
         console.error('Failed to load user:', error);
+        // Clear any invalid auth data
+        authService.logout();
       } finally {
         setLoading(false);
       }
@@ -33,18 +37,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadUser();
   }, []);
 
+  // Login method
   const login = async (email: string, password: string): Promise<User> => {
+    setLoading(true);
     try {
       const loggedInUser = await authService.login(email, password);
       setUser(loggedInUser);
-      toast.success('Login realizado com sucesso');
+      toast.success(`Bem-vindo, ${loggedInUser.name}!`);
       return loggedInUser;
-    } catch (error) {
-      toast.error('Falha no login. Verifique suas credenciais.');
+    } catch (error: any) {
+      toast.error(error.message || 'Falha no login. Verifique suas credenciais.');
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Logout method
   const logout = () => {
     authService.logout();
     setUser(null);

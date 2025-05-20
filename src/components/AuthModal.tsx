@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -12,23 +12,51 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
+import { toast } from "sonner";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (userData: { email: string; password: string }) => void;
+  defaultTab?: "login" | "signup";
 }
 
-const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
-  const [activeTab, setActiveTab] = useState("login");
+const AuthModal = ({ isOpen, onClose, onSuccess, defaultTab = "login" }: AuthModalProps) => {
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Reset tab when modal is opened or defaultTab changes
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(defaultTab);
+    }
+  }, [isOpen, defaultTab]);
   
   const handleReset = () => {
-    setActiveTab("login");
+    setActiveTab(defaultTab);
+    setIsProcessing(false);
+  };
+
+  const handleAuthSuccess = (userData: { email: string; password: string }) => {
+    setIsProcessing(true);
+    
+    // Small delay to allow authentication to complete
+    setTimeout(() => {
+      try {
+        onSuccess(userData);
+        onClose();
+      } catch (error) {
+        console.error("Error in auth success handler:", error);
+        toast.error("Erro ao finalizar autenticação. Tente novamente.");
+      } finally {
+        setIsProcessing(false);
+      }
+    }, 500);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
+      if (!open && !isProcessing) {
         handleReset();
         onClose();
       }
@@ -48,16 +76,16 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           </TabsList>
           
           <TabsContent value="login">
-            <LoginForm onSuccess={onSuccess} />
+            <LoginForm onSuccess={handleAuthSuccess} />
           </TabsContent>
           
           <TabsContent value="signup">
-            <SignupForm onSuccess={onSuccess} />
+            <SignupForm onSuccess={handleAuthSuccess} />
           </TabsContent>
         </Tabs>
         
         <DialogFooter className="flex flex-col sm:flex-row sm:justify-between">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isProcessing}>
             Cancelar
           </Button>
         </DialogFooter>

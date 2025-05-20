@@ -18,12 +18,12 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 seconds timeout
+  timeout: 15000, // Increased timeout to 15 seconds
 });
 
 // Custom retry configuration (stored outside axios config)
 const maxRetries = 3;
-const retryDelay = 1000;
+const retryDelay = 1500; // Increased delay between retries
 
 // Add a request interceptor to include auth token if available
 api.interceptors.request.use(
@@ -32,31 +32,62 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+    console.log(`API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Add a response interceptor to handle common errors
 api.interceptors.response.use(
-  response => response,
+  response => {
+    console.log(`API Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
   async error => {
     const originalRequest = error.config;
+    
+    // Log detailed error information
+    console.error('API Error:', {
+      url: originalRequest?.url,
+      method: originalRequest?.method,
+      status: error.response?.status,
+      message: error.message,
+      retryCount: originalRequest?._retryCount || 0
+    });
     
     // If the error is a network error or timeout, retry
     if ((error.message === 'Network Error' || error.code === 'ECONNABORTED') && 
         originalRequest._retry !== true && 
-        originalRequest._retryCount < maxRetries) {
+        (originalRequest._retryCount || 0) < maxRetries) {
       
       originalRequest._retry = true;
       originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+      
+      console.log(`Retrying request (${originalRequest._retryCount}/${maxRetries}): ${originalRequest.url}`);
       
       // Wait before retrying
       await new Promise(resolve => setTimeout(resolve, retryDelay));
       
       return api(originalRequest);
+    }
+    
+    // User friendly error message based on error type
+    if (error.message === 'Network Error') {
+      error.userMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão de internet.';
+    } else if (error.code === 'ECONNABORTED') {
+      error.userMessage = 'A requisição demorou muito tempo. Por favor, tente novamente.';
+    } else if (error.response?.status === 401) {
+      error.userMessage = 'Credenciais inválidas ou sessão expirada.';
+    } else if (error.response?.status === 403) {
+      error.userMessage = 'Você não tem permissão para acessar este recurso.';
+    } else if (error.response?.status === 404) {
+      error.userMessage = 'O recurso solicitado não foi encontrado.';
+    } else if (error.response?.status >= 500) {
+      error.userMessage = 'Erro no servidor. Por favor, tente novamente mais tarde.';
     }
     
     return Promise.reject(error);

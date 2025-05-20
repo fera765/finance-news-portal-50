@@ -1,6 +1,6 @@
-
 import { api } from './api';
 import { User } from '@/components/Layout';
+import { toast } from "sonner";
 
 // Mock users for offline/demo mode
 const MOCK_USERS = [
@@ -10,7 +10,8 @@ const MOCK_USERS = [
     email: "demo@example.com",
     password: "password123",
     avatar: "https://i.pravatar.cc/150?u=demo",
-    role: "user" as "user" | "admin" | "editor"
+    role: "user" as "user" | "admin" | "editor",
+    status: "active" as "active" | "banned"
   },
   {
     id: "mock-admin-1",
@@ -18,50 +19,84 @@ const MOCK_USERS = [
     email: "admin@example.com",
     password: "admin123",
     avatar: "https://i.pravatar.cc/150?u=admin",
-    role: "admin" as "user" | "admin" | "editor"
+    role: "admin" as "user" | "admin" | "editor",
+    status: "active" as "active" | "banned"
   }
 ];
 
 // Extended User type for auth operations that include password
 interface UserWithPassword extends User {
   password: string;
+  status?: "active" | "banned";
 }
 
 // Simple login service that works with JSON Server
 export const login = async (email: string, password: string): Promise<User> => {
   try {
+    console.log('Login attempt for:', email);
+    
     // With JSON Server, we need to manually match credentials
-    const { data: users } = await api.get<UserWithPassword[]>('/users', {
-      params: { email }
+    // First try to find by email (case insensitive)
+    const { data: usersByEmail } = await api.get<UserWithPassword[]>('/users', {
+      params: { email_like: email }
     });
-
-    const user = users.find(user => user.email === email && user.password === password);
+    
+    // Find user with matching email (case insensitive) and password
+    const user = usersByEmail.find(u => 
+      u.email && u.email.toLowerCase() === email.toLowerCase() && 
+      u.password === password &&
+      u.status !== "banned"
+    );
     
     if (!user) {
+      console.error('Invalid credentials or user not found');
       throw new Error('Invalid email or password');
     }
 
+    // Check if user is banned
+    if (user.status === "banned") {
+      console.error('User is banned:', user.id);
+      throw new Error('Esta conta foi suspensa. Entre em contato com o suporte.');
+    }
+
+    console.log('Login successful for user:', user.id);
+    
     // In a real app, we would get a token from the backend
     // For this demo, we'll simulate it with the user ID
     const token = `demo-token-${user.id}`;
     localStorage.setItem('financeNewsAuthToken', token);
+    localStorage.setItem('financeNewsUser', JSON.stringify({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar
+    }));
     
     // Remove password before returning the user
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword as User;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Login error:", error);
     
     // If server is unreachable, try mock users for demo mode
-    if (error.message === 'Network Error') {
+    if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
       const mockUser = MOCK_USERS.find(user => 
-        user.email === email && user.password === password
+        user.email.toLowerCase() === email.toLowerCase() && 
+        user.password === password
       );
       
       if (mockUser) {
-        console.log("Using mock user for demo mode");
+        console.log("Using mock user for demo mode:", mockUser.id);
         const token = `mock-token-${mockUser.id}`;
         localStorage.setItem('financeNewsAuthToken', token);
+        localStorage.setItem('financeNewsUser', JSON.stringify({
+          id: mockUser.id,
+          name: mockUser.name,
+          email: mockUser.email,
+          role: mockUser.role,
+          avatar: mockUser.avatar
+        }));
         
         // Remove password before returning
         const { password: _, ...userWithoutPassword } = mockUser;
@@ -69,18 +104,38 @@ export const login = async (email: string, password: string): Promise<User> => {
       }
     }
     
+    // Re-throw with a user-friendly message
+    if (error.userMessage) {
+      throw new Error(error.userMessage);
+    }
     throw error;
   }
 };
 
 export const logout = () => {
+  console.log('User logout');
   localStorage.removeItem('financeNewsAuthToken');
+  localStorage.removeItem('financeNewsUser');
 };
 
 // Get the current user based on the stored token
 export const getCurrentUser = async (): Promise<User | null> => {
   const token = localStorage.getItem('financeNewsAuthToken');
   if (!token) return null;
+  
+  // Try to get cached user from localStorage first
+  const cachedUser = localStorage.getItem('financeNewsUser');
+  let user: User | null = null;
+  
+  if (cachedUser) {
+    try {
+      user = JSON.parse(cachedUser) as User;
+      console.log('Using cached user data:', user.id);
+    } catch (e) {
+      console.error('Error parsing cached user:', e);
+      localStorage.removeItem('financeNewsUser');
+    }
+  }
   
   // Check if it's a mock token
   if (token.startsWith('mock-token-')) {
@@ -89,17 +144,28 @@ export const getCurrentUser = async (): Promise<User | null> => {
     
     if (mockUser) {
       const { password: _, ...userWithoutPassword } = mockUser;
+      console.log('Using mock user from token:', mockUser.id);
       return userWithoutPassword;
     }
     
-    return null;
+    return user;
   }
   
   // Extract user ID from our simulated token
   const userId = token.replace('demo-token-', '');
   
   try {
+    console.log('Fetching current user data for ID:', userId);
     const { data } = await api.get<UserWithPassword>(`/users/${userId}`);
+    
+    // Check if user is banned
+    if (data.status === "banned") {
+      console.error('User is banned:', data.id);
+      toast.error('Esta conta foi suspensa. Entre em contato com o suporte.');
+      logout();
+      return null;
+    }
+    
     // Remove password before returning
     const { password: _, ...userWithoutPassword } = data;
     
@@ -109,10 +175,22 @@ export const getCurrentUser = async (): Promise<User | null> => {
       userWithoutPassword.role = "user" as "user" | "admin" | "editor";
     }
     
+    // Update cached user
+    localStorage.setItem('financeNewsUser', JSON.stringify(userWithoutPassword));
+    
     return userWithoutPassword as User;
   } catch (error) {
     console.error("Error getting current user:", error);
+    
+    // Return cached user data if available and API fails
+    if (user) {
+      console.log('Returning cached user data due to API error');
+      return user;
+    }
+    
+    // Otherwise clear auth data
     localStorage.removeItem('financeNewsAuthToken');
+    localStorage.removeItem('financeNewsUser');
     return null;
   }
 };
@@ -124,36 +202,55 @@ export const register = async (userData: {
   password: string;
 }): Promise<User> => {
   try {
-    // Check if email already exists
+    console.log('Registering new user:', userData.email);
+    
+    // Check if email already exists (case insensitive)
     const { data: existingUsers } = await api.get<UserWithPassword[]>('/users', {
-      params: { email: userData.email }
+      params: { email_like: userData.email }
     });
     
-    if (existingUsers.length > 0) {
-      throw new Error('Email already registered');
+    const emailExists = existingUsers.some(user => 
+      user.email && user.email.toLowerCase() === userData.email.toLowerCase()
+    );
+    
+    if (emailExists) {
+      console.error('Email already registered:', userData.email);
+      throw new Error('Email já registrado');
     }
     
-    // Create new user with properly typed role
+    // Create new user with properly typed role and status
     const newUser = {
       ...userData,
       role: 'user' as 'user' | 'admin' | 'editor',
+      status: 'active' as 'active' | 'banned',
+      avatar: `https://i.pravatar.cc/150?u=${Date.now()}`,
       createdAt: new Date().toISOString()
     };
     
     const { data } = await api.post<UserWithPassword>('/users', newUser);
+    console.log('User registered successfully:', data.id);
     
     // Auto-login the user
     const token = `demo-token-${data.id}`;
     localStorage.setItem('financeNewsAuthToken', token);
+    localStorage.setItem('financeNewsUser', JSON.stringify({
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      role: data.role,
+      avatar: data.avatar
+    }));
     
     // Remove password before returning
     const { password: _, ...userWithoutPassword } = data;
     return userWithoutPassword as User;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Registration error:", error);
     
     // If server is unreachable, create a temporary mock user
-    if (error.message === 'Network Error') {
+    if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
+      console.log('Creating offline mock user due to network error');
+      
       const mockId = `temp-${Date.now()}`;
       const mockUser = {
         id: mockId,
@@ -161,20 +258,78 @@ export const register = async (userData: {
         email: userData.email,
         password: userData.password,
         role: 'user' as 'user' | 'admin' | 'editor',
+        status: 'active' as 'active' | 'banned',
         avatar: `https://i.pravatar.cc/150?u=${mockId}`
       };
       
       // Store in localStorage temporarily
-      localStorage.setItem('mockUser', JSON.stringify(mockUser));
+      const offlineUsers = JSON.parse(localStorage.getItem('offlineUsers') || '[]');
+      offlineUsers.push(mockUser);
+      localStorage.setItem('offlineUsers', JSON.stringify(offlineUsers));
       
       const token = `mock-token-${mockId}`;
       localStorage.setItem('financeNewsAuthToken', token);
+      localStorage.setItem('financeNewsUser', JSON.stringify({
+        id: mockUser.id,
+        name: mockUser.name,
+        email: mockUser.email,
+        role: mockUser.role,
+        avatar: mockUser.avatar
+      }));
+      
+      toast.info('Cadastro realizado em modo offline. Seus dados serão sincronizados quando a conexão for restaurada.', {
+        duration: 5000
+      });
       
       // Remove password before returning
       const { password: _, ...userWithoutPassword } = mockUser;
       return userWithoutPassword;
     }
     
+    // Re-throw with a user-friendly message
+    if (error.userMessage) {
+      throw new Error(error.userMessage);
+    }
     throw error;
   }
 };
+
+// Function to sync offline users when connection is restored
+export const syncOfflineUsers = async (): Promise<void> => {
+  try {
+    const offlineUsers = JSON.parse(localStorage.getItem('offlineUsers') || '[]');
+    if (offlineUsers.length === 0) return;
+    
+    console.log('Attempting to sync offline users:', offlineUsers.length);
+    
+    for (const user of offlineUsers) {
+      try {
+        // Check if the user already exists on server
+        const { data: existingUsers } = await api.get<UserWithPassword[]>('/users', {
+          params: { email: user.email }
+        });
+        
+        if (existingUsers.length === 0) {
+          // User doesn't exist, create it
+          await api.post('/users', user);
+          console.log('Synced offline user:', user.email);
+        } else {
+          console.log('User already exists on server:', user.email);
+        }
+      } catch (error) {
+        console.error('Error syncing individual user:', user.email, error);
+      }
+    }
+    
+    // Clear offline users
+    localStorage.removeItem('offlineUsers');
+    toast.success('Dados offline sincronizados com sucesso!');
+  } catch (error) {
+    console.error('Error syncing offline users:', error);
+  }
+};
+
+// Try to sync offline users on app startup
+setTimeout(() => {
+  syncOfflineUsers();
+}, 5000);
