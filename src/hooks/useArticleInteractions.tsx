@@ -20,6 +20,7 @@ export function useArticleInteractions(articleId: string | undefined) {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ type: 'like' | 'bookmark' } | null>(null);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
   // Track article view
   useEffect(() => {
@@ -44,6 +45,7 @@ export function useArticleInteractions(articleId: string | undefined) {
   // Check if article is liked
   useEffect(() => {
     const checkLikeStatus = async () => {
+      setIsCheckingStatus(true);
       if (articleId && userId) {
         try {
           const liked = await checkIfLiked(articleId, userId);
@@ -56,9 +58,12 @@ export function useArticleInteractions(articleId: string | undefined) {
           }
         } catch (error) {
           console.error('Error checking like status:', error);
+        } finally {
+          setIsCheckingStatus(false);
         }
       } else {
         setIsLiked(false);
+        setIsCheckingStatus(false);
       }
     };
 
@@ -106,13 +111,15 @@ export function useArticleInteractions(articleId: string | undefined) {
     onSuccess: (newLikedState) => {
       setIsLiked(newLikedState);
       toast(newLikedState ? 'Artigo curtido' : 'Curtida removida');
+      
+      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['likes', articleId] });
       queryClient.invalidateQueries({ queryKey: ['likes', userId] });
       queryClient.invalidateQueries({ queryKey: ['articles', 'liked'] });
     },
     onError: (error) => {
-      toast.error('Falha ao atualizar status de curtida');
       console.error('Like error:', error);
+      toast.error('Falha ao atualizar status de curtida. Tente novamente.');
     }
   });
 
@@ -133,11 +140,14 @@ export function useArticleInteractions(articleId: string | undefined) {
     onSuccess: (newBookmarkedState) => {
       setIsBookmarked(newBookmarkedState);
       toast(newBookmarkedState ? 'Artigo salvo' : 'Artigo removido dos salvos');
+      
+      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['bookmarks', userId] });
       queryClient.invalidateQueries({ queryKey: ['articles', 'bookmarked'] });
     },
-    onError: () => {
-      toast.error('Falha ao atualizar status de salvamento');
+    onError: (error) => {
+      console.error('Bookmark error:', error);
+      toast.error('Falha ao atualizar status de salvamento. Tente novamente.');
     }
   });
 
@@ -166,7 +176,7 @@ export function useArticleInteractions(articleId: string | undefined) {
     isBookmarked,
     handleLike,
     handleBookmark,
-    likeLoading: likeMutation.isPending,
+    likeLoading: likeMutation.isPending || isCheckingStatus,
     bookmarkLoading: bookmarkMutation.isPending,
     pendingAction
   };
