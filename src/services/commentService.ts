@@ -9,6 +9,8 @@ export interface Comment {
   createdAt: string;
   parentId?: string;
   likes?: number;
+  userName?: string;
+  userAvatar?: string;
 }
 
 export const getComments = async (articleId: string) => {
