@@ -35,10 +35,8 @@ export function useArticleById(id: string | undefined) {
           // Track view silently in background
           trackArticleView(data.id).catch(console.error);
         }
-      }
-    },
-    onSettled: (data, error) => {
-      if (error) {
+      },
+      onError: (error: any) => {
         console.error(`Error loading article (ID: ${id}):`, error);
         toast.error("Não foi possível carregar o artigo.");
       }
@@ -57,10 +55,8 @@ export function useArticleBySlug(slug: string | undefined) {
           // Track view silently in background
           trackArticleView(data.id).catch(console.error);
         }
-      }
-    },
-    onSettled: (data, error) => {
-      if (error) {
+      },
+      onError: (error: any) => {
         console.error(`Error loading article (slug: ${slug}):`, error);
         toast.error("Não foi possível carregar o artigo.");
       }
