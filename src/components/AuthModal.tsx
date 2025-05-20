@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -22,7 +21,7 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose, onSuccess, defaultTab = "login" }: AuthModalProps) => {
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeTab, setActiveTab] = useState<"login" | "signup">(defaultTab);
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Reset tab when modal is opened or defaultTab changes
@@ -54,6 +53,13 @@ const AuthModal = ({ isOpen, onClose, onSuccess, defaultTab = "login" }: AuthMod
     }, 500);
   };
 
+  // Create a handler function that enforces the correct type
+  const handleTabChange = (value: string) => {
+    if (value === "login" || value === "signup") {
+      setActiveTab(value);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open && !isProcessing) {
@@ -69,7 +75,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, defaultTab = "login" }: AuthMod
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Cadastro</TabsTrigger>
