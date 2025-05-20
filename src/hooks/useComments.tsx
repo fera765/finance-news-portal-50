@@ -20,9 +20,11 @@ export function useComments(articleId: string | undefined) {
     enabled: !!articleId,
     staleTime: 60000, // 1 minute
     retry: 2,
-    onError: (error) => {
-      console.error('Error fetching comments:', error);
-      toast.error('Não foi possível carregar os comentários. Tente novamente mais tarde.');
+    meta: {
+      onError: (error: Error) => {
+        console.error('Error fetching comments:', error);
+        toast.error('Não foi possível carregar os comentários. Tente novamente mais tarde.');
+      }
     }
   });
 
