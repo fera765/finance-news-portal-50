@@ -9,19 +9,21 @@ import StockTicker from "@/components/StockTicker";
 import { useFeaturedArticles, useArticleList } from "@/hooks/useNews";
 import { Article } from "@/services/articleService";
 import { useNewsletter } from "@/hooks/useNewsletter";
+import { toast } from "sonner";
+import { FileText } from "lucide-react";
 
-// Convert API article to NewsItem format
+// Convert API article to NewsItem format - Com verificações de dados
 const mapArticleToNewsItem = (article: Article): NewsItem => ({
-  id: article.id || '',
-  title: article.title,
-  summary: article.summary || '',
+  id: article.id || crypto.randomUUID(), // Garante ID único
+  title: article.title || "Sem título",
+  summary: article.summary || 'Sem resumo disponível',
   imageUrl: article.imageUrl || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d',
-  category: article.category,
+  category: article.category || 'Geral',
   publishedDate: typeof article.publishDate === 'object' && article.publishDate instanceof Date 
     ? article.publishDate.toISOString() 
     : String(article.publishDate) || new Date().toISOString(),
-  author: article.author,
-  slug: article.slug
+  author: article.author || 'Equipe Editorial',
+  slug: article.slug || `artigo-${article.id || crypto.randomUUID()}`
 });
 
 const Index = () => {
@@ -31,12 +33,26 @@ const Index = () => {
   const { email, setEmail, isLoading: isNewsletterLoading, handleSubscribe } = useNewsletter();
   
   // Use React Query hooks to fetch data
-  const { data: featuredArticles = [], isLoading: featuredLoading } = useFeaturedArticles();
-  const { data: allArticles = [], isLoading: articlesLoading } = useArticleList();
+  const { 
+    data: featuredArticles = [], 
+    isLoading: featuredLoading,
+    isError: featuredError
+  } = useFeaturedArticles();
   
-  // Map API data to component format
-  const featuredNews = featuredArticles.map(mapArticleToNewsItem);
-  const latestNews = allArticles.map(mapArticleToNewsItem);
+  const { 
+    data: allArticles = [], 
+    isLoading: articlesLoading,
+    isError: articlesError
+  } = useArticleList();
+  
+  // Mapeamento de dados seguro, verificando se os arrays não são undefined
+  const featuredNews = featuredArticles?.length > 0 
+    ? featuredArticles.map(mapArticleToNewsItem) 
+    : [];
+    
+  const latestNews = allArticles?.length > 0 
+    ? allArticles.map(mapArticleToNewsItem) 
+    : [];
   
   const loadMore = () => {
     setVisibleNews(prev => prev + 3);
@@ -55,8 +71,20 @@ const Index = () => {
         {/* Featured News Carousel */}
         {featuredLoading ? (
           <div className="w-full h-72 bg-gray-100 animate-pulse rounded-lg"></div>
+        ) : featuredError ? (
+          <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
+            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">Não foi possível carregar os artigos em destaque</h3>
+            <p className="mt-2 text-sm text-gray-500">Tente novamente mais tarde.</p>
+          </div>
+        ) : featuredNews.length === 0 ? (
+          <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
+            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">Nenhum artigo em destaque</h3>
+            <p className="mt-2 text-sm text-gray-500">Os artigos em destaque aparecerão aqui.</p>
+          </div>
         ) : (
-          <FeaturedNewsSection featuredNews={featuredNews.length > 0 ? featuredNews : []} />
+          <FeaturedNewsSection featuredNews={featuredNews} />
         )}
         
         {/* Latest News */}
@@ -71,6 +99,18 @@ const Index = () => {
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="h-64 bg-gray-100 animate-pulse rounded-lg"></div>
               ))}
+            </div>
+          ) : articlesError ? (
+            <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
+              <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">Não foi possível carregar os artigos</h3>
+              <p className="mt-2 text-sm text-gray-500">Tente novamente mais tarde.</p>
+            </div>
+          ) : latestNews.length === 0 ? (
+            <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
+              <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">Nenhuma notícia disponível</h3>
+              <p className="mt-2 text-sm text-gray-500">Novas notícias aparecerão aqui em breve.</p>
             </div>
           ) : (
             <>

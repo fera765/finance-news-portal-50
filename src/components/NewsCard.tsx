@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
+import { FileText } from "lucide-react";
 
 export interface NewsItem {
   id: string;
@@ -22,8 +23,23 @@ interface NewsCardProps {
 }
 
 const NewsCard = ({ news, featured = false }: NewsCardProps) => {
-  const publishedAgo = formatDistanceToNow(new Date(news.publishedDate), { addSuffix: true });
+  // Handle potential invalid dates
+  const getPublishedAgo = () => {
+    try {
+      return formatDistanceToNow(new Date(news.publishedDate), { addSuffix: true });
+    } catch (e) {
+      return "Recentemente";
+    }
+  };
+  
+  const publishedAgo = getPublishedAgo();
   const articleUrl = `/news/${news.id}/${news.slug}`;
+  
+  // Fallback image handling
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d';
+    e.currentTarget.onerror = null; // Prevent infinite loop
+  };
 
   if (featured) {
     return (
@@ -33,6 +49,7 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
             <img 
               src={news.imageUrl} 
               alt={news.title} 
+              onError={handleImageError}
               className="absolute inset-0 w-full h-full object-cover"
             />
           </div>
@@ -50,7 +67,7 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
               <p className="text-gray-600 line-clamp-3">{news.summary}</p>
             </div>
             <div className="mt-4 text-sm text-gray-500">
-              By {news.author}
+              Por {news.author}
             </div>
           </CardContent>
         </div>
@@ -63,7 +80,8 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
       <div className="relative h-48">
         <img 
           src={news.imageUrl} 
-          alt={news.title} 
+          alt={news.title}
+          onError={handleImageError} 
           className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
@@ -81,7 +99,7 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
         </Link>
         <p className="text-gray-600 text-sm line-clamp-2 mb-2">{news.summary}</p>
         <div className="text-xs text-gray-500">
-          By {news.author}
+          Por {news.author}
         </div>
       </CardContent>
     </Card>
