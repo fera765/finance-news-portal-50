@@ -35,16 +35,16 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     }}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Authentication</DialogTitle>
+          <DialogTitle>Autenticação</DialogTitle>
           <DialogDescription>
-            Login or create an account to access all features.
+            Faça login ou crie uma conta para acessar todos os recursos.
           </DialogDescription>
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="signup">Cadastro</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
@@ -58,7 +58,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         
         <DialogFooter className="flex flex-col sm:flex-row sm:justify-between">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            Cancelar
           </Button>
         </DialogFooter>
       </DialogContent>

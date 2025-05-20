@@ -102,11 +102,13 @@ export const getCurrentUser = async (): Promise<User | null> => {
     const { data } = await api.get<UserWithPassword>(`/users/${userId}`);
     // Remove password before returning
     const { password: _, ...userWithoutPassword } = data;
+    
     // Ensure role is of the correct type
     if (userWithoutPassword.role && 
         !["user", "admin", "editor"].includes(userWithoutPassword.role as string)) {
-      userWithoutPassword.role = "user";
+      userWithoutPassword.role = "user" as "user" | "admin" | "editor";
     }
+    
     return userWithoutPassword as User;
   } catch (error) {
     console.error("Error getting current user:", error);
