@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import ArticleList from "@/components/admin/ArticleList";
 import ArticleEditor from "@/components/admin/ArticleEditor";
@@ -73,7 +72,20 @@ const ArticleManagement = () => {
   };
 
   const handleDeleteById = (id: string) => {
-    handleDeleteArticle(id);
+    // CORREÇÃO: Precisamos encontrar o artigo completo pelo ID antes de deletar
+    // ou adaptar a função handleDeleteArticle para aceitar um string ID
+    const articleToDelete = articles.find(article => {
+      if (typeof article === 'string') return false;
+      return article.id === id;
+    });
+    
+    if (articleToDelete) {
+      handleDeleteArticle(articleToDelete);
+    } else {
+      // Caso não encontre o artigo, tentamos usar apenas o ID
+      // Isso assume que handleDeleteArticle pode lidar internamente com um ID string
+      handleDeleteArticle(id as any);
+    }
   };
 
   // Filter articles based on search query and filters
@@ -177,8 +189,8 @@ const ArticleManagement = () => {
               articles={filteredArticles}
               isLoading={isLoading}
               onAdd={openNewArticleEditor}
-              onEdit={handleEditById}  // Fixed: Now using the wrapper function with correct parameter type
-              onDelete={handleDeleteById}  // Fixed: Now using the wrapper function with correct parameter type
+              onEdit={handleEditById}
+              onDelete={handleDeleteById}
               onView={handleViewArticle}
             />
           </CardContent>

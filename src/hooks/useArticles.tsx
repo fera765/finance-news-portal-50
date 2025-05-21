@@ -103,11 +103,13 @@ export function useArticles() {
     }
   };
   
-  // Handle article delete
-  const handleDeleteArticle = (article: Article) => {
-    if (article.id) {
-      if (window.confirm(`Tem certeza que deseja excluir o artigo "${article.title}"?`)) {
-        deleteArticleMutation.mutate(article.id);
+  // CORREÇÃO: Modificar a função para aceitar tanto Article quanto string
+  const handleDeleteArticle = (articleOrId: Article | string) => {
+    const id = typeof articleOrId === 'string' ? articleOrId : articleOrId.id;
+    
+    if (id) {
+      if (window.confirm(`Tem certeza que deseja excluir este artigo?`)) {
+        deleteArticleMutation.mutate(id);
       }
     }
   };
