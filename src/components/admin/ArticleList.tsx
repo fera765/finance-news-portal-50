@@ -1,226 +1,179 @@
 
-import { useState } from "react";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { 
+import React, { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Eye, Edit, Trash, Plus, Calendar, FileText } from "lucide-react";
-import { Article } from "@/services/articleService";
-import { format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { toast } from 'sonner';
+import { getArticles, Article, deleteArticle } from '@/services/articleService';
+import { getCategories, Category } from '@/services/categoryService';
+import { getUsers, User } from '@/services/userService';
+import { MoreHorizontal, Plus, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface ArticleWithCategoryName extends Article {
-  categoryName?: string;
-}
-
-interface ArticleListProps {
-  articles: ArticleWithCategoryName[];
-  isLoading: boolean;
-  onEdit: (article: Article) => void;
-  onDelete: (article: Article) => void;
-  onView: (article: Article) => void;
-  onAdd: () => void;
-}
-
-export function ArticleList({
-  articles,
-  isLoading,
-  onEdit,
-  onDelete,
-  onView,
-  onAdd
-}: ArticleListProps) {
-  const { toast } = useToast();
-  const [sortBy, setSortBy] = useState<keyof Article>("publishDate");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-
-  // Sort articles based on current sort settings
-  const sortedArticles = [...articles].sort((a, b) => {
-    const aValue = a[sortBy];
-    const bValue = b[sortBy];
-    
-    if (!aValue && !bValue) return 0;
-    if (!aValue) return sortOrder === "asc" ? -1 : 1;
-    if (!bValue) return sortOrder === "asc" ? 1 : -1;
-    
-    if (typeof aValue === "string" && typeof bValue === "string") {
-      return sortOrder === "asc" 
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
-    }
-    
-    // Fallback for other types
-    return 0;
+const ArticleList = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  
+  // Fetch articles, categories and users
+  const { data: articles = [], isLoading: articlesLoading } = useQuery({
+    queryKey: ['articles'],
+    queryFn: () => getArticles(),
   });
-
-  // Handle sort toggle
-  const handleSort = (column: keyof Article) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortOrder("asc");
+  
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories,
+  });
+  
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+  });
+  
+  // Delete article mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteArticle,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
+      toast.success('Artigo excluído com sucesso');
+    },
+    onError: () => {
+      toast.error('Erro ao excluir artigo');
+    },
+  });
+  
+  const handleDelete = (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este artigo?')) {
+      deleteMutation.mutate(id);
     }
   };
-
-  // Handle delete confirmation
-  const handleDeleteClick = (article: Article) => {
-    if (confirm(`Are you sure you want to delete "${article.title}"?`)) {
-      onDelete(article);
-      toast({
-        title: "Article deleted",
-        description: `"${article.title}" has been deleted`
-      });
-    }
+  
+  const handleEdit = (id: string) => {
+    navigate(`/admin/articles/edit/${id}`);
   };
-
-  // Format date helper
-  const formatDate = (date?: Date | string) => {
-    if (!date) return "—";
-    return format(new Date(date), "PPP");
+  
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find((cat: Category) => cat.id === categoryId);
+    return category?.name || 'Sem categoria';
   };
-
-  // Get status badge class
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case "published":
-        return "bg-green-100 text-green-800";
-      case "draft":
-        return "bg-gray-100 text-gray-800";
-      case "scheduled":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  
+  const getAuthorName = (authorId: string) => {
+    const user = users.find((u: User) => u.id === authorId);
+    return user?.name || 'Autor desconhecido';
   };
+  
+  const filteredArticles = articles.filter((article: Article) => 
+    article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    getCategoryName(article.category).toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Articles</h2>
-        <Button onClick={onAdd} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Article
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Gerenciamento de Artigos</CardTitle>
+          <CardDescription>
+            Gerencie todos os artigos do site.
+          </CardDescription>
+        </div>
+        <Button onClick={() => navigate('/admin/articles/new')}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Artigo
         </Button>
-      </div>
-      
-      <div className="border rounded-md overflow-hidden">
-        <Table>
-          <TableCaption>Manage your articles</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead 
-                className="cursor-pointer"
-                onClick={() => handleSort("title")}
-              >
-                Title {sortBy === "title" && (sortOrder === "asc" ? "↑" : "↓")}
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer"
-                onClick={() => handleSort("status")}
-              >
-                Status {sortBy === "status" && (sortOrder === "asc" ? "↑" : "↓")}
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer"
-                onClick={() => handleSort("category")}
-              >
-                Category {sortBy === "category" && (sortOrder === "asc" ? "↑" : "↓")}
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer"
-                onClick={() => handleSort("publishDate")}
-              >
-                Date {sortBy === "publishDate" && (sortOrder === "asc" ? "↑" : "↓")}
-              </TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">Loading articles...</TableCell>
-              </TableRow>
-            ) : sortedArticles.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">No articles found</TableCell>
-              </TableRow>
-            ) : (
-              sortedArticles.map((article) => (
-                <TableRow key={article.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span>{article.title}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs uppercase font-medium ${getStatusClass(article.status)}`}>
-                      {article.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>{article.categoryName || "Unknown"}</TableCell>
-                  <TableCell>
-                    {article.status === "scheduled" ? (
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {formatDate(article.publishDate)}
-                      </div>
-                    ) : article.publishDate ? (
-                      formatDate(article.publishDate)
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => onView(article)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span className="sr-only">View</span>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => onEdit(article)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleDeleteClick(article)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                      >
-                        <Trash className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar artigos..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        {articlesLoading ? (
+          <div>Carregando artigos...</div>
+        ) : filteredArticles.length === 0 ? (
+          <div className="text-center py-4">
+            Nenhum artigo encontrado
+          </div>
+        ) : (
+          <div className="overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Título</TableHead>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead>Autor</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+              </TableHeader>
+              <TableBody>
+                {filteredArticles.map((article: Article) => (
+                  <TableRow key={article.id}>
+                    <TableCell className="font-medium">{article.title}</TableCell>
+                    <TableCell>{getCategoryName(article.category)}</TableCell>
+                    <TableCell>{getAuthorName(article.author)}</TableCell>
+                    <TableCell>
+                      <div className="capitalize">{article.status}</div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(article.id || '')}>
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => handleDelete(article.id || '')}
+                          >
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default ArticleList;
