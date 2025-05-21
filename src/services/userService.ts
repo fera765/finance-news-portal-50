@@ -1,16 +1,17 @@
+
 import { api } from './api';
 
 export type User = {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: "user" | "editor" | "admin";
   status?: 'active' | 'banned';
 };
 
 export interface ExtendedUser extends User {
   password?: string;
-  status?: 'active' | 'banned';
+  avatar?: string;
 };
 
 export const getUsers = async (params = {}) => {

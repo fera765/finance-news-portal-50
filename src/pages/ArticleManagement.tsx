@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import ArticleList from "@/components/admin/ArticleList";
 import ArticleEditor from "@/components/admin/ArticleEditor";
@@ -62,7 +63,10 @@ const ArticleManagement = () => {
 
   // Fix: Create wrapper functions that match the expected parameter types
   const handleEditById = (id: string) => {
-    const articleToEdit = articles.find(article => article.id === id);
+    const articleToEdit = articles.find(article => {
+      if (typeof article === 'string') return false;
+      return article.id === id;
+    });
     if (articleToEdit) {
       openEditArticleEditor(articleToEdit);
     }

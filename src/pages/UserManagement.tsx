@@ -1,8 +1,6 @@
-
 import { useState } from "react";
-import { User } from "@/components/Layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getUsers, deleteUser, updateUser, banUser, unbanUser } from "@/services/userService";
+import { getUsers, deleteUser, updateUser, banUser, unbanUser, ExtendedUser } from "@/services/userService";
 import { toast } from "sonner";
 import { MoreVertical, Plus, Ban, Trash, CircleCheck, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -35,10 +33,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
-interface ExtendedUser extends User {
-  status?: "active" | "banned";
-}
 
 const UserManagement = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);

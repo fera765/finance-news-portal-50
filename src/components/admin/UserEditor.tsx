@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Corrigindo a interface para usar o tipo ExtendedUser do userService
+// Interface que usa o tipo ExtendedUser do userService
 interface UserEditorProps {
   isOpen: boolean;
   onClose: () => void;
@@ -68,7 +68,7 @@ export default function UserEditor({ isOpen, onClose, user }: UserEditorProps) {
       name: "",
       email: "",
       password: "",
-      role: "user",
+      role: "user" as const,
       avatar: "",
     },
   });
@@ -80,7 +80,7 @@ export default function UserEditor({ isOpen, onClose, user }: UserEditorProps) {
         name: user.name,
         email: user.email || "",
         password: "",
-        role: user.role || "user",
+        role: user.role || "user" as const,
         avatar: user.avatar || "",
       });
     } else {
@@ -88,7 +88,7 @@ export default function UserEditor({ isOpen, onClose, user }: UserEditorProps) {
         name: "",
         email: "",
         password: "",
-        role: "user",
+        role: "user" as const,
         avatar: "",
       });
     }
@@ -136,7 +136,7 @@ export default function UserEditor({ isOpen, onClose, user }: UserEditorProps) {
         });
         return;
       }
-      // Corrigido: Converter os valores para o tipo ExtendedUser antes de enviar
+      // Convertendo valores para o tipo ExtendedUser
       createUserMutation.mutate(values as ExtendedUser);
     }
   }
