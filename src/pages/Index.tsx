@@ -44,7 +44,8 @@ const mapArticleToNewsItem = (article: Article, categories: Category[] = [], aut
       ? article.publishDate.toISOString() 
       : String(article.publishDate) || new Date().toISOString(),
     author: authorName,
-    slug: article.slug || `artigo-${article.id || crypto.randomUUID()}`
+    slug: article.slug || `artigo-${article.id || crypto.randomUUID()}`,
+    isDetach: article.isDetach
   };
 };
 

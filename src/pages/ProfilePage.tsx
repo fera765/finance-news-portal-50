@@ -34,7 +34,7 @@ const ArticleList = ({ articles, isLoading }: { articles: NewsItem[], isLoading:
               />
             </div>
             <div className="p-4 sm:w-3/4">
-              <Link to={`/category/${article.categorySlug}`}>
+              <Link to={`/category/${article.categorySlug || article.category.toLowerCase().replace(/\s+/g, '-')}`}>
                 <Badge className="mb-2 hover:bg-primary cursor-pointer">{article.category}</Badge>
               </Link>
               <Link to={`/news/${article.id}/${article.slug}`}>

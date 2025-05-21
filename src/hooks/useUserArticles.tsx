@@ -60,6 +60,7 @@ export function useUserArticles() {
           try {
             const article = await getArticleById(bookmark.articleId);
             const categoryName = categories.find(cat => cat.id === article.category)?.name || "Sem categoria";
+            const categorySlug = categories.find(cat => cat.id === article.category)?.slug || "";
             const authorName = authors.find(auth => auth.id === article.author)?.name || "Autor desconhecido";
             
             return {
@@ -69,7 +70,7 @@ export function useUserArticles() {
               imageUrl: article.imageUrl || '',
               category: categoryName,
               categoryId: article.category,
-              categorySlug: categories.find(cat => cat.id === article.category)?.slug || '',
+              categorySlug: categorySlug,
               publishedDate: article.publishDate,
               author: authorName,
               slug: article.slug,
@@ -102,6 +103,7 @@ export function useUserArticles() {
           try {
             const article = await getArticleById(like.articleId);
             const categoryName = categories.find(cat => cat.id === article.category)?.name || "Sem categoria";
+            const categorySlug = categories.find(cat => cat.id === article.category)?.slug || "";
             const authorName = authors.find(auth => auth.id === article.author)?.name || "Autor desconhecido";
             
             return {
@@ -111,7 +113,7 @@ export function useUserArticles() {
               imageUrl: article.imageUrl || '',
               category: categoryName,
               categoryId: article.category,
-              categorySlug: categories.find(cat => cat.id === article.category)?.slug || '',
+              categorySlug: categorySlug,
               publishedDate: article.publishDate,
               author: authorName,
               slug: article.slug,
