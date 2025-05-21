@@ -17,6 +17,8 @@ import * as z from "zod";
 import StockSearch from "@/components/StockSearch";
 import { X } from "lucide-react";
 import { type StockSymbolSearchResult } from "@/services/stockService";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSettings, updateSeoSettings, updateSocialSettings, updateTrackingSettings } from "@/services/settingsService";
 
 interface StockSymbol {
   id: string;
@@ -30,9 +32,8 @@ const seoSchema = z.object({
   siteTitle: z.string().min(1, "Site title is required"),
   siteDescription: z.string().min(1, "Site description is required"),
   siteKeywords: z.string(),
-  ogTitle: z.string(),
-  ogDescription: z.string(),
-  ogImage: z.string()
+  siteFavicon: z.string(),
+  siteImage: z.string()
 });
 
 const socialSchema = z.object({
@@ -44,9 +45,11 @@ const socialSchema = z.object({
 });
 
 const trackingSchema = z.object({
-  googleAnalyticsId: z.string().regex(/^UA-\d{7}-\d+$|^G-[A-Z0-9]+$/).or(z.literal("")),
-  facebookPixelId: z.string().regex(/^\d+$/).or(z.literal("")),
-  tiktokPixelId: z.string().regex(/^\d+$/).or(z.literal("")),
+  googleAnalytics: z.string(),
+  facebookPixel: z.string(),
+  tiktokPixel: z.string(),
+  customHeadCode: z.string(),
+  customBodyCode: z.string()
 });
 
 const stockTickerSchema = z.object({
@@ -55,37 +58,7 @@ const stockTickerSchema = z.object({
   maxStocksToShow: z.number().min(1).max(20),
 });
 
-// Mock initial data
-const initialSeoData = {
-  siteTitle: "Finance News - Latest Financial Updates & Market Analysis",
-  siteDescription: "Stay informed with the latest financial news, market analysis, and expert insights on our comprehensive finance news platform.",
-  siteKeywords: "finance news, financial markets, stock market, investments, economy, business news",
-  ogTitle: "Finance News - Market Updates & Financial Analysis",
-  ogDescription: "Breaking financial news and in-depth market analysis from industry experts.",
-  ogImage: "https://example.com/images/finance-news-og.jpg"
-};
-
-const initialSocialData = {
-  facebook: "https://facebook.com/financenews",
-  twitter: "https://twitter.com/financenews",
-  instagram: "https://instagram.com/financenews",
-  linkedin: "https://linkedin.com/company/financenews",
-  youtube: "https://youtube.com/financenews"
-};
-
-const initialTrackingData = {
-  googleAnalyticsId: "G-ABC123456",
-  facebookPixelId: "123456789",
-  tiktokPixelId: "987654321"
-};
-
-const initialStockTickerData = {
-  enabled: true,
-  autoRefreshInterval: 5,
-  maxStocksToShow: 10,
-};
-
-// Popular stock symbols for selection
+// Lista de ações populares para seleção
 const popularStocks: StockSymbol[] = [
   { id: "1", symbol: "AAPL", name: "Apple Inc.", enabled: true },
   { id: "2", symbol: "MSFT", name: "Microsoft Corporation", enabled: true },
@@ -108,45 +81,133 @@ const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("seo");
   const [stockSymbols, setStockSymbols] = useState<StockSymbol[]>(popularStocks);
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
   
+  // Fetch settings from API
+  const { data: settings, isLoading, error } = useQuery({
+    queryKey: ['settings'],
+    queryFn: getSettings
+  });
+
   // SEO Form
   const seoForm = useForm<z.infer<typeof seoSchema>>({
     resolver: zodResolver(seoSchema),
-    defaultValues: initialSeoData
+    defaultValues: {
+      siteTitle: "",
+      siteDescription: "",
+      siteKeywords: "",
+      siteFavicon: "",
+      siteImage: ""
+    }
   });
   
   // Social Media Form
   const socialForm = useForm<z.infer<typeof socialSchema>>({
     resolver: zodResolver(socialSchema),
-    defaultValues: initialSocialData
+    defaultValues: {
+      facebook: "",
+      twitter: "",
+      instagram: "",
+      linkedin: "",
+      youtube: ""
+    }
   });
   
   // Tracking Form
   const trackingForm = useForm<z.infer<typeof trackingSchema>>({
     resolver: zodResolver(trackingSchema),
-    defaultValues: initialTrackingData
+    defaultValues: {
+      googleAnalytics: "",
+      facebookPixel: "",
+      tiktokPixel: "",
+      customHeadCode: "",
+      customBodyCode: ""
+    }
   });
   
   // Stock Ticker Form
   const stockTickerForm = useForm<z.infer<typeof stockTickerSchema>>({
     resolver: zodResolver(stockTickerSchema),
-    defaultValues: initialStockTickerData
+    defaultValues: {
+      enabled: true,
+      autoRefreshInterval: 5,
+      maxStocksToShow: 10,
+    }
+  });
+
+  // Update forms when settings are loaded
+  useEffect(() => {
+    if (settings) {
+      seoForm.reset({
+        siteTitle: settings.seo.siteTitle || "",
+        siteDescription: settings.seo.siteDescription || "",
+        siteKeywords: settings.seo.siteKeywords || "",
+        siteFavicon: settings.seo.siteFavicon || "",
+        siteImage: settings.seo.siteImage || ""
+      });
+      
+      socialForm.reset({
+        facebook: settings.social.facebook || "",
+        twitter: settings.social.twitter || "",
+        instagram: settings.social.instagram || "",
+        linkedin: settings.social.linkedin || "",
+        youtube: settings.social.youtube || ""
+      });
+      
+      trackingForm.reset({
+        googleAnalytics: settings.tracking.googleAnalytics || "",
+        facebookPixel: settings.tracking.facebookPixel || "",
+        tiktokPixel: settings.tracking.tiktokPixel || "",
+        customHeadCode: settings.tracking.customHeadCode || "",
+        customBodyCode: settings.tracking.customBodyCode || ""
+      });
+    }
+  }, [settings, seoForm, socialForm, trackingForm]);
+
+  // Mutation for updating SEO settings
+  const updateSeoMutation = useMutation({
+    mutationFn: updateSeoSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      toast.success("SEO Settings Saved - Your SEO settings have been updated successfully.");
+    },
+    onError: (error) => {
+      console.error("Error saving SEO settings:", error);
+      toast.error("Error - Failed to save SEO settings. Please try again.");
+    }
+  });
+
+  // Mutation for updating Social settings
+  const updateSocialMutation = useMutation({
+    mutationFn: updateSocialSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      toast.success("Social Media Settings Saved - Your social media settings have been updated successfully.");
+    },
+    onError: (error) => {
+      console.error("Error saving social media settings:", error);
+      toast.error("Error - Failed to save social media settings. Please try again.");
+    }
+  });
+
+  // Mutation for updating Tracking settings
+  const updateTrackingMutation = useMutation({
+    mutationFn: updateTrackingSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      toast.success("Tracking Settings Saved - Your tracking settings have been updated successfully.");
+    },
+    onError: (error) => {
+      console.error("Error saving tracking settings:", error);
+      toast.error("Error - Failed to save tracking settings. Please try again.");
+    }
   });
   
   // Save SEO settings
   const onSaveSeo = async (data: z.infer<typeof seoSchema>) => {
     try {
       setSaving(true);
-      // In a real app, this would be an API call
-      console.log("Saving SEO settings:", data);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast("SEO Settings Saved - Your SEO settings have been updated successfully.");
-    } catch (error) {
-      console.error("Error saving SEO settings:", error);
-      toast("Error - Failed to save SEO settings. Please try again.");
+      await updateSeoMutation.mutateAsync(data);
     } finally {
       setSaving(false);
     }
@@ -156,16 +217,7 @@ const SettingsPage = () => {
   const onSaveSocial = async (data: z.infer<typeof socialSchema>) => {
     try {
       setSaving(true);
-      // In a real app, this would be an API call
-      console.log("Saving Social Media settings:", data);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast("Social Media Settings Saved - Your social media settings have been updated successfully.");
-    } catch (error) {
-      console.error("Error saving social media settings:", error);
-      toast("Error - Failed to save social media settings. Please try again.");
+      await updateSocialMutation.mutateAsync(data);
     } finally {
       setSaving(false);
     }
@@ -175,16 +227,7 @@ const SettingsPage = () => {
   const onSaveTracking = async (data: z.infer<typeof trackingSchema>) => {
     try {
       setSaving(true);
-      // In a real app, this would be an API call
-      console.log("Saving Tracking settings:", data);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast("Tracking Settings Saved - Your tracking settings have been updated successfully.");
-    } catch (error) {
-      console.error("Error saving tracking settings:", error);
-      toast("Error - Failed to save tracking settings. Please try again.");
+      await updateTrackingMutation.mutateAsync(data);
     } finally {
       setSaving(false);
     }
@@ -194,17 +237,16 @@ const SettingsPage = () => {
   const onSaveStockTicker = async (data: z.infer<typeof stockTickerSchema>) => {
     try {
       setSaving(true);
-      // In a real app, this would be an API call
       console.log("Saving Stock Ticker settings:", data);
       console.log("Stock symbols:", stockSymbols.filter(stock => stock.enabled).map(stock => stock.symbol));
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Aqui seria implementado o salvamento das configurações do ticker
+      // Para uma implementação completa, seria necessário criar um novo método na API
       
-      toast("Stock Ticker Settings Saved - Your stock ticker settings have been updated successfully.");
+      toast.success("Stock Ticker Settings Saved - Your stock ticker settings have been updated successfully.");
     } catch (error) {
       console.error("Error saving stock ticker settings:", error);
-      toast("Error - Failed to save stock ticker settings. Please try again.");
+      toast.error("Error - Failed to save stock ticker settings. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -244,6 +286,31 @@ const SettingsPage = () => {
     setStockSymbols(prev => prev.filter(stock => stock.id !== id));
     toast("Ação removida com sucesso");
   };
+
+  if (isLoading) {
+    return (
+      <AdminLayout activeTab="settings">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">Carregando configurações...</h1>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout activeTab="settings">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">Erro ao carregar configurações</h1>
+          </div>
+          <p className="text-red-500">Houve um erro ao carregar as configurações. Por favor, tente novamente mais tarde.</p>
+        </div>
+      </AdminLayout>
+    );
+  }
   
   return (
     <AdminLayout activeTab="settings">
@@ -313,15 +380,26 @@ const SettingsPage = () => {
                       )}
                     />
                     
-                    <Separator className="my-4" />
-                    <h3 className="text-lg font-medium mb-4">Open Graph Settings</h3>
+                    <FormField
+                      control={seoForm.control}
+                      name="siteFavicon"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Favicon URL</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="/favicon.ico" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     
                     <FormField
                       control={seoForm.control}
-                      name="ogTitle"
+                      name="siteImage"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>OG Title</FormLabel>
+                          <FormLabel>Default Site Image URL</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -330,36 +408,8 @@ const SettingsPage = () => {
                       )}
                     />
                     
-                    <FormField
-                      control={seoForm.control}
-                      name="ogDescription"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>OG Description</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} rows={2} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={seoForm.control}
-                      name="ogImage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>OG Image URL</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <Button type="submit" disabled={saving}>
-                      {saving ? "Saving..." : "Save SEO Settings"}
+                    <Button type="submit" disabled={saving || updateSeoMutation.isPending}>
+                      {saving || updateSeoMutation.isPending ? "Saving..." : "Save SEO Settings"}
                     </Button>
                   </form>
                 </Form>
@@ -448,8 +498,8 @@ const SettingsPage = () => {
                       )}
                     />
                     
-                    <Button type="submit" disabled={saving}>
-                      {saving ? "Saving..." : "Save Social Media Settings"}
+                    <Button type="submit" disabled={saving || updateSocialMutation.isPending}>
+                      {saving || updateSocialMutation.isPending ? "Saving..." : "Save Social Media Settings"}
                     </Button>
                   </form>
                 </Form>
@@ -470,7 +520,7 @@ const SettingsPage = () => {
                   <form onSubmit={trackingForm.handleSubmit(onSaveTracking)} className="space-y-6">
                     <FormField
                       control={trackingForm.control}
-                      name="googleAnalyticsId"
+                      name="googleAnalytics"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Google Analytics ID</FormLabel>
@@ -484,7 +534,7 @@ const SettingsPage = () => {
                     
                     <FormField
                       control={trackingForm.control}
-                      name="facebookPixelId"
+                      name="facebookPixel"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Facebook Pixel ID</FormLabel>
@@ -498,7 +548,7 @@ const SettingsPage = () => {
                     
                     <FormField
                       control={trackingForm.control}
-                      name="tiktokPixelId"
+                      name="tiktokPixel"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>TikTok Pixel ID</FormLabel>
@@ -510,8 +560,36 @@ const SettingsPage = () => {
                       )}
                     />
                     
-                    <Button type="submit" disabled={saving}>
-                      {saving ? "Saving..." : "Save Tracking Settings"}
+                    <FormField
+                      control={trackingForm.control}
+                      name="customHeadCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Custom Head Code</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} rows={4} placeholder="<script>...</script>" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={trackingForm.control}
+                      name="customBodyCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Custom Body Code</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} rows={4} placeholder="<script>...</script>" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button type="submit" disabled={saving || updateTrackingMutation.isPending}>
+                      {saving || updateTrackingMutation.isPending ? "Saving..." : "Save Tracking Settings"}
                     </Button>
                   </form>
                 </Form>
