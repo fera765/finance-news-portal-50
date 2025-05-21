@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -18,7 +17,18 @@ import StockSearch from "@/components/StockSearch";
 import { X } from "lucide-react";
 import { type StockSymbolSearchResult } from "@/services/stockService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSettings, updateSeoSettings, updateSocialSettings, updateTrackingSettings } from "@/services/settingsService";
+import { 
+  getSettings, 
+  updateSeoSettings, 
+  updateSocialSettings, 
+  updateTrackingSettings,
+  updateStockTickerSettings,
+  type SeoSettings,
+  type SocialSettings,
+  type TrackingSettings,
+  type StockTickerSettings,
+  type StockSymbol as SettingsStockSymbol
+} from "@/services/settingsService";
 
 interface StockSymbol {
   id: string;
@@ -161,8 +171,26 @@ const SettingsPage = () => {
         customHeadCode: settings.tracking.customHeadCode || "",
         customBodyCode: settings.tracking.customBodyCode || ""
       });
+      
+      if (settings.stockTicker) {
+        stockTickerForm.reset({
+          enabled: settings.stockTicker.enabled,
+          autoRefreshInterval: settings.stockTicker.autoRefreshInterval,
+          maxStocksToShow: settings.stockTicker.maxStocksToShow
+        });
+        
+        // Convert API stock symbols to UI format with IDs
+        const apiStockSymbols = settings.stockTicker.symbols.map((symbol, index) => ({
+          id: `api-${index}`,
+          symbol: symbol.symbol,
+          name: symbol.name,
+          enabled: symbol.enabled
+        }));
+        
+        setStockSymbols(apiStockSymbols);
+      }
     }
-  }, [settings, seoForm, socialForm, trackingForm]);
+  }, [settings, seoForm, socialForm, trackingForm, stockTickerForm]);
 
   // Mutation for updating SEO settings
   const updateSeoMutation = useMutation({
@@ -203,11 +231,34 @@ const SettingsPage = () => {
     }
   });
   
+  // Mutation for updating Stock Ticker settings
+  const updateStockTickerMutation = useMutation({
+    mutationFn: updateStockTickerSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      toast.success("Stock Ticker Settings Saved - Your stock ticker settings have been updated successfully.");
+    },
+    onError: (error) => {
+      console.error("Error saving stock ticker settings:", error);
+      toast.error("Error - Failed to save stock ticker settings. Please try again.");
+    }
+  });
+  
   // Save SEO settings
   const onSaveSeo = async (data: z.infer<typeof seoSchema>) => {
     try {
       setSaving(true);
-      await updateSeoMutation.mutateAsync(data);
+      
+      // Ensure all required fields are provided
+      const seoSettings: SeoSettings = {
+        siteTitle: data.siteTitle,
+        siteDescription: data.siteDescription,
+        siteKeywords: data.siteKeywords,
+        siteFavicon: data.siteFavicon,
+        siteImage: data.siteImage
+      };
+      
+      await updateSeoMutation.mutateAsync(seoSettings);
     } finally {
       setSaving(false);
     }
@@ -217,7 +268,17 @@ const SettingsPage = () => {
   const onSaveSocial = async (data: z.infer<typeof socialSchema>) => {
     try {
       setSaving(true);
-      await updateSocialMutation.mutateAsync(data);
+      
+      // Ensure all required fields are provided
+      const socialSettings: SocialSettings = {
+        facebook: data.facebook,
+        twitter: data.twitter,
+        instagram: data.instagram,
+        linkedin: data.linkedin,
+        youtube: data.youtube
+      };
+      
+      await updateSocialMutation.mutateAsync(socialSettings);
     } finally {
       setSaving(false);
     }
@@ -227,7 +288,17 @@ const SettingsPage = () => {
   const onSaveTracking = async (data: z.infer<typeof trackingSchema>) => {
     try {
       setSaving(true);
-      await updateTrackingMutation.mutateAsync(data);
+      
+      // Ensure all required fields are provided
+      const trackingSettings: TrackingSettings = {
+        googleAnalytics: data.googleAnalytics,
+        facebookPixel: data.facebookPixel,
+        tiktokPixel: data.tiktokPixel,
+        customHeadCode: data.customHeadCode,
+        customBodyCode: data.customBodyCode
+      };
+      
+      await updateTrackingMutation.mutateAsync(trackingSettings);
     } finally {
       setSaving(false);
     }
@@ -237,13 +308,24 @@ const SettingsPage = () => {
   const onSaveStockTicker = async (data: z.infer<typeof stockTickerSchema>) => {
     try {
       setSaving(true);
-      console.log("Saving Stock Ticker settings:", data);
-      console.log("Stock symbols:", stockSymbols.filter(stock => stock.enabled).map(stock => stock.symbol));
       
-      // Aqui seria implementado o salvamento das configurações do ticker
-      // Para uma implementação completa, seria necessário criar um novo método na API
+      // Convert UI stock symbols to API format without IDs
+      const apiStockSymbols: SettingsStockSymbol[] = stockSymbols
+        .map(stock => ({
+          symbol: stock.symbol,
+          name: stock.name,
+          enabled: stock.enabled
+        }));
       
-      toast.success("Stock Ticker Settings Saved - Your stock ticker settings have been updated successfully.");
+      // Create stock ticker settings object
+      const stockTickerSettings: StockTickerSettings = {
+        enabled: data.enabled,
+        autoRefreshInterval: data.autoRefreshInterval,
+        maxStocksToShow: data.maxStocksToShow,
+        symbols: apiStockSymbols
+      };
+      
+      await updateStockTickerMutation.mutateAsync(stockTickerSettings);
     } catch (error) {
       console.error("Error saving stock ticker settings:", error);
       toast.error("Error - Failed to save stock ticker settings. Please try again.");
@@ -709,8 +791,8 @@ const SettingsPage = () => {
                       </div>
                     </div>
                     
-                    <Button type="submit" disabled={saving}>
-                      {saving ? "Saving..." : "Save Stock Ticker Settings"}
+                    <Button type="submit" disabled={saving || updateStockTickerMutation.isPending}>
+                      {saving || updateStockTickerMutation.isPending ? "Saving..." : "Save Stock Ticker Settings"}
                     </Button>
                   </form>
                 </Form>
