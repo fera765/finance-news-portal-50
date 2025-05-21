@@ -2,7 +2,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Bold, Italic, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+import { 
+  Bold, 
+  Italic, 
+  AlignLeft, 
+  AlignCenter, 
+  AlignRight, 
+  List, 
+  ListOrdered,
+  Link2,
+  Quote,
+  Heading1,
+  Heading2,
+  Heading3,
+  ImageIcon
+} from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface RichTextEditorProps {
   value: string;
@@ -12,6 +29,10 @@ interface RichTextEditorProps {
 
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const [previewMode, setPreviewMode] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkText, setLinkText] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
 
   const insertFormatting = (startTag: string, endTag: string) => {
     // Obter o elemento textarea
@@ -25,8 +46,8 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
     // Se texto foi selecionado, envolva-o com as tags
     if (selectedText) {
       const newText = value.substring(0, start) + 
-                      startTag + selectedText + endTag + 
-                      value.substring(end);
+                    startTag + selectedText + endTag + 
+                    value.substring(end);
       onChange(newText);
       
       // Restaurar a seleção após a atualização
@@ -55,67 +76,315 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   const handleAlignLeft = () => insertFormatting("\n<div style='text-align: left'>", "</div>\n");
   const handleAlignCenter = () => insertFormatting("\n<div style='text-align: center'>", "</div>\n");
   const handleAlignRight = () => insertFormatting("\n<div style='text-align: right'>", "</div>\n");
+  const handleBulletList = () => insertFormatting("\n- ", "\n");
+  const handleNumberedList = () => insertFormatting("\n1. ", "\n");
+  const handleQuote = () => insertFormatting("\n> ", "\n");
+  const handleH1 = () => insertFormatting("\n# ", "\n");
+  const handleH2 = () => insertFormatting("\n## ", "\n");
+  const handleH3 = () => insertFormatting("\n### ", "\n");
+
+  const insertLink = () => {
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = value.substring(start, end);
+    
+    const linkMarkdown = `[${linkText || selectedText || 'link'}](${linkUrl})`;
+    const newText = value.substring(0, start) + linkMarkdown + value.substring(end);
+    
+    onChange(newText);
+    setLinkUrl("");
+    setLinkText("");
+    
+    // Posicionar o cursor após o link
+    setTimeout(() => {
+      textarea.focus();
+      const cursorPos = start + linkMarkdown.length;
+      textarea.setSelectionRange(cursorPos, cursorPos);
+    }, 0);
+  };
+
+  const insertImage = () => {
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const imageMarkdown = `![${imageAlt || 'imagem'}](${imageUrl})`;
+    
+    const newText = value.substring(0, start) + imageMarkdown + value.substring(start);
+    onChange(newText);
+    
+    setImageUrl("");
+    setImageAlt("");
+    
+    // Posicionar o cursor após a imagem
+    setTimeout(() => {
+      textarea.focus();
+      const cursorPos = start + imageMarkdown.length;
+      textarea.setSelectionRange(cursorPos, cursorPos);
+    }, 0);
+  };
 
   const renderMarkdown = (text: string) => {
-    // Very basic markdown rendering for preview
-    // In a real app, you would use a proper markdown library
-    const html = text
+    // Markdown rendering for preview - implementação básica
+    let html = text
+      // Headers
+      .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+      .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+      .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+      // Bold
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      // Italic
       .replace(/\*(.*?)\*/g, "<em>$1</em>")
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+      // Images
+      .replace(/!\[([^\]]+)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto my-2 rounded" />')
+      // Lists
+      .replace(/^\- (.*$)/gm, '<li>$1</li>')
+      .replace(/<\/li>\n<li>/g, '</li><li>')
+      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+      // Numbered lists
+      .replace(/^\d+\. (.*$)/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>)/gs, '<ol>$1</ol>')
+      // Blockquotes
+      .replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-gray-300 pl-4 italic text-gray-700">$1</blockquote>')
+      // Line breaks
       .replace(/\n/g, "<br>");
-    
+      
+    // Preserve existing HTML (for alignment divs)
     return html;
   };
 
   return (
     <div className="w-full space-y-2">
-      <div className="flex items-center gap-1 p-1 border rounded-md bg-background">
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleBold}
-          className="h-8 w-8 p-0"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleItalic}
-          className="h-8 w-8 p-0"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
+      <div className="flex flex-wrap items-center gap-1 p-1 border rounded-md bg-background overflow-x-auto">
+        <div className="flex items-center gap-1">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleBold}
+            className="h-8 w-8 p-0"
+            title="Negrito"
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleItalic}
+            className="h-8 w-8 p-0"
+            title="Itálico"
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+        </div>
+
         <div className="h-4 w-px bg-border mx-1" />
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleAlignLeft}
-          className="h-8 w-8 p-0"
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleAlignCenter}
-          className="h-8 w-8 p-0"
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleAlignRight}
-          className="h-8 w-8 p-0"
-        >
-          <AlignRight className="h-4 w-4" />
-        </Button>
+        
+        <div className="flex items-center gap-1">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleH1}
+            className="h-8 px-2 text-xs"
+            title="Título 1"
+          >
+            <Heading1 className="h-4 w-4" />
+          </Button>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleH2}
+            className="h-8 px-2 text-xs"
+            title="Título 2"
+          >
+            <Heading2 className="h-4 w-4" />
+          </Button>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleH3}
+            className="h-8 px-2 text-xs"
+            title="Título 3"
+          >
+            <Heading3 className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="h-4 w-px bg-border mx-1" />
+        
+        <div className="flex items-center gap-1">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleAlignLeft}
+            className="h-8 w-8 p-0"
+            title="Alinhar à esquerda"
+          >
+            <AlignLeft className="h-4 w-4" />
+          </Button>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleAlignCenter}
+            className="h-8 w-8 p-0"
+            title="Centralizar"
+          >
+            <AlignCenter className="h-4 w-4" />
+          </Button>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleAlignRight}
+            className="h-8 w-8 p-0"
+            title="Alinhar à direita"
+          >
+            <AlignRight className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="h-4 w-px bg-border mx-1" />
+        
+        <div className="flex items-center gap-1">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleBulletList}
+            className="h-8 w-8 p-0"
+            title="Lista com marcadores"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleNumberedList}
+            className="h-8 w-8 p-0"
+            title="Lista numerada"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleQuote}
+            className="h-8 w-8 p-0"
+            title="Citação"
+          >
+            <Quote className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="h-4 w-px bg-border mx-1" />
+        
+        <div className="flex items-center gap-1">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0"
+                title="Inserir link"
+              >
+                <Link2 className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72">
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Inserir Link</h4>
+                <div className="space-y-2">
+                  <div>
+                    <Label htmlFor="link-text">Texto do link</Label>
+                    <Input 
+                      id="link-text" 
+                      value={linkText} 
+                      onChange={(e) => setLinkText(e.target.value)} 
+                      placeholder="Texto a ser exibido"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="link-url">URL</Label>
+                    <Input 
+                      id="link-url" 
+                      value={linkUrl} 
+                      onChange={(e) => setLinkUrl(e.target.value)} 
+                      placeholder="https://exemplo.com"
+                    />
+                  </div>
+                  <Button 
+                    onClick={insertLink} 
+                    disabled={!linkUrl}
+                    className="w-full"
+                  >
+                    Inserir
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0"
+                title="Inserir imagem"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72">
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Inserir Imagem</h4>
+                <div className="space-y-2">
+                  <div>
+                    <Label htmlFor="image-url">URL da imagem</Label>
+                    <Input 
+                      id="image-url" 
+                      value={imageUrl} 
+                      onChange={(e) => setImageUrl(e.target.value)} 
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="image-alt">Texto alternativo</Label>
+                    <Input 
+                      id="image-alt" 
+                      value={imageAlt} 
+                      onChange={(e) => setImageAlt(e.target.value)} 
+                      placeholder="Descrição da imagem"
+                    />
+                  </div>
+                  <Button 
+                    onClick={insertImage} 
+                    disabled={!imageUrl}
+                    className="w-full"
+                  >
+                    Inserir
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+        
         <div className="flex-1" />
         <Button 
           type="button" 
@@ -123,7 +392,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
           size="sm" 
           onClick={() => setPreviewMode(!previewMode)}
         >
-          {previewMode ? "Edit" : "Preview"}
+          {previewMode ? "Editar" : "Visualizar"}
         </Button>
       </div>
 
@@ -136,7 +405,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         <Textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder || "Write your content in Markdown..."}
+          placeholder={placeholder || "Escreva seu conteúdo em Markdown..."}
           className="min-h-[300px] font-mono"
         />
       )}

@@ -1,5 +1,5 @@
 
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,8 +34,12 @@ const ArticleList = ({ articles, isLoading }: { articles: NewsItem[], isLoading:
               />
             </div>
             <div className="p-4 sm:w-3/4">
-              <Badge className="mb-2">{article.category}</Badge>
-              <h3 className="text-lg font-bold mb-2">{article.title}</h3>
+              <Link to={`/category/${article.categorySlug}`}>
+                <Badge className="mb-2 hover:bg-primary cursor-pointer">{article.category}</Badge>
+              </Link>
+              <Link to={`/news/${article.id}/${article.slug}`}>
+                <h3 className="text-lg font-bold mb-2 hover:text-primary">{article.title}</h3>
+              </Link>
               <p className="text-gray-600 text-sm mb-3 line-clamp-2">{article.summary}</p>
               <div className="flex justify-between items-center text-sm text-gray-500">
                 <span>{format(new Date(article.publishedDate), "MMMM d, yyyy")}</span>

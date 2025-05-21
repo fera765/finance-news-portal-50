@@ -5,10 +5,23 @@ import { useQuery } from '@tanstack/react-query';
 import { getBookmarks, getLikes } from '@/services/interactionService';
 import { getArticleById } from '@/services/articleService';
 import { NewsItem } from '@/components/NewsCard';
+import { getCategories } from '@/services/categoryService';
+import { getUsers } from '@/services/userService';
 
 export function useUserArticles() {
   const { user } = useAuth();
   const userId = user?.id;
+
+  // Fetch categories and users to get names
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories
+  });
+
+  const { data: authors = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers
+  });
 
   // Fetch user's bookmarked articles
   const {
@@ -46,14 +59,19 @@ export function useUserArticles() {
         bookmarks.map(async (bookmark) => {
           try {
             const article = await getArticleById(bookmark.articleId);
+            const categoryName = categories.find(cat => cat.id === article.category)?.name || "Sem categoria";
+            const authorName = authors.find(auth => auth.id === article.author)?.name || "Autor desconhecido";
+            
             return {
               id: article.id,
               title: article.title,
               summary: article.summary || '',
               imageUrl: article.imageUrl || '',
-              category: article.category,
+              category: categoryName,
+              categoryId: article.category,
+              categorySlug: categories.find(cat => cat.id === article.category)?.slug || '',
               publishedDate: article.publishDate,
-              author: article.author,
+              author: authorName,
               slug: article.slug,
             } as NewsItem;
           } catch (error) {
@@ -65,7 +83,7 @@ export function useUserArticles() {
       
       return articles.filter(Boolean) as NewsItem[];
     },
-    enabled: bookmarks.length > 0
+    enabled: bookmarks.length > 0 && categories.length > 0 && authors.length > 0
   });
 
   // Convert likes to NewsItem format
@@ -82,14 +100,19 @@ export function useUserArticles() {
         likes.map(async (like) => {
           try {
             const article = await getArticleById(like.articleId);
+            const categoryName = categories.find(cat => cat.id === article.category)?.name || "Sem categoria";
+            const authorName = authors.find(auth => auth.id === article.author)?.name || "Autor desconhecido";
+            
             return {
               id: article.id,
               title: article.title,
               summary: article.summary || '',
               imageUrl: article.imageUrl || '',
-              category: article.category,
+              category: categoryName,
+              categoryId: article.category,
+              categorySlug: categories.find(cat => cat.id === article.category)?.slug || '',
               publishedDate: article.publishDate,
-              author: article.author,
+              author: authorName,
               slug: article.slug,
             } as NewsItem;
           } catch (error) {
@@ -101,7 +124,7 @@ export function useUserArticles() {
       
       return articles.filter(Boolean) as NewsItem[];
     },
-    enabled: likes.length > 0
+    enabled: likes.length > 0 && categories.length > 0 && authors.length > 0
   });
 
   return {
