@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import ArticleList from "@/components/admin/ArticleList";
 import ArticleEditor from "@/components/admin/ArticleEditor";
@@ -74,28 +73,35 @@ const ArticleManagement = () => {
   };
 
   // Filter articles based on search query and filters
-  const filteredArticles = articles.map(article => {
-    // Enriquecer artigos com informações de categoria e autor para exibição
-    const category = categories.find(cat => cat.id === article.category);
-    const categoryName = category ? category.name : 'Sem categoria';
-    
-    return {
-      ...article,
-      categoryName // Adicionar nome da categoria para exibição
-    };
-  }).filter(article => {
-    // Search filter
-    const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          article.content.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Category filter
-    const matchesCategory = categoryFilter === "all" || article.category === categoryFilter;
-    
-    // Status filter
-    const matchesStatus = statusFilter === "all" || article.status === statusFilter;
-    
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+  const filteredArticles = articles
+    .filter(article => {
+      // Verificação para garantir que article é um objeto válido do tipo Article
+      if (typeof article === 'string') {
+        return false;
+      }
+      
+      // Search filter
+      const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            article.content.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Category filter
+      const matchesCategory = categoryFilter === "all" || article.category === categoryFilter;
+      
+      // Status filter
+      const matchesStatus = statusFilter === "all" || article.status === statusFilter;
+      
+      return matchesSearch && matchesCategory && matchesStatus;
+    })
+    .map(article => {
+      // Enriquecer artigos com informações de categoria e autor para exibição
+      const category = categories.find(cat => cat.id === article.category);
+      const categoryName = category ? category.name : 'Sem categoria';
+      
+      return {
+        ...article,
+        categoryName // Adicionar nome da categoria para exibição
+      };
+    });
 
   return (
     <AdminLayout activeTab="articles">

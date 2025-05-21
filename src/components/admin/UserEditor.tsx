@@ -3,10 +3,9 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { createUser, updateUser } from "@/services/userService";
+import { createUser, updateUser, ExtendedUser } from "@/services/userService";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,10 +31,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Corrigindo a interface para usar o tipo ExtendedUser do userService
 interface UserEditorProps {
   isOpen: boolean;
   onClose: () => void;
-  user: User | null;
+  user: ExtendedUser | null;
 }
 
 const userSchema = z.object({
@@ -136,7 +136,8 @@ export default function UserEditor({ isOpen, onClose, user }: UserEditorProps) {
         });
         return;
       }
-      createUserMutation.mutate(values as User & { password: string });
+      // Corrigido: Converter os valores para o tipo ExtendedUser antes de enviar
+      createUserMutation.mutate(values as ExtendedUser);
     }
   }
 
