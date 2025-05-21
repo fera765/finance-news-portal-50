@@ -39,8 +39,8 @@ const NewsDetail = () => {
   });
   
   // Find category and author names based on their IDs
-  const categoryName = categories.find(cat => cat.id === article?.category)?.name || article?.category || "";
-  const authorName = authors.find(auth => auth.id === article?.author)?.name || article?.author || "";
+  const categoryName = categories.find(cat => cat.id === article?.category)?.name || "Sem categoria";
+  const authorName = authors.find(auth => auth.id === article?.author)?.name || "Autor desconhecido";
   
   // Handle article interactions (likes, bookmarks, views)
   const { 
@@ -157,7 +157,9 @@ const NewsDetail = () => {
         </Button>
         
         <div className="mb-4 flex flex-wrap gap-2">
-          <Badge className="bg-finance-700">{categoryName}</Badge>
+          <Link to={`/category/${categories.find(cat => cat.id === article.category)?.slug || ''}`}>
+            <Badge className="bg-finance-700 hover:bg-finance-800 cursor-pointer">{categoryName}</Badge>
+          </Link>
           {article.tags?.map((tag) => (
             <Badge key={tag} variant="outline" className="bg-gray-100">
               {tag}

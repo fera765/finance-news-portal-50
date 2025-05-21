@@ -38,7 +38,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         );
       }, 0);
     } else {
-      // Se nenhum texto foi selecionado, apenas insira as tags
+      // Se nenhum texto foi selecionado, apenas insira as tags com o cursor entre elas
       const newText = value.substring(0, start) + startTag + endTag + value.substring(end);
       onChange(newText);
       
