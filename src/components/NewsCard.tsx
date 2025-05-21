@@ -34,6 +34,10 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
   
   const publishedAgo = getPublishedAgo();
   const articleUrl = `/news/${news.id}/${news.slug}`;
+
+  // Extrair o slug da categoria a partir do nome (simplificação, melhor seria ter o slug diretamente)
+  const categorySlug = news.category.toLowerCase().replace(/\s+/g, '-');
+  const categoryUrl = `/category/${categorySlug}`;
   
   // Fallback image handling
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -56,9 +60,11 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
           <CardContent className="p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="bg-gold-100 text-finance-800 hover:bg-gold-200">
-                  {news.category}
-                </Badge>
+                <Link to={categoryUrl}>
+                  <Badge variant="outline" className="bg-gold-100 text-finance-800 hover:bg-gold-200">
+                    {news.category}
+                  </Badge>
+                </Link>
                 <span className="text-xs text-gray-500">{publishedAgo}</span>
               </div>
               <Link to={articleUrl}>
@@ -87,9 +93,11 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
       </div>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <Badge variant="outline" className="bg-finance-50 text-finance-800 hover:bg-finance-100">
-            {news.category}
-          </Badge>
+          <Link to={categoryUrl}>
+            <Badge variant="outline" className="bg-finance-50 text-finance-800 hover:bg-finance-100">
+              {news.category}
+            </Badge>
+          </Link>
           <span className="text-xs text-gray-500">{publishedAgo}</span>
         </div>
         <Link to={articleUrl}>

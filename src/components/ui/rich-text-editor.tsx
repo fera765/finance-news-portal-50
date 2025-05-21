@@ -13,16 +13,48 @@ interface RichTextEditorProps {
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const [previewMode, setPreviewMode] = useState(false);
 
-  const applyMarkdown = (markdownSymbol: string) => {
-    // Simple implementation for applying markdown
-    onChange(value + markdownSymbol);
+  const insertFormatting = (startTag: string, endTag: string) => {
+    // Obter o elemento textarea
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = value.substring(start, end);
+    
+    // Se texto foi selecionado, envolva-o com as tags
+    if (selectedText) {
+      const newText = value.substring(0, start) + 
+                      startTag + selectedText + endTag + 
+                      value.substring(end);
+      onChange(newText);
+      
+      // Restaurar a seleção após a atualização
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(
+          start + startTag.length, 
+          start + startTag.length + selectedText.length
+        );
+      }, 0);
+    } else {
+      // Se nenhum texto foi selecionado, apenas insira as tags
+      const newText = value.substring(0, start) + startTag + endTag + value.substring(end);
+      onChange(newText);
+      
+      // Posicionar o cursor entre as tags
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + startTag.length, start + startTag.length);
+      }, 0);
+    }
   };
 
-  const handleBold = () => applyMarkdown("**Bold Text**");
-  const handleItalic = () => applyMarkdown("*Italic Text*");
-  const handleAlignLeft = () => applyMarkdown("\n<div style='text-align: left'>Text</div>\n");
-  const handleAlignCenter = () => applyMarkdown("\n<div style='text-align: center'>Text</div>\n");
-  const handleAlignRight = () => applyMarkdown("\n<div style='text-align: right'>Text</div>\n");
+  const handleBold = () => insertFormatting("**", "**");
+  const handleItalic = () => insertFormatting("*", "*");
+  const handleAlignLeft = () => insertFormatting("\n<div style='text-align: left'>", "</div>\n");
+  const handleAlignCenter = () => insertFormatting("\n<div style='text-align: center'>", "</div>\n");
+  const handleAlignRight = () => insertFormatting("\n<div style='text-align: right'>", "</div>\n");
 
   const renderMarkdown = (text: string) => {
     // Very basic markdown rendering for preview

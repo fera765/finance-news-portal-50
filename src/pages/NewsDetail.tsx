@@ -14,6 +14,9 @@ import StockTicker from "@/components/StockTicker";
 import { useArticleBySlug } from "@/hooks/useNews";
 import { useArticleInteractions } from "@/hooks/useArticleInteractions";
 import { useComments } from "@/hooks/useComments";
+import { useQuery } from "@tanstack/react-query";
+import { getCategories } from "@/services/categoryService";
+import { getUsers } from "@/services/userService";
 
 const NewsDetail = () => {
   const { id, slug } = useParams<{ id: string, slug: string }>();
@@ -23,6 +26,21 @@ const NewsDetail = () => {
 
   // Fetch article data
   const { data: article, isLoading, isError } = useArticleBySlug(slug);
+  
+  // Fetch categories and users to get names instead of IDs
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories
+  });
+
+  const { data: authors = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers
+  });
+  
+  // Find category and author names based on their IDs
+  const categoryName = categories.find(cat => cat.id === article?.category)?.name || article?.category || "";
+  const authorName = authors.find(auth => auth.id === article?.author)?.name || article?.author || "";
   
   // Handle article interactions (likes, bookmarks, views)
   const { 
@@ -139,7 +157,7 @@ const NewsDetail = () => {
         </Button>
         
         <div className="mb-4 flex flex-wrap gap-2">
-          <Badge className="bg-finance-700">{article.category}</Badge>
+          <Badge className="bg-finance-700">{categoryName}</Badge>
           {article.tags?.map((tag) => (
             <Badge key={tag} variant="outline" className="bg-gray-100">
               {tag}
@@ -152,7 +170,7 @@ const NewsDetail = () => {
         <div className="flex items-center justify-between text-gray-500 mb-6 flex-wrap gap-y-2">
           <div className="flex items-center flex-wrap">
             <div className="mr-4">
-              Por <span className="font-medium text-gray-700">{article.author}</span>
+              Por <span className="font-medium text-gray-700">{authorName}</span>
             </div>
             <div>
               {article.publishDate && format(new Date(article.publishDate), "d 'de' MMMM 'de' yyyy")}

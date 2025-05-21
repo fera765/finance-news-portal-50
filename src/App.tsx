@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Index from "./pages/Index";
 import NewsDetail from "./pages/NewsDetail";
+import CategoryPage from "./pages/CategoryPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import CategoryManagement from "./pages/CategoryManagement";
 import ArticleManagement from "./pages/ArticleManagement";
@@ -34,6 +35,7 @@ const App: React.FC = () => {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/news/:id/:slug" element={<NewsDetail />} />
+                  <Route path="/category/:slug" element={<CategoryPage />} />
                   
                   {/* Rotas Admin protegidas */}
                   <Route path="/admin" element={
