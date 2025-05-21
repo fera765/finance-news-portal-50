@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { ArticleList } from "@/components/admin/ArticleList";
+import ArticleList from "@/components/admin/ArticleList";
 import ArticleEditor from "@/components/admin/ArticleEditor";
 import { useArticles } from "@/hooks/useArticles";
 import { getCategories } from "@/services/categoryService";

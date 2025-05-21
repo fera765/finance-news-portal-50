@@ -2,6 +2,14 @@
 import { api } from './api';
 import { User } from '@/components/Layout';
 
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status?: 'active' | 'banned';
+};
+
 export interface ExtendedUser extends User {
   password?: string;
   status?: 'active' | 'banned';

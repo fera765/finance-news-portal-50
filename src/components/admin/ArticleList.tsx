@@ -31,15 +31,35 @@ import { getUsers, User } from '@/services/userService';
 import { MoreHorizontal, Plus, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const ArticleList = () => {
+interface ArticleListProps {
+  articles?: Article[];
+  isLoading?: boolean;
+  onAdd?: () => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onView?: (article: Article) => void;
+}
+
+const ArticleList: React.FC<ArticleListProps> = ({ 
+  articles: propArticles,
+  isLoading: propIsLoading,
+  onAdd,
+  onEdit,
+  onDelete,
+  onView
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   
-  // Fetch articles, categories and users
-  const { data: articles = [], isLoading: articlesLoading } = useQuery({
+  // Use props if provided, otherwise fetch data
+  const useLocalData = propArticles !== undefined;
+  
+  // Fetch articles, categories and users only if props are not provided
+  const { data: fetchedArticles = [], isLoading: articlesLoading } = useQuery({
     queryKey: ['articles'],
     queryFn: () => getArticles(),
+    enabled: !useLocalData,
   });
   
   const { data: categories = [] } = useQuery({
@@ -51,6 +71,10 @@ const ArticleList = () => {
     queryKey: ['users'],
     queryFn: getUsers,
   });
+  
+  // Use props data or fetched data
+  const articles = useLocalData ? propArticles : fetchedArticles;
+  const isLoading = useLocalData ? propIsLoading : articlesLoading;
   
   // Delete article mutation
   const deleteMutation = useMutation({
@@ -66,12 +90,20 @@ const ArticleList = () => {
   
   const handleDelete = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este artigo?')) {
-      deleteMutation.mutate(id);
+      if (onDelete) {
+        onDelete(id);
+      } else {
+        deleteMutation.mutate(id);
+      }
     }
   };
   
   const handleEdit = (id: string) => {
-    navigate(`/admin/articles/edit/${id}`);
+    if (onEdit) {
+      onEdit(id);
+    } else {
+      navigate(`/admin/articles/edit/${id}`);
+    }
   };
   
   const getCategoryName = (categoryId: string) => {
@@ -98,10 +130,17 @@ const ArticleList = () => {
             Gerencie todos os artigos do site.
           </CardDescription>
         </div>
-        <Button onClick={() => navigate('/admin/articles/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Artigo
-        </Button>
+        {onAdd ? (
+          <Button onClick={onAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Artigo
+          </Button>
+        ) : (
+          <Button onClick={() => navigate('/admin/articles/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Artigo
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         <div className="mb-4">
@@ -117,7 +156,7 @@ const ArticleList = () => {
           </div>
         </div>
         
-        {articlesLoading ? (
+        {isLoading ? (
           <div>Carregando artigos...</div>
         ) : filteredArticles.length === 0 ? (
           <div className="text-center py-4">
@@ -162,6 +201,11 @@ const ArticleList = () => {
                           >
                             Excluir
                           </DropdownMenuItem>
+                          {onView && (
+                            <DropdownMenuItem onClick={() => onView(article)}>
+                              Visualizar
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
