@@ -84,7 +84,7 @@ const StockTicker = () => {
               ) : (
                 <ArrowDownIcon className="h-3 w-3 mr-1" />
               )}
-              {stock.changePercent.toFixed(2)}%
+              {Math.abs(stock.change).toFixed(2)}%
             </span>
           </div>
         ))}
