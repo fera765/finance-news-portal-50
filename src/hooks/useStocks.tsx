@@ -8,7 +8,7 @@ export function useStockData(symbols = DEFAULT_SYMBOLS) {
   return useQuery({
     queryKey: ['stocks', symbols],
     queryFn: () => getMultipleStockData(symbols),
-    staleTime: 60000, // 1 minute
+    staleTime: 60000, // 1 minuto
     refetchInterval: 60000, // Refetch every minute
     refetchOnWindowFocus: true,
     retry: 3,
