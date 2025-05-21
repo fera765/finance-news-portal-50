@@ -61,6 +61,18 @@ const ArticleManagement = () => {
     window.open(`/news/${article.slug}`, '_blank');
   };
 
+  // Fix: Create wrapper functions that match the expected parameter types
+  const handleEditById = (id: string) => {
+    const articleToEdit = articles.find(article => article.id === id);
+    if (articleToEdit) {
+      openEditArticleEditor(articleToEdit);
+    }
+  };
+
+  const handleDeleteById = (id: string) => {
+    handleDeleteArticle(id);
+  };
+
   // Filter articles based on search query and filters
   const filteredArticles = articles.map(article => {
     // Enriquecer artigos com informações de categoria e autor para exibição
@@ -155,8 +167,8 @@ const ArticleManagement = () => {
               articles={filteredArticles}
               isLoading={isLoading}
               onAdd={openNewArticleEditor}
-              onEdit={openEditArticleEditor}
-              onDelete={handleDeleteArticle}
+              onEdit={handleEditById}  // Fixed: Now using the wrapper function with correct parameter type
+              onDelete={handleDeleteById}  // Fixed: Now using the wrapper function with correct parameter type
               onView={handleViewArticle}
             />
           </CardContent>

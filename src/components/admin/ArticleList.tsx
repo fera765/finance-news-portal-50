@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -40,6 +39,7 @@ interface ArticleListProps {
   onView?: (article: Article) => void;
 }
 
+// Make sure the component is properly exported as default
 const ArticleList: React.FC<ArticleListProps> = ({ 
   articles: propArticles,
   isLoading: propIsLoading,

@@ -1,6 +1,4 @@
-
 import { api } from './api';
-import { User } from '@/components/Layout';
 
 export type User = {
   id: string;
@@ -13,7 +11,7 @@ export type User = {
 export interface ExtendedUser extends User {
   password?: string;
   status?: 'active' | 'banned';
-}
+};
 
 export const getUsers = async (params = {}) => {
   const { data } = await api.get('/users', { params });
