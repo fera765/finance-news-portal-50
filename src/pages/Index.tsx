@@ -5,7 +5,7 @@ import NewsCard, { NewsItem } from "@/components/NewsCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StockTicker from "@/components/StockTicker";
-import { useFeaturedArticles, useArticleList } from "@/hooks/useNews";
+import { useDetachArticles, useNonDetachArticles } from "@/hooks/useNews";
 import { Article } from "@/services/articleService";
 import { useNewsletter } from "@/hooks/useNewsletter";
 import { FileText } from "lucide-react";
@@ -21,11 +21,13 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useInView } from "react-intersection-observer";
+import FeaturedNewsSection from "@/components/FeaturedNewsSection";
 
 // Convert API article to NewsItem format - Com verificações de dados e busca de nomes
 const mapArticleToNewsItem = (article: Article, categories: Category[] = [], authors: User[] = []): NewsItem => {
   // Encontrar nome da categoria baseado no ID
   const categoryName = categories.find(cat => cat.id === article.category)?.name || 'Geral';
+  const categorySlug = categories.find(cat => cat.id === article.category)?.slug || '';
   
   // Encontrar nome do autor baseado no ID
   const authorName = authors.find(auth => auth.id === article.author)?.name || 'Equipe Editorial';
@@ -36,6 +38,8 @@ const mapArticleToNewsItem = (article: Article, categories: Category[] = [], aut
     summary: article.summary || 'Sem resumo disponível',
     imageUrl: article.imageUrl || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d',
     category: categoryName,
+    categoryId: article.category,
+    categorySlug: categorySlug,
     publishedDate: typeof article.publishDate === 'object' && article.publishDate instanceof Date 
       ? article.publishDate.toISOString() 
       : String(article.publishDate) || new Date().toISOString(),
@@ -62,32 +66,27 @@ const Index = () => {
     queryFn: getUsers
   });
   
-  // Use React Query hooks to fetch data
+  // Use separate hooks to fetch detach and non-detach articles
   const { 
-    data: featuredArticles = [], 
-    isLoading: featuredLoading,
-    isError: featuredError
-  } = useFeaturedArticles();
+    data: detachArticles = [], 
+    isLoading: detachLoading,
+    isError: detachError
+  } = useDetachArticles();
   
   const { 
-    data: allArticles = [], 
-    isLoading: articlesLoading,
-    isError: articlesError
-  } = useArticleList();
+    data: nonDetachArticles = [], 
+    isLoading: nonDetachLoading,
+    isError: nonDetachError
+  } = useNonDetachArticles();
   
-  // Mapeamento de dados seguro com nomes reais em vez de IDs
-  const featuredNews = featuredArticles?.length > 0 
-    ? featuredArticles.map(article => mapArticleToNewsItem(article, categories, authors)) 
+  // Map carousel articles (with isDetach=true)
+  const carouselNews = detachArticles?.length > 0 
+    ? detachArticles.map(article => mapArticleToNewsItem(article, categories, authors)) 
     : [];
     
-  // Filtrar artigos para não repetir os que já estão em destaque
-  const featuredIds = new Set(featuredNews.map(article => article.id));
-  const filteredArticles = allArticles.filter(article => 
-    article.id && !featuredIds.has(article.id)
-  );
-  
-  const latestNews = filteredArticles?.length > 0 
-    ? filteredArticles.map(article => mapArticleToNewsItem(article, categories, authors)) 
+  // Map regular articles (with isDetach=false)
+  const latestNews = nonDetachArticles?.length > 0 
+    ? nonDetachArticles.map(article => mapArticleToNewsItem(article, categories, authors)) 
     : [];
   
   // Efeito para carregamento infinito quando o elemento de referência estiver visível
@@ -107,60 +106,25 @@ const Index = () => {
       </div>
       
       <div className="max-w-screen-2xl mx-auto px-4 py-6 md:py-8">
-        {/* Featured News Carousel */}
+        {/* Featured News Carousel - use FeaturedNewsSection for detached articles */}
         <section>
-          <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center">
-            <span className="mr-2">Em Destaque</span>
-            <div className="h-1 w-10 bg-gold-500"></div>
-          </h2>
-          
-          {featuredLoading ? (
-            <div className="w-full h-72 bg-gray-100 animate-pulse rounded-lg"></div>
-          ) : featuredError ? (
-            <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
-              <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">Não foi possível carregar os artigos em destaque</h3>
-              <p className="mt-2 text-sm text-gray-500">Tente novamente mais tarde.</p>
-            </div>
-          ) : featuredNews.length === 0 ? (
-            <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
-              <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">Nenhum artigo em destaque</h3>
-              <p className="mt-2 text-sm text-gray-500">Os artigos em destaque aparecerão aqui.</p>
-            </div>
-          ) : (
-            <Carousel className="mb-12">
-              <CarouselContent>
-                {featuredNews.map((news) => (
-                  <CarouselItem key={news.id} className="md:basis-1/2 lg:basis-1/3">
-                    <div className="p-1">
-                      <NewsCard news={news} featured />
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <div className="flex justify-center mt-4">
-                <CarouselPrevious className="relative static translate-y-0 mr-2" />
-                <CarouselNext className="relative static translate-y-0" />
-              </div>
-            </Carousel>
-          )}
+          <FeaturedNewsSection featuredNews={carouselNews} />
         </section>
         
-        {/* Latest News */}
+        {/* Latest News - non-detached articles */}
         <section className="mt-8 md:mt-12">
           <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
             <span className="mr-2">Últimas Notícias</span>
             <div className="h-1 w-10 bg-finance-500"></div>
           </h2>
           
-          {articlesLoading ? (
+          {nonDetachLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="h-64 bg-gray-100 animate-pulse rounded-lg"></div>
               ))}
             </div>
-          ) : articlesError ? (
+          ) : nonDetachError ? (
             <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
               <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900">Não foi possível carregar os artigos</h3>

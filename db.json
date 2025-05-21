@@ -1,4 +1,3 @@
-
 {
   "articles": [
     {
@@ -12,7 +11,8 @@
       "status": "published",
       "publishDate": "2023-11-02T14:30:00.000Z",
       "imageUrl": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-      "tags": ["federal reserve", "interest rates", "stock market", "economic policy"]
+      "tags": ["federal reserve", "interest rates", "stock market", "economic policy"],
+      "isDetach": true
     },
     {
       "id": "2",
@@ -25,7 +25,8 @@
       "status": "published",
       "publishDate": "2023-11-01T10:15:00.000Z",
       "imageUrl": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-      "tags": ["technology", "regulation", "antitrust", "congress"]
+      "tags": ["technology", "regulation", "antitrust", "congress"],
+      "isDetach": true
     },
     {
       "id": "3",
@@ -38,7 +39,8 @@
       "status": "published",
       "publishDate": "2023-10-30T09:45:00.000Z",
       "imageUrl": "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80",
-      "tags": ["cryptocurrency", "bitcoin", "blockchain", "institutional investment"]
+      "tags": ["cryptocurrency", "bitcoin", "blockchain", "institutional investment"],
+      "isDetach": false
     }
   ],
   "categories": [
@@ -328,7 +330,7 @@
     },
     {
       "id": "3",
-      "articleId": "3", 
+      "articleId": "3",
       "count": 2156,
       "likes": 2,
       "bookmarks": 2,

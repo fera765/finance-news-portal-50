@@ -1,4 +1,3 @@
-
 import { api } from './api';
 import { toast } from "sonner";
 
@@ -15,7 +14,8 @@ const MOCK_ARTICLES = [
     status: "published",
     publishDate: new Date().toISOString(),
     imageUrl: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f",
-    tags: ["Mercados", "Banco Central", "Investimentos"]
+    tags: ["Mercados", "Banco Central", "Investimentos"],
+    isDetach: true
   },
   {
     id: "mock-2",
@@ -28,7 +28,8 @@ const MOCK_ARTICLES = [
     status: "published",
     publishDate: new Date().toISOString(),
     imageUrl: "https://images.unsplash.com/photo-1563013544-824ae1b704d3",
-    tags: ["Fintech", "Pagamentos", "Tecnologia"]
+    tags: ["Fintech", "Pagamentos", "Tecnologia"],
+    isDetach: true
   },
   {
     id: "mock-3",
@@ -41,7 +42,8 @@ const MOCK_ARTICLES = [
     status: "published",
     publishDate: new Date().toISOString(),
     imageUrl: "https://images.unsplash.com/photo-1611324586758-1ff1534d217b",
-    tags: ["Economia", "Inflação", "Brasil"]
+    tags: ["Economia", "Inflação", "Brasil"],
+    isDetach: false
   }
 ];
 
@@ -57,6 +59,7 @@ export interface Article {
   publishDate?: Date | string;
   imageUrl?: string;
   tags?: string[];
+  isDetach?: boolean;
 }
 
 export const getArticles = async (params = {}) => {
@@ -138,6 +141,21 @@ export const deleteArticle = async (id: string) => {
 
 export const getFeaturedArticles = async () => {
   try {
+    // Get articles with isDetach set to true
+    const { data } = await api.get('/articles', {
+      params: {
+        isDetach: true,
+        status: 'published',
+        _sort: 'publishDate',
+        _order: 'desc',
+      },
+    });
+    
+    if (Array.isArray(data) && data.length > 0) {
+      return data;
+    }
+    
+    // Fallback to previous behavior if no featured articles are found
     // Try to get the most viewed articles
     const { data: views } = await api.get('/views', {
       params: {

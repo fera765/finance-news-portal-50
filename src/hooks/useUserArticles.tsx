@@ -73,6 +73,7 @@ export function useUserArticles() {
               publishedDate: article.publishDate,
               author: authorName,
               slug: article.slug,
+              isDetach: article.isDetach || false,
             } as NewsItem;
           } catch (error) {
             console.error(`Error fetching bookmarked article: ${bookmark.articleId}`, error);
@@ -114,6 +115,7 @@ export function useUserArticles() {
               publishedDate: article.publishDate,
               author: authorName,
               slug: article.slug,
+              isDetach: article.isDetach || false,
             } as NewsItem;
           } catch (error) {
             console.error(`Error fetching liked article: ${like.articleId}`, error);

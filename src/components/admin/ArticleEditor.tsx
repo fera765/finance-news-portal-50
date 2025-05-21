@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Save, Upload, ExternalLink, X } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Article } from "@/services/articleService";
+import { Switch } from "@/components/ui/switch";
 
 interface Category {
   id: string;
@@ -48,7 +49,8 @@ const ArticleEditor = ({
     content: "",
     category: "",
     author: "",
-    status: 'draft'
+    status: 'draft',
+    isDetach: false
   });
   
   const [publishDate, setPublishDate] = useState<Date | undefined>(
@@ -63,7 +65,10 @@ const ArticleEditor = ({
   
   useEffect(() => {
     if (article) {
-      setFormData(article);
+      setFormData({
+        ...article,
+        isDetach: article.isDetach || false
+      });
       setPublishDate(
         article.publishDate 
           ? (typeof article.publishDate === 'string' 
@@ -78,7 +83,8 @@ const ArticleEditor = ({
         content: "",
         category: "",
         author: "",
-        status: 'draft'
+        status: 'draft',
+        isDetach: false
       });
       setPublishDate(undefined);
     }
@@ -181,6 +187,23 @@ const ArticleEditor = ({
             <p className="text-sm text-muted-foreground">
               Será usado na URL: example.com/news/{formData.slug || 'artigo-slug'}
             </p>
+          </div>
+          
+          {/* isDetach Switch - NEW */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="isDetach" className="text-base">
+                Exibir no Carrossel
+                <p className="text-sm text-muted-foreground mt-1">
+                  Se ativado, este artigo será exibido no carrossel da página inicial
+                </p>
+              </Label>
+              <Switch
+                id="isDetach"
+                checked={formData.isDetach}
+                onCheckedChange={(checked) => handleInputChange('isDetach', checked)}
+              />
+            </div>
           </div>
           
           {/* Categoria & Autor em uma linha para telas maiores, em coluna para telas menores */}
