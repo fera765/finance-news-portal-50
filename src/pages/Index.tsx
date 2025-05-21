@@ -1,20 +1,26 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import NewsCard, { NewsItem } from "@/components/NewsCard";
-import FeaturedNewsSection from "@/components/FeaturedNewsSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StockTicker from "@/components/StockTicker";
 import { useFeaturedArticles, useArticleList } from "@/hooks/useNews";
 import { Article } from "@/services/articleService";
 import { useNewsletter } from "@/hooks/useNewsletter";
-import { toast } from "sonner";
 import { FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories, Category } from "@/services/categoryService";
 import { getUsers } from "@/services/userService";
 import { User } from "@/components/Layout";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { useInView } from "react-intersection-observer";
 
 // Convert API article to NewsItem format - Com verificações de dados e busca de nomes
 const mapArticleToNewsItem = (article: Article, categories: Category[] = [], authors: User[] = []): NewsItem => {
@@ -39,7 +45,8 @@ const mapArticleToNewsItem = (article: Article, categories: Category[] = [], aut
 };
 
 const Index = () => {
-  const [visibleNews, setVisibleNews] = useState(6);
+  const [initialArticlesLoaded, setInitialArticlesLoaded] = useState(6);
+  const { ref, inView } = useInView();
   
   // Newsletter state com hook
   const { email, setEmail, isLoading: isNewsletterLoading, handleSubscribe } = useNewsletter();
@@ -73,13 +80,22 @@ const Index = () => {
     ? featuredArticles.map(article => mapArticleToNewsItem(article, categories, authors)) 
     : [];
     
-  const latestNews = allArticles?.length > 0 
-    ? allArticles.map(article => mapArticleToNewsItem(article, categories, authors)) 
+  // Filtrar artigos para não repetir os que já estão em destaque
+  const featuredIds = new Set(featuredNews.map(article => article.id));
+  const filteredArticles = allArticles.filter(article => 
+    article.id && !featuredIds.has(article.id)
+  );
+  
+  const latestNews = filteredArticles?.length > 0 
+    ? filteredArticles.map(article => mapArticleToNewsItem(article, categories, authors)) 
     : [];
   
-  const loadMore = () => {
-    setVisibleNews(prev => prev + 3);
-  };
+  // Efeito para carregamento infinito quando o elemento de referência estiver visível
+  useEffect(() => {
+    if (inView && initialArticlesLoaded < latestNews.length) {
+      setInitialArticlesLoaded(prev => Math.min(prev + 3, latestNews.length));
+    }
+  }, [inView, latestNews.length, initialArticlesLoaded]);
 
   return (
     <Layout>
@@ -92,23 +108,44 @@ const Index = () => {
       
       <div className="max-w-screen-2xl mx-auto px-4 py-6 md:py-8">
         {/* Featured News Carousel */}
-        {featuredLoading ? (
-          <div className="w-full h-72 bg-gray-100 animate-pulse rounded-lg"></div>
-        ) : featuredError ? (
-          <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
-            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">Não foi possível carregar os artigos em destaque</h3>
-            <p className="mt-2 text-sm text-gray-500">Tente novamente mais tarde.</p>
-          </div>
-        ) : featuredNews.length === 0 ? (
-          <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
-            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">Nenhum artigo em destaque</h3>
-            <p className="mt-2 text-sm text-gray-500">Os artigos em destaque aparecerão aqui.</p>
-          </div>
-        ) : (
-          <FeaturedNewsSection featuredNews={featuredNews} />
-        )}
+        <section>
+          <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center">
+            <span className="mr-2">Em Destaque</span>
+            <div className="h-1 w-10 bg-gold-500"></div>
+          </h2>
+          
+          {featuredLoading ? (
+            <div className="w-full h-72 bg-gray-100 animate-pulse rounded-lg"></div>
+          ) : featuredError ? (
+            <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
+              <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">Não foi possível carregar os artigos em destaque</h3>
+              <p className="mt-2 text-sm text-gray-500">Tente novamente mais tarde.</p>
+            </div>
+          ) : featuredNews.length === 0 ? (
+            <div className="w-full py-12 bg-gray-50 rounded-lg text-center">
+              <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">Nenhum artigo em destaque</h3>
+              <p className="mt-2 text-sm text-gray-500">Os artigos em destaque aparecerão aqui.</p>
+            </div>
+          ) : (
+            <Carousel className="mb-12">
+              <CarouselContent>
+                {featuredNews.map((news) => (
+                  <CarouselItem key={news.id} className="md:basis-1/2 lg:basis-1/3">
+                    <div className="p-1">
+                      <NewsCard news={news} featured />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="flex justify-center mt-4">
+                <CarouselPrevious className="relative static translate-y-0 mr-2" />
+                <CarouselNext className="relative static translate-y-0" />
+              </div>
+            </Carousel>
+          )}
+        </section>
         
         {/* Latest News */}
         <section className="mt-8 md:mt-12">
@@ -138,16 +175,22 @@ const Index = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {latestNews.slice(0, visibleNews).map((news) => (
+                {latestNews.slice(0, initialArticlesLoaded).map((news) => (
                   <NewsCard key={news.id} news={news} />
                 ))}
               </div>
               
-              {visibleNews < latestNews.length && (
-                <div className="mt-6 md:mt-8 text-center">
-                  <Button onClick={loadMore} variant="outline">
-                    Carregar mais artigos
-                  </Button>
+              {/* Elemento de observação para carregamento infinito */}
+              {initialArticlesLoaded < latestNews.length && (
+                <div 
+                  ref={ref} 
+                  className="w-full flex justify-center py-8"
+                >
+                  <div className="animate-pulse flex items-center">
+                    <div className="h-2 w-2 bg-gray-400 rounded-full mr-1"></div>
+                    <div className="h-2 w-2 bg-gray-400 rounded-full mr-1"></div>
+                    <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
+                  </div>
                 </div>
               )}
             </>

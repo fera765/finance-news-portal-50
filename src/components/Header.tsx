@@ -1,7 +1,8 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Bell, Menu, Search, X, Settings, LogOut, BookMarked } from "lucide-react";
+import { Menu, Search, X, Settings, LogOut, BookMarked } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   DropdownMenu,
@@ -12,6 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserType } from "./Layout";
+import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   user?: UserType | null;
@@ -21,11 +24,23 @@ interface HeaderProps {
 
 export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
-  const handleSearch = () => {
-    toast("Search functionality will be implemented in the next version.");
+  // Nova função para lidar com a pesquisa
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch(e);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -55,24 +70,38 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Campo de busca substituindo as notificações */}
+            <form onSubmit={handleSearch} className="relative hidden md:block">
+              <Input 
+                type="search"
+                placeholder="Buscar notícias..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                className="w-[200px] pr-8"
+              />
+              <Button 
+                type="submit" 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-0 top-0 text-gray-700 hover:text-finance-700"
+              >
+                <Search size={18} />
+              </Button>
+            </form>
+            
+            {/* Ícone de busca para mobile */}
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={handleSearch}
-              className="text-gray-700 hover:text-finance-700"
+              onClick={() => navigate('/search')}
+              className="md:hidden text-gray-700 hover:text-finance-700"
             >
               <Search size={20} />
             </Button>
             
             {user ? (
               <>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="text-gray-700 hover:text-finance-700"
-                >
-                  <Bell size={20} />
-                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -141,6 +170,18 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t py-4 px-4">
           <nav className="flex flex-col space-y-4">
+            {/* Campo de busca mobile */}
+            <form onSubmit={handleSearch} className="flex mb-2">
+              <Input 
+                type="search"
+                placeholder="Buscar notícias..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 mr-2"
+              />
+              <Button type="submit">Buscar</Button>
+            </form>
+            
             <Link 
               to="/" 
               className="text-base font-medium text-gray-700 hover:text-finance-700"

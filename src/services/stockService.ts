@@ -1,94 +1,83 @@
 
 import { api } from './api';
 
-// Define stock data type
-export interface StockData {
-  symbol: string;
-  price: number;
-  change: number;
-  changePercent: number;
-}
-
-export interface StockSymbolSearchResult {
+interface Stock {
   symbol: string;
   name: string;
-  exchange?: string;
+  price: number;
+  change: number;
+  favorite?: boolean;
 }
 
-// Mock data for fallbacks
-const MOCK_STOCK_DATA: StockData[] = [
-  { symbol: "AAPL", price: 175.05, change: 1.25, changePercent: 0.72 },
-  { symbol: "MSFT", price: 350.12, change: 0.85, changePercent: 0.24 },
-  { symbol: "GOOGL", price: 136.10, change: -0.32, changePercent: -0.23 },
-  { symbol: "AMZN", price: 178.35, change: 2.41, changePercent: 1.37 },
-  { symbol: "META", price: 487.95, change: -1.15, changePercent: -0.23 },
-  { symbol: "TSLA", price: 172.63, change: -3.82, changePercent: -2.16 },
-  { symbol: "NVDA", price: 950.02, change: 15.30, changePercent: 1.64 },
-  { symbol: "JPM", price: 198.48, change: 0.37, changePercent: 0.19 }
-];
+interface StockView {
+  id?: string;
+  userId: string;
+  stockSymbol: string;
+  favorite: boolean;
+}
 
-// Mock search results
-const MOCK_SYMBOL_SEARCH: StockSymbolSearchResult[] = [
-  { symbol: "AAPL", name: "Apple Inc.", exchange: "NASDAQ" },
-  { symbol: "MSFT", name: "Microsoft Corporation", exchange: "NASDAQ" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", exchange: "NASDAQ" },
-  { symbol: "GOOG", name: "Alphabet Inc. Class C", exchange: "NASDAQ" },
-  { symbol: "AMZN", name: "Amazon.com Inc.", exchange: "NASDAQ" },
-  { symbol: "META", name: "Meta Platforms Inc.", exchange: "NASDAQ" },
-  { symbol: "TSLA", name: "Tesla Inc.", exchange: "NASDAQ" },
-  { symbol: "NVDA", name: "NVIDIA Corporation", exchange: "NASDAQ" },
-  { symbol: "JPM", name: "JPMorgan Chase & Co.", exchange: "NYSE" },
-  { symbol: "BAC", name: "Bank of America Corp.", exchange: "NYSE" },
-  { symbol: "WMT", name: "Walmart Inc.", exchange: "NYSE" },
-  { symbol: "PG", name: "Procter & Gamble Co.", exchange: "NYSE" }
-];
-
-// Fetch data for a single stock
-export const getStockData = async (symbol: string): Promise<StockData> => {
+// Get stock data
+export const getStocks = async (): Promise<Stock[]> => {
   try {
-    const { data } = await api.get(`/stocks/${symbol}`);
-    return data;
+    const { data } = await api.get('/stocks');
+    return data || [];
   } catch (error) {
-    console.error(`Error fetching stock data for ${symbol}:`, error);
-    // Return mock data for the requested symbol
-    const mockStock = MOCK_STOCK_DATA.find(stock => stock.symbol === symbol);
-    return mockStock || { 
-      symbol, 
-      price: 100 + Math.random() * 200, 
-      change: (Math.random() * 10) - 5,
-      changePercent: (Math.random() * 2) - 1 
-    };
+    console.error('Error fetching stocks:', error);
+    // Fallback mock data
+    return [
+      { symbol: 'AAPL', name: 'Apple Inc.', price: 177.97, change: 0.74 },
+      { symbol: 'MSFT', name: 'Microsoft Corporation', price: 337.22, change: -0.56 },
+      { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 131.84, change: 1.31 },
+      { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 124.31, change: 0.22 },
+      { symbol: 'TSLA', name: 'Tesla, Inc.', price: 263.62, change: -2.44 },
+    ];
   }
 };
 
-// Fetch data for multiple stocks at once
-export const getMultipleStockData = async (symbols: string[]): Promise<StockData[]> => {
+// Get favorite stocks for a user
+export const getFavoriteStocks = async (userId: string): Promise<string[]> => {
   try {
-    // In a real API you might have a batch endpoint, here we're simulating it
-    const requests = symbols.map(symbol => getStockData(symbol));
-    const results = await Promise.all(requests);
-    return results;
-  } catch (error) {
-    console.error('Error fetching multiple stock data:', error);
-    // Filter mock data to only return the requested symbols
-    return MOCK_STOCK_DATA.filter(stock => symbols.includes(stock.symbol));
-  }
-};
-
-// Search for stock symbols
-export const searchStockSymbols = async (query: string): Promise<StockSymbolSearchResult[]> => {
-  try {
-    const { data } = await api.get(`/stocks/search`, {
-      params: { q: query }
+    const { data } = await api.get('/stockViews', {
+      params: {
+        userId,
+        favorite: true,
+      }
     });
-    return data;
+    
+    return data?.map((item: StockView) => item.stockSymbol) || [];
   } catch (error) {
-    console.error(`Error searching for stocks with query ${query}:`, error);
-    // Filter mock data based on search query
-    return MOCK_SYMBOL_SEARCH.filter(
-      stock => 
-        stock.symbol.toLowerCase().includes(query.toLowerCase()) || 
-        stock.name.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 10); // Return max 10 results
+    console.error('Error fetching favorite stocks:', error);
+    return [];
+  }
+};
+
+// Toggle favorite status for a stock
+export const toggleFavoriteStock = async (userId: string, stockSymbol: string, favorite: boolean): Promise<boolean> => {
+  try {
+    // Check if entry already exists
+    const { data: existingEntries } = await api.get('/stockViews', {
+      params: {
+        userId,
+        stockSymbol,
+      }
+    });
+    
+    if (existingEntries && existingEntries.length > 0) {
+      // Update existing entry
+      const entry = existingEntries[0];
+      await api.patch(`/stockViews/${entry.id}`, { favorite });
+    } else {
+      // Create new entry
+      await api.post('/stockViews', {
+        userId,
+        stockSymbol,
+        favorite,
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error toggling favorite stock:', error);
+    return false;
   }
 };

@@ -1,17 +1,18 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; 
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Menu, Bell, LogOut } from "lucide-react";
+import { Menu, Bell, LogOut, Check } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
 import {
   Avatar,
@@ -20,6 +21,8 @@ import {
 } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { getStocks, getFavoriteStocks, toggleFavoriteStock } from "@/services/stockService";
+import { toast } from "sonner";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -30,10 +33,65 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [stocks, setStocks] = useState<any[]>([]);
+  const [favoriteStocks, setFavoriteStocks] = useState<string[]>([]);
+  const [notificationCount, setNotificationCount] = useState<number>(0);
+  const [isStockDropdownOpen, setIsStockDropdownOpen] = useState(false);
+  
+  // Carregar ações e favoritos do usuário
+  useEffect(() => {
+    const fetchStocksData = async () => {
+      try {
+        const stocksData = await getStocks();
+        setStocks(stocksData);
+        
+        if (user?.id) {
+          const userFavorites = await getFavoriteStocks(user.id);
+          setFavoriteStocks(userFavorites);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados de ações:", error);
+      }
+    };
+    
+    fetchStocksData();
+    
+    // Simular notificações
+    setNotificationCount(Math.floor(Math.random() * 5) + 1);
+  }, [user?.id]);
   
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+  
+  // Alternar status favorito de uma ação
+  const handleToggleFavorite = async (symbol: string, checked: boolean) => {
+    if (!user?.id) {
+      toast.error("Você precisa estar logado para favoritar ações");
+      return;
+    }
+    
+    try {
+      const success = await toggleFavoriteStock(user.id, symbol, checked);
+      
+      if (success) {
+        setFavoriteStocks(prev => 
+          checked 
+            ? [...prev, symbol] 
+            : prev.filter(s => s !== symbol)
+        );
+        
+        toast.success(
+          checked 
+            ? `${symbol} adicionada aos favoritos` 
+            : `${symbol} removida dos favoritos`
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar favoritos:", error);
+      toast.error("Erro ao atualizar favoritos");
+    }
   };
   
   // Pegar as iniciais do nome do usuário
@@ -75,12 +133,50 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
               </h1>
             </div>
             <div className="flex items-center gap-3">
+              {/* Menu de ações favoritas */}
+              <DropdownMenu
+                open={isStockDropdownOpen}
+                onOpenChange={setIsStockDropdownOpen}
+              >
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <span>Ações</span>
+                    {favoriteStocks.length > 0 && (
+                      <span className="bg-primary/20 text-primary text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {favoriteStocks.length}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Monitorar Ações</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {stocks.map((stock) => (
+                    <DropdownMenuCheckboxItem
+                      key={stock.symbol}
+                      checked={favoriteStocks.includes(stock.symbol)}
+                      onCheckedChange={(checked) => handleToggleFavorite(stock.symbol, checked)}
+                    >
+                      <div className="flex justify-between w-full items-center">
+                        <span>{stock.symbol}</span>
+                        <span className={cn(
+                          "text-xs font-medium",
+                          stock.change >= 0 ? "text-green-600" : "text-red-600"
+                        )}>
+                          {stock.change >= 0 ? "+" : ""}{stock.change.toFixed(2)}%
+                        </span>
+                      </div>
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative">
                     <Bell size={20} />
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                      3
+                      {notificationCount}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -88,13 +184,20 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
                   <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <div className="max-h-80 overflow-auto">
-                    {[1, 2, 3].map((i) => (
+                    {[...Array(notificationCount)].map((_, i) => (
                       <DropdownMenuItem key={i} className="p-3 cursor-pointer">
                         <div className="flex flex-col gap-1">
-                          <span className="font-medium">New comment on article</span>
-                          <span className="text-xs text-gray-500">2 hours ago</span>
+                          <span className="font-medium">
+                            {i % 2 === 0 ? "Novo comentário no artigo" : "Ação em alta"}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {Math.floor(Math.random() * 5) + 1} horas atrás
+                          </span>
                           <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                            John Doe commented on "Federal Reserve Signals Possible Interest Rate Cuts"
+                            {i % 2 === 0 
+                              ? "Novo comentário em um artigo recente"
+                              : `${stocks[i % stocks.length]?.symbol || 'AAPL'} subiu ${(Math.random() * 5).toFixed(2)}% hoje`
+                            }
                           </p>
                         </div>
                       </DropdownMenuItem>
