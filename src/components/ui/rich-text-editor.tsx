@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,6 +58,9 @@ export function RichTextEditor({
   const [orderedListActive, setOrderedListActive] = useState(false);
   const [currentListItemNumber, setCurrentListItemNumber] = useState(1);
   
+  // Adicionado para rastrear imagens sendo visualizadas no editor
+  const [liveImages, setLiveImages] = useState<{url: string, alt: string}[]>([]);
+  
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   
@@ -69,11 +71,41 @@ export function RichTextEditor({
       // Sanitize the HTML to prevent XSS attacks
       const sanitizedHtml = DOMPurify.sanitize(rawHtml);
       setRenderedHtml(sanitizedHtml);
+      
+      // Extrair URLs de imagens para visualização em tempo real
+      extractImagesFromMarkdown(value);
     } catch (error) {
       console.error("Error parsing markdown content:", error);
       setRenderedHtml(value);
     }
   }, [value]);
+
+  // Nova função para extrair URLs de imagens do markdown
+  const extractImagesFromMarkdown = (markdown: string) => {
+    const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
+    const images: {url: string, alt: string}[] = [];
+    let match;
+    
+    while ((match = imageRegex.exec(markdown)) !== null) {
+      const alt = match[1] || '';
+      const url = match[2] || '';
+      if (url) {
+        images.push({ url, alt });
+      }
+    }
+    
+    // Também buscar imagens em HTML
+    const htmlImageRegex = /<img\s+[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/g;
+    while ((match = htmlImageRegex.exec(markdown)) !== null) {
+      const url = match[1] || '';
+      const alt = match[2] || '';
+      if (url) {
+        images.push({ url, alt });
+      }
+    }
+    
+    setLiveImages(images);
+  };
 
   const insertFormatting = (startTag: string, endTag: string) => {
     // Obter o elemento textarea
@@ -240,9 +272,16 @@ export function RichTextEditor({
     const newText = value.substring(0, start) + imageMarkdown + value.substring(start);
     onChange(newText);
     
-    // Preview should show the image immediately
-    const updatedHtml = marked.parse(newText, { async: false }) as string;
-    setRenderedHtml(DOMPurify.sanitize(updatedHtml));
+    // Imediatamente atualizar a prévia
+    try {
+      const updatedHtml = marked.parse(newText, { async: false }) as string;
+      setRenderedHtml(DOMPurify.sanitize(updatedHtml));
+      
+      // Adicionar a nova imagem à lista de imagens ao vivo
+      setLiveImages(prev => [...prev, { url: imageUrl, alt: imageAlt }]);
+    } catch (error) {
+      console.error("Error updating preview with new image:", error);
+    }
     
     setImageUrl("");
     setImageAlt("");
@@ -319,6 +358,34 @@ export function RichTextEditor({
         }
       }
     }
+  };
+
+  // Função para renderizar visualização em tempo real de imagens no modo de edição
+  const renderLiveImagePreview = () => {
+    if (liveImages.length === 0) return null;
+    
+    return (
+      <div className="mt-4 p-3 border rounded-md bg-gray-50">
+        <p className="text-sm font-medium mb-2">Imagens no documento:</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {liveImages.map((img, index) => (
+            <div key={index} className="border p-2 rounded bg-white">
+              <img 
+                src={img.url} 
+                alt={img.alt || "Imagem do documento"} 
+                className="max-h-32 object-contain mx-auto"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://via.placeholder.com/150x150?text=Erro+ao+carregar";
+                }}
+              />
+              <p className="text-xs text-center mt-1 text-gray-500 truncate" title={img.alt}>
+                {img.alt || "Sem descrição"}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   // Função para analisar o Markdown e extrair o HTML para visualização em tempo real
@@ -606,6 +673,7 @@ export function RichTextEditor({
                       </Select>
                     </div>
                     
+                    {/* Preview da imagem - melhorado com indicador de carregamento */}
                     {imageUrl && (
                       <div className="p-2 border rounded-md mt-2">
                         <p className="text-sm font-medium mb-1">Prévia:</p>
@@ -665,15 +733,9 @@ export function RichTextEditor({
                 className="border-0 rounded-t-none min-h-[300px] font-mono resize-y"
                 style={{ minHeight }}
               />
-              {/* Visualização ao vivo de imagens quando no modo de edição */}
-              {activeTab === "edit" && value.includes("![") && (
-                <div 
-                  className="prose prose-slate max-w-none dark:prose-invert p-4 bg-gray-50 border-t"
-                  dangerouslySetInnerHTML={{ 
-                    __html: renderLivePreview() 
-                  }}
-                />
-              )}
+              
+              {/* Melhorado: Visualização de imagens quando no modo de edição */}
+              {activeTab === "edit" && liveImages.length > 0 && renderLiveImagePreview()}
             </div>
           </TabsContent>
           

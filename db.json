@@ -1,3 +1,4 @@
+
 {
   "articles": [
     {
@@ -338,6 +339,43 @@
       "lastUpdated": "2023-10-31T10:30:00.000Z"
     }
   ],
+  "newsletter-subscriptions": [
+    {
+      "id": "1",
+      "email": "john.doe@example.com",
+      "name": "John Doe",
+      "status": "active",
+      "createdAt": "2023-10-15T08:30:00.000Z"
+    },
+    {
+      "id": "2",
+      "email": "mary.smith@example.com",
+      "name": "Mary Smith",
+      "status": "active",
+      "createdAt": "2023-10-18T14:45:00.000Z"
+    },
+    {
+      "id": "3",
+      "email": "james.wilson@example.com",
+      "name": "James Wilson",
+      "status": "active",
+      "createdAt": "2023-10-20T11:20:00.000Z"
+    },
+    {
+      "id": "4",
+      "email": "emma.johnson@example.com",
+      "name": "Emma Johnson",
+      "status": "active",
+      "createdAt": "2023-10-22T09:15:00.000Z"
+    },
+    {
+      "id": "5",
+      "email": "robert.brown@example.com",
+      "name": "Robert Brown",
+      "status": "active",
+      "createdAt": "2023-10-25T16:30:00.000Z"
+    }
+  ],
   "settings": [
     {
       "id": "1",
@@ -366,9 +404,37 @@
         "enabled": true,
         "autoRefreshInterval": 5,
         "maxStocksToShow": 10,
-        "symbols": []
+        "symbols": [
+          {"symbol": "PETR4.SA", "name": "Petrobras SA", "enabled": true},
+          {"symbol": "VALE3.SA", "name": "Vale SA", "enabled": true},
+          {"symbol": "ITUB4.SA", "name": "Itau Unibanco Holding", "enabled": true},
+          {"symbol": "BBDC4.SA", "name": "Banco Bradesco SA", "enabled": true},
+          {"symbol": "AAPL", "name": "Apple Inc", "enabled": true},
+          {"symbol": "MSFT", "name": "Microsoft Corporation", "enabled": true},
+          {"symbol": "GOOGL", "name": "Alphabet Inc", "enabled": true}
+        ]
       }
     }
   ],
-  "stocks": []
+  "stocks": [],
+  "stockViews": [
+    {
+      "id": "1",
+      "userId": "1",
+      "stockSymbol": "AAPL",
+      "favorite": true
+    },
+    {
+      "id": "2",
+      "userId": "1",
+      "stockSymbol": "MSFT",
+      "favorite": false
+    },
+    {
+      "id": "3",
+      "userId": "2",
+      "stockSymbol": "GOOGL",
+      "favorite": true
+    }
+  ]
 }
