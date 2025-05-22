@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getComments, addComment, deleteComment, Comment, updateComment as updateCommentService, likeComment as likeCommentService } from '@/services/commentService';
 import { toast } from 'sonner';
@@ -143,7 +142,15 @@ export function useComments(articleId: string | undefined) {
     deleteComment: deleteCommentMutation.mutate,
     replyToComment: replyToCommentMutation.mutate,
     updateComment: updateCommentMutation.mutate,
-    likeComment: (commentId: string, userId: string) => likeCommentMutation.mutate({ commentId, userId }),
+    likeComment: async (commentId: string, userId: string): Promise<boolean> => {
+      try {
+        const result = await likeCommentMutation.mutateAsync({ commentId, userId });
+        return result;
+      } catch (error) {
+        console.error('Error liking/unliking comment:', error);
+        return false;
+      }
+    },
     isAddingComment: addCommentMutation.isPending,
     isDeletingComment: deleteCommentMutation.isPending,
     isReplyingToComment: replyToCommentMutation.isPending,
