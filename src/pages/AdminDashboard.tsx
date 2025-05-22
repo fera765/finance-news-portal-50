@@ -61,6 +61,19 @@ const AdminDashboard = () => {
     );
   }
 
+  if (stats.isError) {
+    return (
+      <AdminLayout activeTab="dashboard">
+        <div className="p-6">
+          <div className="text-center py-12">
+            <h3 className="text-xl font-medium mb-2 text-red-600">Erro ao carregar dados</h3>
+            <p className="text-gray-500">Não foi possível carregar as estatísticas do dashboard. Tente novamente mais tarde.</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout activeTab="dashboard">
       <div className="w-full border-b border-gray-200 mb-4">

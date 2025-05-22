@@ -58,37 +58,53 @@ export const updateComment = async (id: string, content: string) => {
   }
 };
 
-export const deleteComment = async (id: string) => {
+// Função auxiliar para excluir likes de um comentário
+const deleteCommentLikes = async (commentId: string) => {
   try {
-    // First check if there are replies to this comment
-    const { data: replies } = await api.get('/comments', {
-      params: { parentId: id }
+    const { data: commentLikes } = await api.get('/comment-likes', {
+      params: { commentId }
     });
     
-    // If there are replies, mark the comment as deleted but don't actually remove it
-    if (replies && replies.length > 0) {
-      const { data: comment } = await api.get(`/comments/${id}`);
-      await api.patch(`/comments/${id}`, {
-        ...comment,
-        content: "[Comentário removido]",
-        deletedAt: new Date().toISOString(),
-        isDeleted: true
-      });
-    } else {
-      // If no replies, we can safely delete the comment
-      await api.delete(`/comments/${id}`);
-      
-      // Also delete any likes associated with this comment
-      const { data: commentLikes } = await api.get('/comment-likes', {
-        params: { commentId: id }
-      });
-      
-      for (const like of commentLikes) {
-        await api.delete(`/comment-likes/${like.id}`);
-      }
+    for (const like of commentLikes) {
+      await api.delete(`/comment-likes/${like.id}`);
+    }
+    return true;
+  } catch (error) {
+    console.error(`Error deleting likes for comment ${commentId}:`, error);
+    throw error;
+  }
+};
+
+// Função recursiva para excluir comentários em cascata
+const deleteCommentAndReplies = async (commentId: string) => {
+  try {
+    // Buscar todas as respostas a este comentário
+    const { data: replies } = await api.get('/comments', {
+      params: { parentId: commentId }
+    });
+    
+    // Excluir recursivamente todas as respostas
+    for (const reply of replies) {
+      await deleteCommentAndReplies(reply.id);
     }
     
+    // Excluir os likes deste comentário
+    await deleteCommentLikes(commentId);
+    
+    // Excluir o comentário em si
+    await api.delete(`/comments/${commentId}`);
+    
     return true;
+  } catch (error) {
+    console.error(`Error recursively deleting comment ${commentId}:`, error);
+    throw error;
+  }
+};
+
+export const deleteComment = async (id: string) => {
+  try {
+    // Utiliza a função recursiva para excluir o comentário e todas as suas respostas
+    return await deleteCommentAndReplies(id);
   } catch (error) {
     console.error(`Error deleting comment ${id}:`, error);
     throw error;

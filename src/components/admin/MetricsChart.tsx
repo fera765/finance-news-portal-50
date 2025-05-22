@@ -70,7 +70,7 @@ const MetricsChart: React.FC<MetricsChartProps> = ({
               />
               <Tooltip 
                 formatter={(value: number) => [`${value.toLocaleString()}`, 'Total']}
-                labelFormatter={(label) => `${nameKey}: ${label}`}
+                labelFormatter={(label) => `${label}`}
                 contentStyle={{
                   backgroundColor: 'white',
                   borderRadius: '4px',

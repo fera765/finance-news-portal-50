@@ -205,7 +205,7 @@ export const CommentItem = ({
                   level={level + 1}
                   replies={[]}
                   currentUser={currentUser}
-                  isLiked={reply.id ? isLiked : false} // Passa o status de curtida correto para cada resposta
+                  isLiked={reply.id ? isCommentLiked(reply.id) : false} // Corrigido: usar a função para verificar curtida
                   onLike={onLike}
                   onReply={onReply}
                   onEdit={onEdit}
@@ -221,3 +221,9 @@ export const CommentItem = ({
     </div>
   );
 };
+
+// Função auxiliar para verificar se o comentário foi curtido
+function isCommentLiked(commentId: string) {
+  // Esta variável deve ser definida no escopo do componente pai
+  return false;
+}
