@@ -1,254 +1,122 @@
 
 import { api } from './api';
 
+// Interface for stock data
 export interface Stock {
   symbol: string;
   name: string;
   price: number;
   change: number;
-  favorite?: boolean;
+  lastUpdated: string;
 }
 
-export interface StockView {
-  id?: string;
-  userId: string;
-  stockSymbol: string;
-  favorite: boolean;
-}
-
-// Define o tipo para resultados de pesquisa de símbolos de ações
-export interface StockSymbolSearchResult {
-  symbol: string;
-  name: string;
-  exchange?: string;
-  type?: string;
-}
-
-// Search for stocks using a server-side API (mocked for now)
-export const searchYahooStocks = async (query: string): Promise<StockSymbolSearchResult[]> => {
+// Get all stocks from the API
+export const getStocks = async (): Promise<Stock[]> => {
   try {
-    // For now, we'll use a simple mock that returns common stocks based on the query
-    // In a real app, this would call a server-side API that uses yahoo-finance
-    const mockResults: StockSymbolSearchResult[] = [];
+    const { data } = await api.get('/stocks');
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching stocks:', error);
     
-    // Some mock data for common Brazilian and US stocks
-    const stockDatabase = [
-      { symbol: 'PETR4.SA', name: 'Petrobras SA', exchange: 'BVMF', type: 'Equity' },
-      { symbol: 'PETR3.SA', name: 'Petrobras SA', exchange: 'BVMF', type: 'Equity' },
-      { symbol: 'VALE3.SA', name: 'Vale SA', exchange: 'BVMF', type: 'Equity' },
-      { symbol: 'ITUB4.SA', name: 'Itau Unibanco Holding', exchange: 'BVMF', type: 'Equity' },
-      { symbol: 'BBDC4.SA', name: 'Banco Bradesco SA', exchange: 'BVMF', type: 'Equity' },
-      { symbol: 'BBAS3.SA', name: 'Banco do Brasil SA', exchange: 'BVMF', type: 'Equity' },
-      { symbol: 'AAPL', name: 'Apple Inc', exchange: 'NASDAQ', type: 'Equity' },
-      { symbol: 'MSFT', name: 'Microsoft Corporation', exchange: 'NASDAQ', type: 'Equity' },
-      { symbol: 'GOOGL', name: 'Alphabet Inc', exchange: 'NASDAQ', type: 'Equity' },
-      { symbol: 'AMZN', name: 'Amazon.com Inc', exchange: 'NASDAQ', type: 'Equity' },
-      { symbol: 'TSLA', name: 'Tesla Inc', exchange: 'NASDAQ', type: 'Equity' },
-      { symbol: 'META', name: 'Meta Platforms Inc', exchange: 'NASDAQ', type: 'Equity' },
-      { symbol: 'BRK-B', name: 'Berkshire Hathaway Inc', exchange: 'NYSE', type: 'Equity' },
-      { symbol: 'JPM', name: 'JPMorgan Chase & Co', exchange: 'NYSE', type: 'Equity' },
-      { symbol: 'V', name: 'Visa Inc', exchange: 'NYSE', type: 'Equity' },
-      { symbol: 'BAC', name: 'Bank of America Corp', exchange: 'NYSE', type: 'Equity' },
-      { symbol: 'WMT', name: 'Walmart Inc', exchange: 'NYSE', type: 'Equity' },
-      { symbol: 'PG', name: 'Procter & Gamble Co', exchange: 'NYSE', type: 'Equity' },
+    // Return fallback data in case of error
+    return [
+      {
+        symbol: 'AAPL',
+        name: 'Apple Inc',
+        price: 173.57,
+        change: 2.14,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        symbol: 'MSFT',
+        name: 'Microsoft Corporation',
+        price: 368.63,
+        change: 1.02,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        symbol: 'GOOGL',
+        name: 'Alphabet Inc',
+        price: 139.69,
+        change: -0.34,
+        lastUpdated: new Date().toISOString()
+      }
     ];
-    
-    // Simple search algorithm to find matching stocks
-    if (query.length >= 2) {
-      const lowercaseQuery = query.toLowerCase();
-      const matches = stockDatabase.filter(
-        stock => 
-          stock.symbol.toLowerCase().includes(lowercaseQuery) || 
-          stock.name.toLowerCase().includes(lowercaseQuery)
-      );
-      mockResults.push(...matches.slice(0, 10)); // Limit to 10 results
-    }
-    
-    return mockResults;
-  } catch (error) {
-    console.error('Error searching stocks:', error);
-    return [];
   }
 };
 
-// Get mock stock data for demo purposes
-export const getYahooStockData = async (symbols: string[]): Promise<Stock[]> => {
+// Get a specific stock by symbol
+export const getStock = async (symbol: string): Promise<Stock | null> => {
   try {
-    if (!symbols.length) return [];
-    
-    // In a real app, this would call a server-side API that uses yahoo-finance
-    // For now, generate random but realistic stock data
-    return symbols.map(symbol => {
-      // Generate a random price between $10 and $500
-      const price = Math.random() * 490 + 10;
-      
-      // Generate a random percentage change between -5% and 5%
-      const change = (Math.random() * 10) - 5;
-      
-      return {
-        symbol,
-        name: symbol,
-        price: parseFloat(price.toFixed(2)),
-        change: parseFloat(change.toFixed(2))
-      };
-    });
+    const { data } = await api.get(`/stocks?symbol=${symbol}`);
+    return data && data.length > 0 ? data[0] : null;
   } catch (error) {
-    console.error('Error fetching stock data:', error);
-    return [];
-  }
-};
-
-// Get stock data
-export const getStocks = async (): Promise<string[]> => {
-  try {
-    const { data: settings } = await api.get('/settings/1');
-    return settings?.stockTicker?.symbols.map((s: any) => s.symbol) || [];
-  } catch (error) {
-    console.error('Error fetching stocks from settings:', error);
-    return [];
-  }
-};
-
-// Add a stock to the settings
-export const addStock = async (stock: { symbol: string; name: string }): Promise<boolean> => {
-  try {
-    // Get current settings
-    const { data: settings } = await api.get('/settings/1');
-    
-    // Check if stock already exists
-    const symbols = settings?.stockTicker?.symbols || [];
-    if (symbols.some((s: any) => s.symbol === stock.symbol)) {
-      return false; // Stock already exists
-    }
-    
-    // Add new stock
-    const updatedSymbols = [...symbols, { symbol: stock.symbol, name: stock.name, enabled: true }];
-    
-    // Update settings
-    await api.patch('/settings/1', {
-      stockTicker: {
-        ...settings.stockTicker,
-        symbols: updatedSymbols
-      }
-    });
-    
-    return true;
-  } catch (error) {
-    console.error('Error adding stock:', error);
-    return false;
-  }
-};
-
-// Remove a stock from settings
-export const removeStock = async (symbol: string): Promise<boolean> => {
-  try {
-    // Get current settings
-    const { data: settings } = await api.get('/settings/1');
-    
-    // Remove stock
-    const symbols = settings?.stockTicker?.symbols || [];
-    const updatedSymbols = symbols.filter((s: any) => s.symbol !== symbol);
-    
-    // Update settings
-    await api.patch('/settings/1', {
-      stockTicker: {
-        ...settings.stockTicker,
-        symbols: updatedSymbols
-      }
-    });
-    
-    return true;
-  } catch (error) {
-    console.error('Error removing stock:', error);
-    return false;
-  }
-};
-
-// Toggle stock enabled status
-export const toggleStockEnabled = async (symbol: string, enabled: boolean): Promise<boolean> => {
-  try {
-    // Get current settings
-    const { data: settings } = await api.get('/settings/1');
-    
-    // Update stock enabled status
-    const symbols = settings?.stockTicker?.symbols || [];
-    const updatedSymbols = symbols.map((s: any) => 
-      s.symbol === symbol ? { ...s, enabled } : s
-    );
-    
-    // Update settings
-    await api.patch('/settings/1', {
-      stockTicker: {
-        ...settings.stockTicker,
-        symbols: updatedSymbols
-      }
-    });
-    
-    return true;
-  } catch (error) {
-    console.error('Error toggling stock enabled status:', error);
-    return false;
+    console.error(`Error fetching stock ${symbol}:`, error);
+    return null;
   }
 };
 
 // Get favorite stocks for a user
 export const getFavoriteStocks = async (userId: string): Promise<string[]> => {
   try {
-    // O endpoint /stockViews pode não existir, então vamos simular a resposta
-    try {
-      const { data } = await api.get('/stockViews', {
-        params: {
-          userId,
-          favorite: true,
-        }
-      });
-      
-      return data?.map((item: StockView) => item.stockSymbol) || [];
-    } catch (error) {
-      // Se o endpoint não existir, retornamos um array vazio
-      console.error('Error fetching favorite stocks, endpoint may not exist:', error);
-      return [];
-    }
+    const { data } = await api.get(`/stockViews?userId=${userId}&favorite=true`);
+    return data?.map((item: any) => item.stockSymbol) || [];
   } catch (error) {
     console.error('Error fetching favorite stocks:', error);
+    // Return an empty array as fallback
     return [];
   }
 };
 
 // Toggle favorite status for a stock
-export const toggleFavoriteStock = async (userId: string, stockSymbol: string, favorite: boolean): Promise<boolean> => {
+export const toggleFavoriteStock = async (
+  userId: string,
+  stockSymbol: string,
+  favorite: boolean
+): Promise<boolean> => {
   try {
-    // Como o endpoint pode não existir, vamos verificar se ele realmente existe antes de continuar
-    try {
-      // Check if entry already exists
-      const { data: existingEntries } = await api.get('/stockViews', {
-        params: {
-          userId,
-          stockSymbol,
-        }
+    // Check if the stock view already exists
+    const { data: existing } = await api.get(
+      `/stockViews?userId=${userId}&stockSymbol=${stockSymbol}`
+    );
+
+    if (existing && existing.length > 0) {
+      // Update existing record
+      const id = existing[0].id;
+      await api.patch(`/stockViews/${id}`, { favorite });
+    } else {
+      // Create new record
+      await api.post('/stockViews', {
+        userId,
+        stockSymbol,
+        favorite,
+        id: `${Date.now()}`
       });
-      
-      if (existingEntries && existingEntries.length > 0) {
-        // Update existing entry
-        const entry = existingEntries[0];
-        await api.patch(`/stockViews/${entry.id}`, { favorite });
-      } else {
-        // Create new entry
-        await api.post('/stockViews', {
-          userId,
-          stockSymbol,
-          favorite,
-        });
-      }
-      
-      return true;
-    } catch (error) {
-      // Se o endpoint não existir, simulamos o sucesso para não quebrar a aplicação
-      console.error('Error toggling favorite stock, endpoint may not exist:', error);
-      return true;
     }
+    
+    return true;
   } catch (error) {
     console.error('Error toggling favorite stock:', error);
     return false;
+  }
+};
+
+// Search for stocks by name or symbol
+export const searchStocks = async (query: string): Promise<Stock[]> => {
+  try {
+    if (!query || query.trim() === '') {
+      return [];
+    }
+
+    const formattedQuery = query.toLowerCase().trim();
+    const { data } = await api.get('/stocks');
+    
+    return data.filter((stock: Stock) => 
+      stock.symbol.toLowerCase().includes(formattedQuery) ||
+      stock.name.toLowerCase().includes(formattedQuery)
+    );
+  } catch (error) {
+    console.error('Error searching stocks:', error);
+    return [];
   }
 };

@@ -31,6 +31,8 @@ export function useDashboardStats() {
   const articlesQuery = useQuery({
     queryKey: ['dashboard', 'articles'],
     queryFn: () => getArticles(),
+    retry: 1,
+    staleTime: 60000 // Cache for 1 minute
   });
 
   // Query to get article views
@@ -44,7 +46,9 @@ export function useDashboardStats() {
         console.error('Error fetching views:', error);
         return [];
       }
-    }
+    },
+    retry: 1,
+    staleTime: 60000
   });
 
   // Query to get article likes
@@ -58,7 +62,9 @@ export function useDashboardStats() {
         console.error('Error fetching likes:', error);
         return [];
       }
-    }
+    },
+    retry: 1,
+    staleTime: 60000
   });
 
   // Query to get article bookmarks
@@ -72,34 +78,41 @@ export function useDashboardStats() {
         console.error('Error fetching bookmarks:', error);
         return [];
       }
-    }
+    },
+    retry: 1,
+    staleTime: 60000
   });
 
   // Query to get categories
   const categoriesQuery = useQuery({
     queryKey: ['dashboard', 'categories'],
     queryFn: getCategories,
+    retry: 1,
+    staleTime: 60000
   });
 
   // Query to get users
   const usersQuery = useQuery({
     queryKey: ['dashboard', 'users'],
     queryFn: getUsers,
+    retry: 1,
+    staleTime: 60000
   });
 
-  // Query to get newsletter subscribers
+  // Query to get newsletter subscribers - using the correct endpoint "newsletter-subscriptions"
   const subscribersQuery = useQuery({
-    queryKey: ['dashboard', 'subscribers'],
+    queryKey: ['dashboard', 'newsletter-subscriptions'],
     queryFn: async () => {
       try {
-        // Alterado para usar newsletter-subscriptions em vez de subscribers
         const { data } = await api.get('/newsletter-subscriptions');
         return data || [];
       } catch (error) {
         console.error('Error fetching subscribers:', error);
         return [];
       }
-    }
+    },
+    retry: 1,
+    staleTime: 60000
   });
 
   // Generate monthly views data
@@ -125,9 +138,9 @@ export function useDashboardStats() {
     
     return lastFiveMonths.map(({ month, year }) => {
       // Get views from this month
-      const monthViews = viewsQuery.data?.filter((view: any) => {
-        if (!view.timestamp) return false;
-        const viewDate = new Date(view.timestamp);
+      const monthViews = (viewsQuery.data || []).filter((view: any) => {
+        if (!view?.timestamp && !view?.lastUpdated) return false;
+        const viewDate = new Date(view.timestamp || view.lastUpdated);
         return viewDate.getMonth() === month && viewDate.getFullYear() === year;
       });
 
@@ -154,9 +167,9 @@ export function useDashboardStats() {
     
     return lastFiveYears.map(year => {
       // Get views from this year
-      const yearViews = viewsQuery.data?.filter((view: any) => {
-        if (!view.timestamp) return false;
-        const viewDate = new Date(view.timestamp);
+      const yearViews = (viewsQuery.data || []).filter((view: any) => {
+        if (!view?.timestamp && !view?.lastUpdated) return false;
+        const viewDate = new Date(view.timestamp || view.lastUpdated);
         return viewDate.getFullYear() === year;
       });
 
@@ -171,7 +184,7 @@ export function useDashboardStats() {
 
   // Calculate total views
   const calculateTotalViews = () => {
-    return viewsQuery.data?.reduce((sum: number, view: any) => sum + (view.count || 0), 0) || 0;
+    return (viewsQuery.data || []).reduce((sum: number, view: any) => sum + (view.count || 0), 0) || 0;
   };
 
   // Calculate views percent change from previous month
@@ -184,15 +197,15 @@ export function useDashboardStats() {
     const currentYear = now.getFullYear();
     const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
     
-    const currentMonthViews = viewsQuery.data.filter((view: any) => {
-      if (!view.timestamp) return false;
-      const date = new Date(view.timestamp);
+    const currentMonthViews = (viewsQuery.data || []).filter((view: any) => {
+      if (!view?.timestamp && !view?.lastUpdated) return false;
+      const date = new Date(view.timestamp || view.lastUpdated);
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
     }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
     
-    const lastMonthViews = viewsQuery.data.filter((view: any) => {
-      if (!view.timestamp) return false;
-      const date = new Date(view.timestamp);
+    const lastMonthViews = (viewsQuery.data || []).filter((view: any) => {
+      if (!view?.timestamp && !view?.lastUpdated) return false;
+      const date = new Date(view.timestamp || view.lastUpdated);
       return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
     }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
     
@@ -207,15 +220,15 @@ export function useDashboardStats() {
     }
     
     const articlesWithViews = articlesQuery.data.map(article => {
-      const views = viewsQuery.data
+      const views = (viewsQuery.data || [])
         ?.filter((view: any) => view.articleId === article.id)
         .reduce((sum: number, view: any) => sum + (view.count || 0), 0) || 0;
       
-      const likes = likesQuery.data
+      const likes = (likesQuery.data || [])
         ?.filter((like: any) => like.articleId === article.id)
         .length || 0;
         
-      const bookmarks = bookmarksQuery.data
+      const bookmarks = (bookmarksQuery.data || [])
         ?.filter((bookmark: any) => bookmark.articleId === article.id)
         .length || 0;
       
@@ -241,15 +254,15 @@ export function useDashboardStats() {
     }
     
     const articlesWithLikes = articlesQuery.data.map(article => {
-      const views = viewsQuery.data
+      const views = (viewsQuery.data || [])
         ?.filter((view: any) => view.articleId === article.id)
         .reduce((sum: number, view: any) => sum + (view.count || 0), 0) || 0;
       
-      const likes = likesQuery.data
+      const likes = (likesQuery.data || [])
         ?.filter((like: any) => like.articleId === article.id)
         .length || 0;
         
-      const bookmarks = bookmarksQuery.data
+      const bookmarks = (bookmarksQuery.data || [])
         ?.filter((bookmark: any) => bookmark.articleId === article.id)
         .length || 0;
       
@@ -275,11 +288,11 @@ export function useDashboardStats() {
     }
     
     const articlesWithBookmarks = articlesQuery.data.map(article => {
-      const views = viewsQuery.data
+      const views = (viewsQuery.data || [])
         ?.filter((view: any) => view.articleId === article.id)
         .reduce((sum: number, view: any) => sum + (view.count || 0), 0) || 0;
         
-      const bookmarks = bookmarksQuery.data
+      const bookmarks = (bookmarksQuery.data || [])
         ?.filter((bookmark: any) => bookmark.articleId === article.id)
         .length || 0;
       
@@ -299,15 +312,15 @@ export function useDashboardStats() {
 
   // Calculate total interactions
   const calculateTotalLikes = () => {
-    return likesQuery.data?.length || 0;
+    return (likesQuery.data || [])?.length || 0;
   };
   
   const calculateTotalSaves = () => {
-    return bookmarksQuery.data?.length || 0;
+    return (bookmarksQuery.data || [])?.length || 0;
   };
   
   const calculateTotalSubscribers = () => {
-    return subscribersQuery.data?.length || 0;
+    return (subscribersQuery.data || [])?.length || 0;
   };
 
   // Calculate percent changes for metrics

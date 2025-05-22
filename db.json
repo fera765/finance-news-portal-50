@@ -416,7 +416,57 @@
       }
     }
   ],
-  "stocks": [],
+  "stocks": [
+    {
+      "symbol": "PETR4.SA",
+      "name": "Petrobras SA",
+      "price": 36.42,
+      "change": 1.23,
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    },
+    {
+      "symbol": "VALE3.SA",
+      "name": "Vale SA",
+      "price": 67.81,
+      "change": -0.45,
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    },
+    {
+      "symbol": "ITUB4.SA",
+      "name": "Itau Unibanco Holding",
+      "price": 32.56,
+      "change": 0.78,
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    },
+    {
+      "symbol": "BBDC4.SA",
+      "name": "Banco Bradesco SA",
+      "price": 14.92,
+      "change": -0.23,
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    },
+    {
+      "symbol": "AAPL",
+      "name": "Apple Inc",
+      "price": 173.57,
+      "change": 2.14,
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Microsoft Corporation",
+      "price": 368.63,
+      "change": 1.02,
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Alphabet Inc",
+      "price": 139.69,
+      "change": -0.34,
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    }
+  ],
   "stockViews": [
     {
       "id": "1",

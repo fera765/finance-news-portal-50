@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Menu, Bell, LogOut, Check } from "lucide-react";
+import { Menu, Bell, LogOut } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -43,14 +43,15 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
     const fetchStocksData = async () => {
       try {
         const stocksData = await getStocks();
-        setStocks(stocksData);
+        setStocks(stocksData || []); // Ensure stocks is always an array
         
         if (user?.id) {
           const userFavorites = await getFavoriteStocks(user.id);
-          setFavoriteStocks(userFavorites);
+          setFavoriteStocks(userFavorites || []); // Ensure favoriteStocks is always an array
         }
       } catch (error) {
         console.error("Erro ao carregar dados de ações:", error);
+        setStocks([]); // Set to empty array on error
       }
     };
     
@@ -163,7 +164,7 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
                           "text-xs font-medium",
                           stock.change >= 0 ? "text-green-600" : "text-red-600"
                         )}>
-                          {stock.change >= 0 ? "+" : ""}{stock.change.toFixed(2)}%
+                          {stock.change >= 0 ? "+" : ""}{stock.change ? stock.change.toFixed(2) : "0.00"}%
                         </span>
                       </div>
                     </DropdownMenuCheckboxItem>
@@ -232,10 +233,8 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
           </div>
           
           {/* Main content */}
-          <div className="flex-1 overflow-auto p-6">
-            <div className="max-w-7xl mx-auto">
-              {children}
-            </div>
+          <div className="flex-1 overflow-auto">
+            {children}
           </div>
         </div>
       </div>
