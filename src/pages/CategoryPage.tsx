@@ -66,7 +66,7 @@ const CategoryPage = () => {
       _order: "desc"
     }),
     enabled: !!currentCategory?.id,
-    keepPreviousData: true
+    placeholderData: previousData => previousData // This replaces keepPreviousData
   });
   
   // Append new articles to our collection when they arrive
