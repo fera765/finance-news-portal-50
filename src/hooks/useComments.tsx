@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getComments, addComment, deleteComment, Comment, updateComment as updateCommentService } from '@/services/commentService';
+import { getComments, addComment, deleteComment, Comment, updateComment as updateCommentService, likeComment as likeCommentService } from '@/services/commentService';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -98,6 +98,37 @@ export function useComments(articleId: string | undefined) {
     }
   });
 
+  // Mutation to like/unlike a comment
+  const likeCommentMutation = useMutation({
+    mutationFn: ({ commentId, userId }: { commentId: string, userId: string }) => {
+      return likeCommentService(commentId, userId);
+    },
+    onSuccess: (isLiked, { commentId }) => {
+      // Update local state immediately
+      queryClient.setQueryData(['comments', articleId], (oldData: Comment[] | undefined) => {
+        if (!oldData) return [];
+        return oldData.map(comment => {
+          if (comment.id === commentId) {
+            return {
+              ...comment,
+              likes: isLiked ? (comment.likes || 0) + 1 : Math.max(0, (comment.likes || 0) - 1)
+            };
+          }
+          return comment;
+        });
+      });
+      
+      // Also invalidate to make sure data stays consistent
+      queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
+      
+      toast.success(isLiked ? 'Comentário curtido' : 'Curtida removida');
+    },
+    onError: (error) => {
+      console.error('Error liking/unliking comment:', error);
+      toast.error('Falha ao processar curtida. Tente novamente.');
+    }
+  });
+
   // Update comments list manually
   const refreshComments = () => {
     return refetch();
@@ -112,9 +143,11 @@ export function useComments(articleId: string | undefined) {
     deleteComment: deleteCommentMutation.mutate,
     replyToComment: replyToCommentMutation.mutate,
     updateComment: updateCommentMutation.mutate,
+    likeComment: (commentId: string, userId: string) => likeCommentMutation.mutate({ commentId, userId }),
     isAddingComment: addCommentMutation.isPending,
     isDeletingComment: deleteCommentMutation.isPending,
     isReplyingToComment: replyToCommentMutation.isPending,
-    isUpdatingComment: updateCommentMutation.isPending
+    isUpdatingComment: updateCommentMutation.isPending,
+    isLikingComment: likeCommentMutation.isPending
   };
 }

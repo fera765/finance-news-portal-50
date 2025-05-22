@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, Edit, Trash2, CornerDownLeft } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Comment, likeComment, isCommentLiked } from "@/services/commentService";
+import { Comment } from "@/services/commentService";
 import { User } from "@/components/Layout";
 
 interface CommentItemProps {
@@ -205,7 +205,7 @@ export const CommentItem = ({
                   level={level + 1}
                   replies={[]}
                   currentUser={currentUser}
-                  isLiked={false}
+                  isLiked={reply.id ? isLiked : false} // Passa o status de curtida correto para cada resposta
                   onLike={onLike}
                   onReply={onReply}
                   onEdit={onEdit}

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Comment, likeComment } from "@/services/commentService";
+import { Comment } from "@/services/commentService";
 import { User } from "@/components/Layout";
 import { CommentForm } from "./comments/CommentForm";
 import { CommentItem } from "./comments/CommentItem";
@@ -38,10 +38,12 @@ const CommentSection = ({
     replyToComment, 
     deleteComment, 
     updateComment,
+    likeComment,
     isAddingComment, 
     isReplyingToComment,
     isDeletingComment,
-    isUpdatingComment
+    isUpdatingComment,
+    isLikingComment
   } = useComments(newsId);
 
   const handleAddComment = (content: string) => {
@@ -63,14 +65,12 @@ const CommentSection = ({
     }
     
     try {
-      const isLiked = await likeComment(commentId, currentUser.id);
+      // Use the likeComment function from the useComments hook
+      likeComment(commentId, currentUser.id);
       
-      // Update the local state
-      setCommentLiked(commentId, isLiked);
+      // Toggle the liked state locally for immediate feedback
+      setCommentLiked(commentId, !isCommentLiked(commentId));
       
-      toast(isLiked 
-        ? "Você curtiu este comentário" 
-        : "Você descurtiu este comentário");
     } catch (error) {
       console.error("Error liking comment:", error);
       toast.error("Erro: Não foi possível processar sua solicitação");
