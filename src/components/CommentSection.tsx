@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Comment } from "@/services/commentService";
 import { User } from "@/components/Layout";
@@ -61,7 +60,7 @@ const CommentSection = ({
   const handleLikeComment = async (commentId: string) => {
     if (!currentUser) {
       onLogin();
-      return;
+      return false; // Return false when user is not logged in
     }
     
     try {
@@ -71,9 +70,11 @@ const CommentSection = ({
       // Toggle the liked state locally for immediate feedback
       setCommentLiked(commentId, result);
       
+      return true; // Return true on successful like operation
     } catch (error) {
       console.error("Error liking comment:", error);
       toast.error("Erro: Não foi possível processar sua solicitação");
+      return false; // Return false on error
     }
   };
 

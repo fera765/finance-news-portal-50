@@ -7,18 +7,18 @@ export function useLikedComments(comments: Comment[], currentUser: User | null) 
   const [likedComments, setLikedComments] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   
-  // Função para extrair todos os IDs de comentários, incluindo respostas
+  // Function to extract all comment IDs, including replies
   const getAllCommentIds = (comments: Comment[]) => {
     const ids: string[] = [];
     
-    // Função recursiva para coletar todos os IDs
+    // Recursive function to collect all IDs
     const collectIds = (commentList: Comment[]) => {
       for (const comment of commentList) {
         if (comment.id) {
           ids.push(comment.id);
         }
         
-        // Se o comentário tiver respostas (é uma propriedade do objeto)
+        // Check if the comment has replies and they are an array before processing
         if (comment.replies && Array.isArray(comment.replies)) {
           collectIds(comment.replies);
         }
@@ -39,15 +39,14 @@ export function useLikedComments(comments: Comment[], currentUser: User | null) 
       setIsLoading(true);
       const liked: Record<string, boolean> = {};
       
-      // Extrai todos os IDs de comentários únicos
+      // Get all comment IDs including replies
+      const commentIds = getAllCommentIds(comments);
       const uniqueCommentIds = Array.from(new Set(
-        comments
-          .filter((c): c is Comment & { id: string } => !!c.id)
-          .map(c => c.id)
+        commentIds.filter(id => id != null) as string[]
       ));
       
       try {
-        // Processar em lotes de 10 para evitar muitas requisições simultâneas
+        // Process in batches of 10 to avoid too many simultaneous requests
         const batchSize = 10;
         for (let i = 0; i < uniqueCommentIds.length; i += batchSize) {
           const batch = uniqueCommentIds.slice(i, i + batchSize);

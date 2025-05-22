@@ -1,4 +1,3 @@
-
 import { api } from './api';
 
 export interface Comment {
@@ -11,6 +10,7 @@ export interface Comment {
   likes?: number;
   userName?: string;
   userAvatar?: string;
+  replies?: Comment[]; // Add replies property to support nested comments
 }
 
 export const getComments = async (articleId: string) => {
