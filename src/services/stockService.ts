@@ -1,7 +1,8 @@
 
 import { api } from './api';
+import yahooFinance from 'yahoo-finance2';
 
-interface Stock {
+export interface Stock {
   symbol: string;
   name: string;
   price: number;
@@ -9,7 +10,7 @@ interface Stock {
   favorite?: boolean;
 }
 
-interface StockView {
+export interface StockView {
   id?: string;
   userId: string;
   stockSymbol: string;
@@ -24,67 +25,152 @@ export interface StockSymbolSearchResult {
   type?: string;
 }
 
-// Get stock data
-export const getStocks = async (): Promise<Stock[]> => {
+// Search for stocks using Yahoo Finance
+export const searchYahooStocks = async (query: string): Promise<StockSymbolSearchResult[]> => {
   try {
-    const { data } = await api.get('/stocks');
-    return data || [];
+    const results = await yahooFinance.search(query);
+    
+    // Filter only equity quotes
+    const stocks = results.quotes
+      .filter(quote => quote.quoteType === 'EQUITY')
+      .map(quote => ({
+        symbol: quote.symbol,
+        name: quote.shortname || quote.longname || quote.symbol,
+        exchange: quote.exchange,
+        type: quote.quoteType
+      }));
+    
+    return stocks.slice(0, 10); // Limit to 10 results
   } catch (error) {
-    console.error('Error fetching stocks:', error);
-    // Fallback mock data
-    return [
-      { symbol: 'AAPL', name: 'Apple Inc.', price: 177.97, change: 0.74 },
-      { symbol: 'MSFT', name: 'Microsoft Corporation', price: 337.22, change: -0.56 },
-      { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 131.84, change: 1.31 },
-      { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 124.31, change: 0.22 },
-      { symbol: 'TSLA', name: 'Tesla, Inc.', price: 263.62, change: -2.44 },
-    ];
+    console.error('Error searching Yahoo Finance:', error);
+    return [];
   }
 };
 
-// Pesquisa símbolos de ações com base em uma consulta
-export const searchStockSymbols = async (query: string): Promise<StockSymbolSearchResult[]> => {
+// Get real-time stock data from Yahoo Finance
+export const getYahooStockData = async (symbols: string[]): Promise<Stock[]> => {
   try {
-    // Em um ambiente real, chamaríamos uma API para isso
-    // const { data } = await api.get(`/stocks/search?q=${encodeURIComponent(query)}`);
-    // return data || [];
+    if (!symbols.length) return [];
     
-    // Dados simulados para desenvolvimento
-    const mockData = [
-      { symbol: 'AAPL', name: 'Apple Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'MSFT', name: 'Microsoft Corporation', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'GOOGL', name: 'Alphabet Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'GOOG', name: 'Alphabet Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'AMZN', name: 'Amazon.com Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'META', name: 'Meta Platforms Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'TSLA', name: 'Tesla, Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'NVDA', name: 'NVIDIA Corporation', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'NFLX', name: 'Netflix, Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'JPM', name: 'JPMorgan Chase & Co.', exchange: 'NYSE', type: 'Common Stock' },
-      { symbol: 'V', name: 'Visa Inc.', exchange: 'NYSE', type: 'Common Stock' },
-      { symbol: 'JNJ', name: 'Johnson & Johnson', exchange: 'NYSE', type: 'Common Stock' },
-      { symbol: 'WMT', name: 'Walmart Inc.', exchange: 'NYSE', type: 'Common Stock' },
-      { symbol: 'PG', name: 'Procter & Gamble Co.', exchange: 'NYSE', type: 'Common Stock' },
-      { symbol: 'MA', name: 'Mastercard Inc.', exchange: 'NYSE', type: 'Common Stock' },
-      { symbol: 'DIS', name: 'The Walt Disney Company', exchange: 'NYSE', type: 'Common Stock' },
-      { symbol: 'BAC', name: 'Bank of America Corp.', exchange: 'NYSE', type: 'Common Stock' },
-      { symbol: 'INTC', name: 'Intel Corporation', exchange: 'NASDAQ', type: 'Common Stock' },
-      { symbol: 'XOM', name: 'Exxon Mobil Corporation', exchange: 'NYSE', type: 'Common Stock' },
-      { symbol: 'VZ', name: 'Verizon Communications Inc.', exchange: 'NYSE', type: 'Common Stock' },
-    ];
-    
-    // Filtra baseado na consulta (símbolo ou nome)
-    const lowercaseQuery = query.toLowerCase();
-    const results = mockData.filter(
-      stock => 
-        stock.symbol.toLowerCase().includes(lowercaseQuery) || 
-        stock.name.toLowerCase().includes(lowercaseQuery)
+    const results = await Promise.all(
+      symbols.map(async (symbol) => {
+        try {
+          const quote = await yahooFinance.quote(symbol);
+          return {
+            symbol,
+            name: quote.shortName || quote.longName || symbol,
+            price: quote.regularMarketPrice || 0,
+            change: quote.regularMarketChangePercent || 0
+          };
+        } catch (err) {
+          console.error(`Error fetching data for ${symbol}:`, err);
+          return {
+            symbol,
+            name: symbol,
+            price: 0,
+            change: 0
+          };
+        }
+      })
     );
     
-    return results.slice(0, 10); // Limitar a 10 resultados
+    return results;
   } catch (error) {
-    console.error('Error searching stock symbols:', error);
+    console.error('Error fetching stock data:', error);
     return [];
+  }
+};
+
+// Get stock data
+export const getStocks = async (): Promise<string[]> => {
+  try {
+    const { data: settings } = await api.get('/settings/1');
+    return settings?.stockTicker?.symbols.map((s: any) => s.symbol) || [];
+  } catch (error) {
+    console.error('Error fetching stocks from settings:', error);
+    return [];
+  }
+};
+
+// Add a stock to the settings
+export const addStock = async (stock: { symbol: string; name: string }): Promise<boolean> => {
+  try {
+    // Get current settings
+    const { data: settings } = await api.get('/settings/1');
+    
+    // Check if stock already exists
+    const symbols = settings?.stockTicker?.symbols || [];
+    if (symbols.some((s: any) => s.symbol === stock.symbol)) {
+      return false; // Stock already exists
+    }
+    
+    // Add new stock
+    const updatedSymbols = [...symbols, { symbol: stock.symbol, name: stock.name, enabled: true }];
+    
+    // Update settings
+    await api.patch('/settings/1', {
+      stockTicker: {
+        ...settings.stockTicker,
+        symbols: updatedSymbols
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error adding stock:', error);
+    return false;
+  }
+};
+
+// Remove a stock from settings
+export const removeStock = async (symbol: string): Promise<boolean> => {
+  try {
+    // Get current settings
+    const { data: settings } = await api.get('/settings/1');
+    
+    // Remove stock
+    const symbols = settings?.stockTicker?.symbols || [];
+    const updatedSymbols = symbols.filter((s: any) => s.symbol !== symbol);
+    
+    // Update settings
+    await api.patch('/settings/1', {
+      stockTicker: {
+        ...settings.stockTicker,
+        symbols: updatedSymbols
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error removing stock:', error);
+    return false;
+  }
+};
+
+// Toggle stock enabled status
+export const toggleStockEnabled = async (symbol: string, enabled: boolean): Promise<boolean> => {
+  try {
+    // Get current settings
+    const { data: settings } = await api.get('/settings/1');
+    
+    // Update stock enabled status
+    const symbols = settings?.stockTicker?.symbols || [];
+    const updatedSymbols = symbols.map((s: any) => 
+      s.symbol === symbol ? { ...s, enabled } : s
+    );
+    
+    // Update settings
+    await api.patch('/settings/1', {
+      stockTicker: {
+        ...settings.stockTicker,
+        symbols: updatedSymbols
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error toggling stock enabled status:', error);
+    return false;
   }
 };
 
@@ -133,45 +219,5 @@ export const toggleFavoriteStock = async (userId: string, stockSymbol: string, f
   } catch (error) {
     console.error('Error toggling favorite stock:', error);
     return false;
-  }
-};
-
-// Get multiple stocks data por symbols
-export const getMultipleStockData = async (symbols: string[]): Promise<Stock[]> => {
-  try {
-    // Em produção, isso faria uma chamada API para buscar dados atualizados
-    // const { data } = await api.get('/stocks/batch', { params: { symbols: symbols.join(',') } });
-    // return data || [];
-    
-    // Dados simulados para desenvolvimento
-    const mockStocks: Record<string, Stock> = {
-      'AAPL': { symbol: 'AAPL', name: 'Apple Inc.', price: 177.97, change: 0.74 },
-      'MSFT': { symbol: 'MSFT', name: 'Microsoft Corporation', price: 337.22, change: -0.56 },
-      'GOOGL': { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 131.84, change: 1.31 },
-      'AMZN': { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 124.31, change: 0.22 },
-      'TSLA': { symbol: 'TSLA', name: 'Tesla, Inc.', price: 263.62, change: -2.44 },
-      'META': { symbol: 'META', name: 'Meta Platforms Inc.', price: 326.49, change: 1.87 },
-      'NVDA': { symbol: 'NVDA', name: 'NVIDIA Corporation', price: 834.88, change: 3.21 },
-      'JPM': { symbol: 'JPM', name: 'JPMorgan Chase & Co.', price: 169.53, change: 0.42 },
-      'BAC': { symbol: 'BAC', name: 'Bank of America Corp.', price: 34.79, change: -0.12 },
-      'V': { symbol: 'V', name: 'Visa Inc.', price: 267.40, change: 0.63 },
-      'JNJ': { symbol: 'JNJ', name: 'Johnson & Johnson', price: 151.76, change: -0.35 },
-      'WMT': { symbol: 'WMT', name: 'Walmart Inc.', price: 59.85, change: 0.28 },
-      'PG': { symbol: 'PG', name: 'Procter & Gamble Co.', price: 162.43, change: 0.15 },
-      'MA': { symbol: 'MA', name: 'Mastercard Inc.', price: 452.91, change: 1.19 },
-      'DIS': { symbol: 'DIS', name: 'The Walt Disney Company', price: 113.87, change: -0.65 },
-    };
-    
-    return symbols.map(symbol => 
-      mockStocks[symbol] || { 
-        symbol, 
-        name: `Unknown (${symbol})`, 
-        price: 0, 
-        change: 0 
-      }
-    );
-  } catch (error) {
-    console.error('Error fetching multiple stocks:', error);
-    return [];
   }
 };

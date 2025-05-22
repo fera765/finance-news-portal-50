@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
+import { ArrowUpIcon, ArrowDownIcon, Loader2 } from "lucide-react";
 import { useStockData } from "@/hooks/useStocks";
 
 const StockTicker = () => {
@@ -11,7 +11,7 @@ const StockTicker = () => {
   const [isPaused, setIsPaused] = useState(false);
   
   // Fetch stock data using our custom hook
-  const { data: stockData = [], isLoading } = useStockData();
+  const { data: stockData = [], isLoading, isError } = useStockData();
   
   // Set ticker width
   useEffect(() => {
@@ -54,10 +54,29 @@ const StockTicker = () => {
   if (isLoading) {
     return (
       <div className="w-full overflow-hidden bg-white py-2 px-4">
-        <div className="h-6 flex gap-8 items-center animate-pulse">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-gray-200 h-4 w-32 rounded"></div>
-          ))}
+        <div className="h-6 flex gap-2 items-center">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span className="text-sm text-muted-foreground">Carregando cotações...</span>
+        </div>
+      </div>
+    );
+  }
+  
+  if (isError) {
+    return (
+      <div className="w-full overflow-hidden bg-white py-2 px-4">
+        <div className="h-6 flex gap-2 items-center">
+          <span className="text-sm text-red-500">Erro ao carregar cotações</span>
+        </div>
+      </div>
+    );
+  }
+  
+  if (stockData.length === 0) {
+    return (
+      <div className="w-full overflow-hidden bg-white py-2 px-4">
+        <div className="h-6 flex gap-2 items-center">
+          <span className="text-sm text-muted-foreground">Nenhuma ação configurada</span>
         </div>
       </div>
     );

@@ -1,4 +1,3 @@
-
 {
   "articles": [
     {
@@ -115,7 +114,7 @@
       "id": "5",
       "name": "Demo User",
       "email": "demo@example.com",
-      "password": "password123", 
+      "password": "password123",
       "avatar": "https://randomuser.me/api/portraits/men/42.jpg",
       "role": "user",
       "status": "active",
@@ -367,31 +366,9 @@
         "enabled": true,
         "autoRefreshInterval": 5,
         "maxStocksToShow": 10,
-        "symbols": [
-          { "symbol": "AAPL", "name": "Apple Inc.", "enabled": true },
-          { "symbol": "MSFT", "name": "Microsoft Corporation", "enabled": true },
-          { "symbol": "GOOGL", "name": "Alphabet Inc.", "enabled": true },
-          { "symbol": "AMZN", "name": "Amazon.com Inc.", "enabled": true },
-          { "symbol": "META", "name": "Meta Platforms Inc.", "enabled": true },
-          { "symbol": "TSLA", "name": "Tesla Inc.", "enabled": true },
-          { "symbol": "NVDA", "name": "NVIDIA Corporation", "enabled": true },
-          { "symbol": "JPM", "name": "JPMorgan Chase & Co.", "enabled": true },
-          { "symbol": "BAC", "name": "Bank of America Corp.", "enabled": true },
-          { "symbol": "V", "name": "Visa Inc.", "enabled": true }
-        ]
+        "symbols": []
       }
     }
   ],
-  "stock-data": [
-    { "symbol": "AAPL", "price": 195.34, "change": 2.45, "changePercent": 1.27 },
-    { "symbol": "MSFT", "price": 412.78, "change": -3.21, "changePercent": -0.77 },
-    { "symbol": "GOOGL", "price": 178.56, "change": 1.23, "changePercent": 0.69 },
-    { "symbol": "AMZN", "price": 186.32, "change": -1.67, "changePercent": -0.89 },
-    { "symbol": "TSLA", "price": 245.67, "change": 7.89, "changePercent": 3.32 },
-    { "symbol": "META", "price": 492.64, "change": 8.76, "changePercent": 1.81 },
-    { "symbol": "NVDA", "price": 924.78, "change": 14.32, "changePercent": 1.57 },
-    { "symbol": "JPM", "price": 195.45, "change": -2.34, "changePercent": -1.18 },
-    { "symbol": "BAC", "price": 39.87, "change": -0.56, "changePercent": -1.39 },
-    { "symbol": "V", "price": 278.92, "change": 1.23, "changePercent": 0.44 }
-  ]
+  "stocks": []
 }

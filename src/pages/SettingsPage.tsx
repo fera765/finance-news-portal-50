@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -13,9 +14,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import StockSearch from "@/components/StockSearch";
-import { X } from "lucide-react";
-import { type StockSymbolSearchResult } from "@/services/stockService";
+import StockSearch, { StockSearchResult } from "@/components/StockSearch";
+import { X, ArrowUpIcon, ArrowDownIcon, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   getSettings, 
@@ -26,16 +26,10 @@ import {
   type SeoSettings,
   type SocialSettings,
   type TrackingSettings,
-  type StockTickerSettings,
-  type StockSymbol as SettingsStockSymbol
+  type StockTickerSettings
 } from "@/services/settingsService";
-
-interface StockSymbol {
-  id: string;
-  symbol: string;
-  name: string;
-  enabled: boolean;
-}
+import { useAddStock, useRemoveStock, useToggleStockEnabled } from "@/hooks/useStocks";
+import { getYahooStockData } from "@/services/stockService";
 
 // Form schemas
 const seoSchema = z.object({
@@ -68,37 +62,37 @@ const stockTickerSchema = z.object({
   maxStocksToShow: z.number().min(1).max(20),
 });
 
-// Lista de ações populares para seleção
-const popularStocks: StockSymbol[] = [
-  { id: "1", symbol: "AAPL", name: "Apple Inc.", enabled: true },
-  { id: "2", symbol: "MSFT", name: "Microsoft Corporation", enabled: true },
-  { id: "3", symbol: "GOOGL", name: "Alphabet Inc.", enabled: true },
-  { id: "4", symbol: "AMZN", name: "Amazon.com Inc.", enabled: true },
-  { id: "5", symbol: "META", name: "Meta Platforms Inc.", enabled: true },
-  { id: "6", symbol: "TSLA", name: "Tesla Inc.", enabled: true },
-  { id: "7", symbol: "NVDA", name: "NVIDIA Corporation", enabled: true },
-  { id: "8", symbol: "JPM", name: "JPMorgan Chase & Co.", enabled: true },
-  { id: "9", symbol: "BAC", name: "Bank of America Corp.", enabled: true },
-  { id: "10", symbol: "V", name: "Visa Inc.", enabled: true },
-  { id: "11", symbol: "JNJ", name: "Johnson & Johnson", enabled: false },
-  { id: "12", symbol: "WMT", name: "Walmart Inc.", enabled: false },
-  { id: "13", symbol: "PG", name: "Procter & Gamble Co.", enabled: false },
-  { id: "14", symbol: "MA", name: "Mastercard Inc.", enabled: false },
-  { id: "15", symbol: "DIS", name: "The Walt Disney Company", enabled: false }
-];
+interface StockSymbol {
+  symbol: string;
+  name: string;
+  enabled: boolean;
+}
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("seo");
-  const [stockSymbols, setStockSymbols] = useState<StockSymbol[]>(popularStocks);
+  const [stockSymbols, setStockSymbols] = useState<StockSymbol[]>([]);
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
+  
+  // Custom hooks for stock operations
+  const addStockMutation = useAddStock();
+  const removeStockMutation = useRemoveStock();
+  const toggleEnabledMutation = useToggleStockEnabled();
   
   // Fetch settings from API
   const { data: settings, isLoading, error } = useQuery({
     queryKey: ['settings'],
     queryFn: getSettings
   });
-
+  
+  // Get real-time stock data for selected symbols
+  const { data: stockData = [], isLoading: loadingStockData } = useQuery({
+    queryKey: ['currentStocks', stockSymbols.map(s => s.symbol)],
+    queryFn: () => getYahooStockData(stockSymbols.filter(s => s.enabled).map(s => s.symbol)),
+    enabled: stockSymbols.some(s => s.enabled),
+    refetchInterval: 60000 // 1 minute
+  });
+  
   // SEO Form
   const seoForm = useForm<z.infer<typeof seoSchema>>({
     resolver: zodResolver(seoSchema),
@@ -179,14 +173,8 @@ const SettingsPage = () => {
           maxStocksToShow: settings.stockTicker.maxStocksToShow
         });
         
-        // Convert API stock symbols to UI format with IDs
-        const apiStockSymbols = settings.stockTicker.symbols.map((symbol, index) => ({
-          id: `api-${index}`,
-          symbol: symbol.symbol,
-          name: symbol.name,
-          enabled: symbol.enabled
-        }));
-        
+        // Set stock symbols
+        const apiStockSymbols = settings.stockTicker.symbols || [];
         setStockSymbols(apiStockSymbols);
       }
     }
@@ -309,20 +297,12 @@ const SettingsPage = () => {
     try {
       setSaving(true);
       
-      // Convert UI stock symbols to API format without IDs
-      const apiStockSymbols: SettingsStockSymbol[] = stockSymbols
-        .map(stock => ({
-          symbol: stock.symbol,
-          name: stock.name,
-          enabled: stock.enabled
-        }));
-      
       // Create stock ticker settings object
       const stockTickerSettings: StockTickerSettings = {
         enabled: data.enabled,
         autoRefreshInterval: data.autoRefreshInterval,
         maxStocksToShow: data.maxStocksToShow,
-        symbols: apiStockSymbols
+        symbols: stockSymbols
       };
       
       await updateStockTickerMutation.mutateAsync(stockTickerSettings);
@@ -334,39 +314,55 @@ const SettingsPage = () => {
     }
   };
   
-  // Toggle stock symbol
-  const toggleStockSymbol = (id: string) => {
-    setStockSymbols(prev => 
-      prev.map(stock => 
-        stock.id === id ? { ...stock, enabled: !stock.enabled } : stock
-      )
-    );
+  // Toggle stock enabled status
+  const toggleStockEnabled = (symbol: string) => {
+    const stock = stockSymbols.find(s => s.symbol === symbol);
+    if (stock) {
+      const newEnabled = !stock.enabled;
+      toggleEnabledMutation.mutate({ symbol, enabled: newEnabled });
+      
+      // Update local state immediately for UI
+      setStockSymbols(prev => 
+        prev.map(s => s.symbol === symbol ? { ...s, enabled: newEnabled } : s)
+      );
+    }
   };
   
   // Add new stock from search
-  const addStockFromSearch = (result: StockSymbolSearchResult) => {
+  const addStockFromSearch = (result: StockSearchResult) => {
     const symbol = result.symbol.trim();
     
-    // Verificar se o símbolo já existe
+    // Check if stock already exists
     if (stockSymbols.some(stock => stock.symbol === symbol)) {
-      toast(`A ação ${symbol} já está na lista`);
+      toast.error(`A ação ${symbol} já está na lista`);
       return;
     }
     
-    // Adicionar novo símbolo
-    const newId = `custom-${Date.now()}`;
+    // Add new stock to database
+    addStockMutation.mutate({ 
+      symbol: symbol,
+      name: result.name
+    });
+    
+    // Update local state immediately for UI
     setStockSymbols(prev => [
       ...prev, 
-      { id: newId, symbol, name: result.name, enabled: true }
+      { symbol, name: result.name, enabled: true }
     ]);
-    
-    toast(`Ação ${symbol} - ${result.name} adicionada com sucesso`);
   };
   
-  // Remover ação
-  const removeStock = (id: string) => {
-    setStockSymbols(prev => prev.filter(stock => stock.id !== id));
-    toast("Ação removida com sucesso");
+  // Remove stock
+  const removeStockItem = (symbol: string) => {
+    removeStockMutation.mutate(symbol);
+    
+    // Update local state immediately for UI
+    setStockSymbols(prev => prev.filter(stock => stock.symbol !== symbol));
+  };
+  
+  // Get current stock price and change for display
+  const getStockData = (symbol: string) => {
+    const stock = stockData.find(s => s.symbol === symbol);
+    return stock || { price: 0, change: 0 };
   };
 
   if (isLoading) {
@@ -684,7 +680,7 @@ const SettingsPage = () => {
               <CardHeader>
                 <CardTitle>Stock Ticker Settings</CardTitle>
                 <CardDescription>
-                  Configure the stock ticker display and select which symbols to show.
+                  Configure the stock ticker display and select which symbols to show using real-time data from Yahoo Finance.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -744,9 +740,9 @@ const SettingsPage = () => {
                     </div>
                     
                     <div>
-                      <Label className="text-base font-medium mb-2 block">Stock Symbols</Label>
+                      <Label className="text-base font-medium mb-2 block">Search and Add Stocks</Label>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Select the stock symbols to display in the ticker or add new ones by searching.
+                        Search for stocks from Yahoo Finance by name or symbol and add them to your ticker.
                       </p>
                       
                       <div className="border rounded-md p-4">
@@ -760,33 +756,69 @@ const SettingsPage = () => {
                         
                         <Separator className="my-4" />
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {stockSymbols.map((stock) => (
-                            <div key={stock.id} className="flex items-center justify-between border rounded-md p-2 bg-background">
-                              <div className="flex items-center space-x-2">
-                                <Switch
-                                  id={`stock-${stock.id}`}
-                                  checked={stock.enabled}
-                                  onCheckedChange={() => toggleStockSymbol(stock.id)}
-                                />
-                                <Label htmlFor={`stock-${stock.id}`} className="cursor-pointer">
-                                  <span className="font-medium">{stock.symbol}</span>
-                                  <span className="text-muted-foreground ml-1 text-sm truncate max-w-[120px] inline-block">
-                                    ({stock.name})
-                                  </span>
-                                </Label>
-                              </div>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-8 w-8 p-0" 
-                                onClick={() => removeStock(stock.id)}
-                              >
-                                <X className="h-4 w-4" />
-                                <span className="sr-only">Remove {stock.symbol}</span>
-                              </Button>
+                        <div className="space-y-4">
+                          <Label className="text-base font-medium mb-2 block">Current Stocks</Label>
+                          {stockSymbols.length === 0 ? (
+                            <div className="py-4 text-center text-muted-foreground">
+                              No stocks added yet. Use the search above to add stocks.
                             </div>
-                          ))}
+                          ) : (
+                            <div className="grid grid-cols-1 gap-3">
+                              {stockSymbols.map((stock) => {
+                                const stockData = getStockData(stock.symbol);
+                                return (
+                                  <div key={stock.symbol} className="flex items-center justify-between border rounded-md p-3 bg-background">
+                                    <div className="flex items-center space-x-2">
+                                      <Switch
+                                        id={`stock-${stock.symbol}`}
+                                        checked={stock.enabled}
+                                        onCheckedChange={() => toggleStockEnabled(stock.symbol)}
+                                      />
+                                      <div className="flex flex-col">
+                                        <div className="flex items-center">
+                                          <span className="font-bold">{stock.symbol}</span>
+                                          <span className="ml-2 text-sm text-muted-foreground">
+                                            {stock.name}
+                                          </span>
+                                        </div>
+                                        {loadingStockData ? (
+                                          <div className="flex items-center text-sm text-muted-foreground">
+                                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                            Loading...
+                                          </div>
+                                        ) : (
+                                          <div className="flex items-center text-sm">
+                                            <span className="mr-2">${stockData.price.toFixed(2)}</span>
+                                            <span 
+                                              className={`flex items-center ${
+                                                stockData.change >= 0 ? "text-green-600" : "text-red-600"
+                                              }`}
+                                            >
+                                              {stockData.change >= 0 ? (
+                                                <ArrowUpIcon className="h-3 w-3 mr-1" />
+                                              ) : (
+                                                <ArrowDownIcon className="h-3 w-3 mr-1" />
+                                              )}
+                                              {Math.abs(stockData.change).toFixed(2)}%
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => removeStockItem(stock.symbol)}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <X className="h-4 w-4" />
+                                      <span className="sr-only">Remove {stock.symbol}</span>
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
