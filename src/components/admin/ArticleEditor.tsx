@@ -12,6 +12,7 @@ import { CalendarIcon, Save, Upload, ExternalLink, X } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Article } from "@/services/articleService";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface Category {
   id: string;
@@ -62,6 +63,8 @@ const ArticleEditor = ({
   );
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [showValidationAlert, setShowValidationAlert] = useState(false);
   
   useEffect(() => {
     if (article) {
@@ -76,6 +79,8 @@ const ArticleEditor = ({
               : article.publishDate)
           : undefined
       );
+      setValidationErrors([]);
+      setShowValidationAlert(false);
     } else {
       setFormData({
         title: "",
@@ -87,6 +92,8 @@ const ArticleEditor = ({
         isDetach: false
       });
       setPublishDate(undefined);
+      setValidationErrors([]);
+      setShowValidationAlert(false);
     }
   }, [article, isOpen]);
   
@@ -120,6 +127,42 @@ const ArticleEditor = ({
     });
   };
   
+  const validateArticle = (status: 'draft' | 'published' | 'scheduled'): boolean => {
+    const errors: string[] = [];
+    
+    // Apenas validar campos obrigatórios se o artigo não for rascunho
+    if (status !== 'draft') {
+      if (!formData.title || formData.title.trim() === '') {
+        errors.push('Título é obrigatório');
+      }
+      
+      if (!formData.slug || formData.slug.trim() === '') {
+        errors.push('Slug é obrigatório');
+      }
+      
+      if (!formData.content || formData.content.trim() === '') {
+        errors.push('Conteúdo é obrigatório');
+      }
+      
+      if (!formData.category || formData.category.trim() === '') {
+        errors.push('Categoria é obrigatória');
+      }
+      
+      if (!formData.author || formData.author.trim() === '') {
+        errors.push('Autor é obrigatório');
+      }
+      
+      if (status === 'scheduled' && !publishDate) {
+        errors.push('Data de publicação é obrigatória para artigos agendados');
+      }
+    }
+    
+    setValidationErrors(errors);
+    setShowValidationAlert(errors.length > 0);
+    
+    return errors.length === 0;
+  };
+  
   const handleSaveDraft = () => {
     onSave({
       ...formData,
@@ -128,23 +171,28 @@ const ArticleEditor = ({
   };
   
   const handlePublish = () => {
-    onSave({
-      ...formData,
-      status: 'published',
-      publishDate: new Date()
-    });
+    if (validateArticle('published')) {
+      onSave({
+        ...formData,
+        status: 'published',
+        publishDate: new Date()
+      });
+    }
   };
   
   const handleSchedule = () => {
     if (!publishDate) {
+      validateArticle('scheduled');
       return;
     }
     
-    onSave({
-      ...formData,
-      status: 'scheduled',
-      publishDate
-    });
+    if (validateArticle('scheduled')) {
+      onSave({
+        ...formData,
+        status: 'scheduled',
+        publishDate
+      });
+    }
   };
 
   const handlePreview = () => {
@@ -163,33 +211,48 @@ const ArticleEditor = ({
           <DialogTitle>{isEditing ? 'Editar Artigo' : 'Criar Novo Artigo'}</DialogTitle>
         </DialogHeader>
         
+        {showValidationAlert && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Erro de Validação</AlertTitle>
+            <AlertDescription>
+              <ul className="list-disc pl-5 mt-2">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="grid grid-cols-1 gap-6 py-4">
           {/* Título */}
           <div className="space-y-2">
-            <Label htmlFor="title">Título</Label>
+            <Label htmlFor="title">Título *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Título do artigo"
+              className={validationErrors.includes('Título é obrigatório') ? "border-red-500" : ""}
             />
           </div>
           
           {/* Slug */}
           <div className="space-y-2">
-            <Label htmlFor="slug">URL Slug</Label>
+            <Label htmlFor="slug">URL Slug *</Label>
             <Input
               id="slug"
               value={formData.slug}
               onChange={(e) => handleSlugChange(e.target.value)}
               placeholder="artigo-url-slug"
+              className={validationErrors.includes('Slug é obrigatório') ? "border-red-500" : ""}
             />
             <p className="text-sm text-muted-foreground">
               Será usado na URL: example.com/news/{formData.slug || 'artigo-slug'}
             </p>
           </div>
           
-          {/* isDetach Switch - NEW */}
+          {/* isDetach Switch */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="isDetach" className="text-base">
@@ -209,12 +272,12 @@ const ArticleEditor = ({
           {/* Categoria & Autor em uma linha para telas maiores, em coluna para telas menores */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
+              <Label htmlFor="category">Categoria *</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => handleInputChange('category', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className={validationErrors.includes('Categoria é obrigatória') ? "border-red-500" : ""}>
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -228,12 +291,12 @@ const ArticleEditor = ({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="author">Autor</Label>
+              <Label htmlFor="author">Autor *</Label>
               <Select
                 value={formData.author}
                 onValueChange={(value) => handleInputChange('author', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className={validationErrors.includes('Autor é obrigatório') ? "border-red-500" : ""}>
                   <SelectValue placeholder="Selecione o autor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -249,23 +312,27 @@ const ArticleEditor = ({
           
           {/* Editor de texto rico */}
           <div className="space-y-2">
-            <Label htmlFor="content">Conteúdo</Label>
+            <Label htmlFor="content">Conteúdo *</Label>
             <RichTextEditor
               value={formData.content}
               onChange={(value) => handleInputChange('content', value)}
               placeholder="Escreva o conteúdo do artigo aqui..."
+              className={validationErrors.includes('Conteúdo é obrigatório') ? "border-red-500" : ""}
             />
           </div>
           
           {/* Agendar Publicação */}
           <div className="space-y-2">
-            <Label>Agendar Publicação</Label>
+            <Label>Agendar Publicação {formData.status === 'scheduled' ? '*' : ''}</Label>
             <div className="flex flex-col sm:flex-row gap-4">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full sm:w-[240px] justify-start text-left font-normal"
+                    className={`w-full sm:w-[240px] justify-start text-left font-normal ${
+                      validationErrors.includes('Data de publicação é obrigatória para artigos agendados') 
+                      ? "border-red-500" : ""
+                    }`}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {publishDate ? format(publishDate, "PPP") : "Escolha uma data"}
@@ -288,6 +355,10 @@ const ArticleEditor = ({
               <p>URL de Preview: {previewUrl}</p>
             </div>
           )}
+          
+          <div className="text-sm text-muted-foreground">
+            * Campos obrigatórios para publicação
+          </div>
         </div>
         
         <DialogFooter className="flex flex-col sm:flex-row justify-between gap-2">

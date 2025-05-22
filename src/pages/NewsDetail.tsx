@@ -17,12 +17,15 @@ import { useComments } from "@/hooks/useComments";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "@/services/categoryService";
 import { getUsers } from "@/services/userService";
+import DOMPurify from "dompurify";
+import { marked } from "marked";
 
 const NewsDetail = () => {
   const { id, slug } = useParams<{ id: string, slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [parsedContent, setParsedContent] = useState("");
 
   // Fetch article data
   const { data: article, isLoading, isError } = useArticleBySlug(slug);
@@ -58,6 +61,25 @@ const NewsDetail = () => {
     comments,
     addComment
   } = useComments(article?.id);
+
+  // Parse Markdown content when article loads or changes
+  useEffect(() => {
+    if (article?.content) {
+      try {
+        // Use marked to convert Markdown to HTML
+        const rawHtml = marked.parse(article.content);
+        // Sanitize the HTML to prevent XSS attacks
+        const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+        setParsedContent(sanitizedHtml);
+      } catch (error) {
+        console.error("Error parsing markdown content:", error);
+        // Fallback to raw content if parsing fails
+        setParsedContent(article.content);
+      }
+    } else {
+      setParsedContent("");
+    }
+  }, [article]);
 
   // Redirect if slug doesn't match the article
   useEffect(() => {
@@ -231,7 +253,7 @@ const NewsDetail = () => {
         
         <div 
           className="news-content mb-8 md:mb-10 prose prose-slate max-w-none"
-          dangerouslySetInnerHTML={{ __html: article.content }} 
+          dangerouslySetInnerHTML={{ __html: parsedContent }} 
         />
         
         {related.length > 0 && (
