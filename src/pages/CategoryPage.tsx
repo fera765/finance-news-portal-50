@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import NewsCard from "@/components/NewsCard";
@@ -11,6 +11,9 @@ import { getArticles } from "@/services/articleService";
 import { getCategories } from "@/services/categoryService";
 import { getUsers } from "@/services/userService";
 import { Article } from "@/services/articleService";
+import { useInView } from "react-intersection-observer";
+
+const ARTICLES_PER_PAGE = 6;
 
 const mapArticleToNewsItem = (article: Article, categoryName: string, authorName: string) => {
   return {
@@ -28,7 +31,15 @@ const mapArticleToNewsItem = (article: Article, categoryName: string, authorName
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [page, setPage] = useState(1);
+  const [allArticles, setAllArticles] = useState<Article[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const { ref, inView } = useInView();
+  
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
 
   // Fetch categories to get the current category info
   const { data: categories = [] } = useQuery({
@@ -44,26 +55,58 @@ const CategoryPage = () => {
     queryFn: getUsers
   });
 
-  // Fetch articles for this category
-  const { data: articles = [], isLoading, isError } = useQuery({
-    queryKey: ["articles", "category", currentCategory?.id],
-    queryFn: () => getArticles({ category: currentCategory?.id }),
-    enabled: !!currentCategory?.id
+  // Fetch articles for this category with pagination
+  const { data: articles = [], isLoading, isError, fetchStatus } = useQuery({
+    queryKey: ["articles", "category", currentCategory?.id, page],
+    queryFn: () => getArticles({ 
+      category: currentCategory?.id, 
+      _page: page, 
+      _limit: ARTICLES_PER_PAGE,
+      _sort: "publishDate",
+      _order: "desc"
+    }),
+    enabled: !!currentCategory?.id,
+    keepPreviousData: true
   });
+  
+  // Append new articles to our collection when they arrive
+  useEffect(() => {
+    if (articles && articles.length > 0) {
+      // Check for duplicates before adding
+      const newArticles = articles.filter(
+        newArticle => !allArticles.some(existingArticle => 
+          existingArticle.id === newArticle.id
+        )
+      );
+      
+      if (newArticles.length > 0) {
+        setAllArticles(prev => [...prev, ...newArticles]);
+      }
+      
+      // If we got fewer articles than requested, there are no more to load
+      if (articles.length < ARTICLES_PER_PAGE) {
+        setHasMore(false);
+      }
+    } else if (articles && articles.length === 0 && page > 1) {
+      setHasMore(false);
+    }
+  }, [articles, page]);
 
-  // Load more articles on scroll
-  const loadMore = () => {
-    setVisibleCount(prev => prev + 6);
-  };
+  // Load more when the sentinel comes into view
+  useEffect(() => {
+    if (inView && hasMore && !isLoading && fetchStatus !== 'fetching') {
+      setPage(prevPage => prevPage + 1);
+    }
+  }, [inView, hasMore, isLoading, fetchStatus]);
 
   // Map articles to news items with proper names
-  const newsItems = articles.map(article => {
+  const newsItems = allArticles.map(article => {
     const categoryName = categories.find(cat => cat.id === article.category)?.name || "Sem categoria";
     const authorName = authors.find(auth => auth.id === article.author)?.name || "Autor desconhecido";
     return mapArticleToNewsItem(article, categoryName, authorName);
   });
 
-  if (isLoading) {
+  if (isLoading && page === 1) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -120,17 +163,21 @@ const CategoryPage = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {newsItems.slice(0, visibleCount).map((item) => (
+              {newsItems.map((item) => (
                 <NewsCard key={item.id} news={item} />
               ))}
             </div>
             
-            {visibleCount < newsItems.length && (
-              <div className="mt-8 text-center">
-                <Button onClick={loadMore} variant="outline">
-                  Carregar mais artigos
-                </Button>
+            {hasMore && (
+              <div ref={ref} className="mt-8 flex justify-center">
+                <div className="h-8 w-8 border-4 border-t-blue-500 border-b-blue-300 rounded-full animate-spin"></div>
               </div>
+            )}
+            
+            {!hasMore && newsItems.length > 0 && (
+              <p className="text-center text-gray-500 mt-8">
+                Todos os artigos desta categoria foram carregados.
+              </p>
             )}
           </>
         )}

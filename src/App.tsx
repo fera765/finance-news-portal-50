@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import ScrollToTop from "./components/ScrollToTop";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App: React.FC = () => {
             <Sonner />
             <SidebarProvider>
               <BrowserRouter>
+                <ScrollToTop />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/news/:id/:slug" element={<NewsDetail />} />

@@ -1,199 +1,24 @@
-import { useEffect, useState } from "react";
+
+import { useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import GrowthMetrics from "@/components/admin/GrowthMetrics";
 import MetricsChart from "@/components/admin/MetricsChart";
 import PopularArticles from "@/components/admin/PopularArticles";
 import SavedArticles from "@/components/admin/SavedArticles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Heart, Bookmark } from "lucide-react";
-import { ArticleSummary } from "@/components/admin/PopularArticles";
+import { Eye, Heart, Bookmark, Users, FileText, Tag } from "lucide-react";
 import StockTicker from "@/components/StockTicker";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 const AdminDashboard = () => {
-  const [monthlyViews, setMonthlyViews] = useState([]);
-  const [yearlyViews, setYearlyViews] = useState([]);
-  const [topArticlesByViews, setTopArticlesByViews] = useState<ArticleSummary[]>([]);
-  const [topArticlesByLikes, setTopArticlesByLikes] = useState<ArticleSummary[]>([]);
-  const [savedArticles, setSavedArticles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  const stats = useDashboardStats();
+  
+  // Make sure we scroll to top on component mount
   useEffect(() => {
-    // In a real app, these would be API calls
-    const fetchDashboardData = async () => {
-      try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Monthly views data for chart
-        const mockMonthlyData = [
-          { name: "Jan", views: 1200 },
-          { name: "Feb", views: 1900 },
-          { name: "Mar", views: 2100 },
-          { name: "Apr", views: 2400 },
-          { name: "May", views: 3200 }
-        ];
-        
-        // Yearly views data for chart
-        const mockYearlyData = [
-          { name: "2021", views: 12000 },
-          { name: "2022", views: 19000 },
-          { name: "2023", views: 24000 },
-          { name: "2024", views: 28000 },
-          { name: "2025", views: 15000 }
-        ];
-        
-        // Fetch most viewed articles
-        const mockTopViewedArticles = [
-          {
-            id: "1",
-            title: "Federal Reserve Signals Possible Interest Rate Cuts in Coming Months",
-            category: "Economy",
-            publishedDate: "2025-05-05T14:30:00Z",
-            views: 1245,
-            likes: 87,
-            bookmarks: 45,
-            slug: "federal-reserve-signals-possible-interest-rate-cuts"
-          },
-          {
-            id: "2",
-            title: "Global Markets Rally as Trade Tensions Ease Between Major Economies",
-            category: "Markets",
-            publishedDate: "2025-05-04T10:15:00Z",
-            views: 876,
-            likes: 56,
-            bookmarks: 32,
-            slug: "global-markets-rally-as-trade-tensions-ease"
-          },
-          {
-            id: "3",
-            title: "Tech Giant Unveils Revolutionary AI-Powered Financial Analysis Platform",
-            category: "Technology",
-            publishedDate: "2025-05-03T16:45:00Z",
-            views: 765,
-            likes: 92,
-            bookmarks: 61,
-            slug: "tech-giant-unveils-revolutionary-ai-powered-financial-analysis-platform"
-          },
-          {
-            id: "4",
-            title: "Cryptocurrency Market Faces Regulatory Challenges in Major Economies",
-            category: "Cryptocurrency",
-            publishedDate: "2025-05-05T09:20:00Z",
-            views: 682,
-            likes: 43,
-            bookmarks: 28,
-            slug: "cryptocurrency-market-faces-regulatory-challenges"
-          },
-          {
-            id: "5",
-            title: "Oil Prices Stabilize Following Middle East Production Agreement",
-            category: "Commodities",
-            publishedDate: "2025-05-04T18:00:00Z",
-            views: 587,
-            likes: 35,
-            bookmarks: 19,
-            slug: "oil-prices-stabilize-following-middle-east-production-agreement"
-          }
-        ];
-        
-        // Fetch most liked articles
-        const mockTopLikedArticles = [
-          {
-            id: "3",
-            title: "Tech Giant Unveils Revolutionary AI-Powered Financial Analysis Platform",
-            category: "Technology",
-            publishedDate: "2025-05-03T16:45:00Z",
-            views: 765,
-            likes: 92,
-            bookmarks: 61,
-            slug: "tech-giant-unveils-revolutionary-ai-powered-financial-analysis-platform"
-          },
-          {
-            id: "1",
-            title: "Federal Reserve Signals Possible Interest Rate Cuts in Coming Months",
-            category: "Economy",
-            publishedDate: "2025-05-05T14:30:00Z",
-            views: 1245,
-            likes: 87,
-            bookmarks: 45,
-            slug: "federal-reserve-signals-possible-interest-rate-cuts"
-          },
-          {
-            id: "2",
-            title: "Global Markets Rally as Trade Tensions Ease Between Major Economies",
-            category: "Markets",
-            publishedDate: "2025-05-04T10:15:00Z",
-            views: 876,
-            likes: 56,
-            bookmarks: 32,
-            slug: "global-markets-rally-as-trade-tensions-ease"
-          },
-          {
-            id: "4",
-            title: "Cryptocurrency Market Faces Regulatory Challenges in Major Economies",
-            category: "Cryptocurrency",
-            publishedDate: "2025-05-05T09:20:00Z",
-            views: 682,
-            likes: 43,
-            bookmarks: 28,
-            slug: "cryptocurrency-market-faces-regulatory-challenges"
-          },
-          {
-            id: "5",
-            title: "Oil Prices Stabilize Following Middle East Production Agreement",
-            category: "Commodities",
-            publishedDate: "2025-05-04T18:00:00Z",
-            views: 587,
-            likes: 35,
-            bookmarks: 19,
-            slug: "oil-prices-stabilize-following-middle-east-production-agreement"
-          }
-        ];
-        
-        // Fetch saved articles
-        const mockSavedArticles = [
-          {
-            id: "3",
-            title: "Tech Giant Unveils Revolutionary AI-Powered Financial Analysis Platform",
-            category: "Technology",
-            views: 765,
-            bookmarks: 61,
-            publishedDate: "2025-05-03T16:45:00Z"
-          },
-          {
-            id: "1",
-            title: "Federal Reserve Signals Possible Interest Rate Cuts in Coming Months",
-            category: "Economy",
-            views: 1245,
-            bookmarks: 45,
-            publishedDate: "2025-05-05T14:30:00Z"
-          },
-          {
-            id: "2",
-            title: "Global Markets Rally as Trade Tensions Ease Between Major Economies",
-            category: "Markets",
-            views: 876,
-            bookmarks: 32,
-            publishedDate: "2025-05-04T10:15:00Z"
-          }
-        ];
-        
-        setMonthlyViews(mockMonthlyData);
-        setYearlyViews(mockYearlyData);
-        setTopArticlesByViews(mockTopViewedArticles);
-        setTopArticlesByLikes(mockTopLikedArticles);
-        setSavedArticles(mockSavedArticles);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-        setLoading(false);
-      }
-    };
-    
-    fetchDashboardData();
+    window.scrollTo(0, 0);
   }, []);
   
-  if (loading) {
+  if (stats.isLoading) {
     return (
       <AdminLayout activeTab="dashboard">
         <div className="p-6">
@@ -245,53 +70,68 @@ const AdminDashboard = () => {
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-gray-500">Welcome to your finance news admin dashboard.</p>
+          <p className="text-gray-500">Bem-vindo ao painel administrativo de notícias financeiras.</p>
         </div>
         
         {/* Growth metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
           <GrowthMetrics
-            title="Total Views"
-            value="32.5k"
-            change={12.3}
+            title="Total de Visualizações"
+            value={`${(stats.totalViews / 1000).toFixed(1)}k`}
+            change={stats.viewsChange}
             icon={<Eye size={20} />}
-            description="vs. previous month"
+            description="vs. mês anterior"
           />
           <GrowthMetrics
-            title="Article Likes"
-            value="1,203"
-            change={8.1}
+            title="Curtidas em Artigos"
+            value={stats.totalLikes.toString()}
+            change={stats.likesChange}
             icon={<Heart size={20} />}
-            description="vs. previous month"
+            description="vs. mês anterior"
           />
           <GrowthMetrics
-            title="Article Saves"
-            value="845"
-            change={-3.2}
+            title="Artigos Salvos"
+            value={stats.totalSaves.toString()}
+            change={stats.savesChange}
             icon={<Bookmark size={20} />}
-            description="vs. previous month"
+            description="vs. mês anterior"
           />
           <GrowthMetrics
-            title="New Subscribers"
-            value="267"
-            change={24.5}
-            description="vs. previous month"
+            title="Novos Assinantes"
+            value={stats.totalSubscribers.toString()}
+            change={stats.subscribersChange}
+            icon={<Users size={20} />}
+            description="vs. mês anterior"
+          />
+          <GrowthMetrics
+            title="Total de Artigos"
+            value={stats.totalArticles.toString()}
+            change={0}
+            icon={<FileText size={20} />}
+            description="total do sistema"
+          />
+          <GrowthMetrics
+            title="Total de Categorias"
+            value={stats.totalCategories.toString()}
+            change={0}
+            icon={<Tag size={20} />}
+            description="total do sistema"
           />
         </div>
         
         {/* Charts section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <MetricsChart
-            title="Monthly Page Views"
-            description="Number of page views per month"
-            data={monthlyViews}
+            title="Visualizações Mensais"
+            description="Número de visualizações por mês"
+            data={stats.monthlyViewsData}
             dataKey="views"
             nameKey="name"
           />
           <MetricsChart
-            title="Yearly Page Views"
-            description="Number of page views per year"
-            data={yearlyViews}
+            title="Visualizações Anuais"
+            description="Número de visualizações por ano"
+            data={stats.yearlyViewsData}
             dataKey="views"
             nameKey="name"
           />
@@ -300,16 +140,16 @@ const AdminDashboard = () => {
         {/* Articles ranking section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <PopularArticles 
-            title="Most Viewed Articles" 
-            description="Top 5 articles with the highest number of views"
-            articles={topArticlesByViews}
+            title="Artigos Mais Vistos" 
+            description="Top 5 artigos com maior número de visualizações"
+            articles={stats.articlesByViews}
             type="views"
             icon={Eye}
           />
           <PopularArticles 
-            title="Most Liked Articles" 
-            description="Top 5 articles with the highest number of likes"
-            articles={topArticlesByLikes}
+            title="Artigos Mais Curtidos" 
+            description="Top 5 artigos com maior número de curtidas"
+            articles={stats.articlesByLikes}
             type="likes"
             icon={Heart}
           />
@@ -318,9 +158,9 @@ const AdminDashboard = () => {
         {/* Saved articles section */}
         <div className="mb-6">
           <SavedArticles 
-            title="Most Saved Articles" 
-            description="Top articles that users have saved to read later"
-            articles={savedArticles}
+            title="Artigos Mais Salvos" 
+            description="Principais artigos que os usuários salvaram para ler depois"
+            articles={stats.mostSavedArticles}
           />
         </div>
       </div>
