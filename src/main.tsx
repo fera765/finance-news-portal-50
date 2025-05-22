@@ -40,6 +40,11 @@ if (!window.URLSearchParams) {
       }
     }
     
+    // Add size property getter
+    get size(): number {
+      return this.params.size;
+    }
+    
     append(name: string, value: string): void {
       this.params.set(name, value);
     }
@@ -108,4 +113,3 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </React.StrictMode>
 );
-
