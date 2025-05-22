@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Heart, LucideIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 
 export interface ArticleSummary {
   id: string;
@@ -23,6 +23,17 @@ interface PopularArticlesProps {
 }
 
 const PopularArticles = ({ title, description, articles, type, icon: Icon }: PopularArticlesProps) => {
+  // Função auxiliar para formatar data com verificação de validade
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return isValid(date) ? format(date, "MMM d") : "Data inválida";
+    } catch (error) {
+      console.error("Erro ao formatar data:", dateString, error);
+      return "Data inválida";
+    }
+  };
+
   return (
     <Card className="col-span-1">
       <CardHeader>
@@ -49,7 +60,7 @@ const PopularArticles = ({ title, description, articles, type, icon: Icon }: Pop
                     {article.category}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
-                    {format(new Date(article.publishedDate), "MMM d")}
+                    {formatDate(article.publishedDate)}
                   </span>
                 </div>
               </div>

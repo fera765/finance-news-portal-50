@@ -92,7 +92,8 @@ export function useDashboardStats() {
     queryKey: ['dashboard', 'subscribers'],
     queryFn: async () => {
       try {
-        const { data } = await api.get('/subscribers');
+        // Alterado para usar newsletter-subscriptions em vez de subscribers
+        const { data } = await api.get('/newsletter-subscriptions');
         return data || [];
       } catch (error) {
         console.error('Error fetching subscribers:', error);
