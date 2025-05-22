@@ -466,7 +466,7 @@ export function RichTextEditor({
       
       {/* Editor tips */}
       <div className="text-xs text-gray-500 space-y-1">
-        <p>Atalhos: **negrito**, *itálico*, `código`, # título, > citação, - lista</p>
+        <p>Atalhos: **negrito**, *itálico*, `código`, # título, {">"} citação, - lista</p>
       </div>
     </div>
   );
