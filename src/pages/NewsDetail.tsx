@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -66,8 +65,8 @@ const NewsDetail = () => {
   useEffect(() => {
     if (article?.content) {
       try {
-        // Use marked to convert Markdown to HTML
-        const rawHtml = marked.parse(article.content);
+        // Fix: Use marked.parse directly with the content string
+        const rawHtml = marked.parse(article.content, { async: false }) as string;
         // Sanitize the HTML to prevent XSS attacks
         const sanitizedHtml = DOMPurify.sanitize(rawHtml);
         setParsedContent(sanitizedHtml);
@@ -126,7 +125,7 @@ const NewsDetail = () => {
       toast("Could not copy the link to clipboard");
     }
   };
-
+  
   const handleLogin = () => {
     setIsAuthModalOpen(true);
   };
