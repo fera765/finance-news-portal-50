@@ -65,9 +65,12 @@ const deleteCommentLikes = async (commentId: string) => {
       params: { commentId }
     });
     
-    for (const like of commentLikes) {
-      await api.delete(`/comment-likes/${like.id}`);
-    }
+    // Uso de Promise.all para paralelizar as requisições de exclusão
+    const deletionPromises = commentLikes.map(like => 
+      api.delete(`/comment-likes/${like.id}`)
+    );
+    
+    await Promise.all(deletionPromises);
     return true;
   } catch (error) {
     console.error(`Error deleting likes for comment ${commentId}:`, error);
@@ -75,24 +78,58 @@ const deleteCommentLikes = async (commentId: string) => {
   }
 };
 
-// Função recursiva para excluir comentários em cascata
-const deleteCommentAndReplies = async (commentId: string) => {
+// Função auxiliar para buscar todas as respostas a um comentário
+const findReplies = async (commentId: string): Promise<string[]> => {
   try {
-    // Buscar todas as respostas a este comentário
     const { data: replies } = await api.get('/comments', {
       params: { parentId: commentId }
     });
     
-    // Excluir recursivamente todas as respostas
-    for (const reply of replies) {
-      await deleteCommentAndReplies(reply.id);
+    // Coletar IDs de todas as respostas e suas respostas recursivamente
+    let replyIds = replies.map((reply: Comment) => reply.id);
+    
+    // Para cada resposta, encontrar suas próprias respostas recursivamente
+    const childPromises = replies.map((reply: Comment) => 
+      findReplies(reply.id!)
+    );
+    
+    // Aguardar todas as promessas e aplainar os resultados
+    const childResults = await Promise.all(childPromises);
+    const childIds = childResults.flat();
+    
+    // Combinar IDs diretos e indiretos
+    return [...replyIds, ...childIds];
+  } catch (error) {
+    console.error(`Error finding replies for comment ${commentId}:`, error);
+    return [];
+  }
+};
+
+// Função recursiva para excluir comentários em cascata
+const deleteCommentAndReplies = async (commentId: string) => {
+  try {
+    console.log(`Starting deletion process for comment ${commentId}`);
+    
+    // Primeiro, encontrar todos os IDs de respostas (diretas e indiretas)
+    const replyIds = await findReplies(commentId);
+    console.log(`Found ${replyIds.length} replies to delete for comment ${commentId}`);
+    
+    // Excluir os likes de todas as respostas (incluindo o comentário original)
+    const likeDeletionPromises = [commentId, ...replyIds].map(id => 
+      deleteCommentLikes(id)
+    );
+    await Promise.all(likeDeletionPromises);
+    console.log(`Deleted likes for comment ${commentId} and all replies`);
+    
+    // Excluir todas as respostas em ordem reversa (das mais profundas para as mais superficiais)
+    for (const replyId of replyIds.reverse()) {
+      await api.delete(`/comments/${replyId}`);
+      console.log(`Deleted reply ${replyId}`);
     }
     
-    // Excluir os likes deste comentário
-    await deleteCommentLikes(commentId);
-    
-    // Excluir o comentário em si
+    // Por fim, excluir o comentário principal
     await api.delete(`/comments/${commentId}`);
+    console.log(`Deleted main comment ${commentId}`);
     
     return true;
   } catch (error) {
@@ -103,7 +140,7 @@ const deleteCommentAndReplies = async (commentId: string) => {
 
 export const deleteComment = async (id: string) => {
   try {
-    // Utiliza a função recursiva para excluir o comentário e todas as suas respostas
+    // Utiliza a função otimizada para excluir o comentário e todas as suas respostas
     return await deleteCommentAndReplies(id);
   } catch (error) {
     console.error(`Error deleting comment ${id}:`, error);

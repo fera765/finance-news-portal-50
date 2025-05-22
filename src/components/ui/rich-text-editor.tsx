@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { 
@@ -52,6 +52,12 @@ export function RichTextEditor({
   const [imageAlt, setImageAlt] = useState("");
   const [renderedHtml, setRenderedHtml] = useState("");
   
+  const [bulletListActive, setBulletListActive] = useState(false);
+  const [orderedListActive, setOrderedListActive] = useState(false);
+  const [currentListItemNumber, setCurrentListItemNumber] = useState(1);
+  
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
   // Renderiza o HTML quando o valor muda ou a aba muda
   useEffect(() => {
     try {
@@ -67,7 +73,7 @@ export function RichTextEditor({
 
   const insertFormatting = (startTag: string, endTag: string) => {
     // Obter o elemento textarea
-    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    const textarea = textareaRef.current;
     if (!textarea) return;
     
     const start = textarea.selectionStart;
@@ -110,15 +116,77 @@ export function RichTextEditor({
   const handleAlignLeft = () => insertFormatting("\n<div style='text-align: left'>", "</div>\n");
   const handleAlignCenter = () => insertFormatting("\n<div style='text-align: center'>", "</div>\n");
   const handleAlignRight = () => insertFormatting("\n<div style='text-align: right'>", "</div>\n");
-  const handleBulletList = () => insertFormatting("\n- ", "\n");
-  const handleNumberedList = () => insertFormatting("\n1. ", "\n");
+  
+  const handleBulletList = () => {
+    // Toggle bullet list mode
+    const newState = !bulletListActive;
+    setBulletListActive(newState);
+    
+    // If turning on bullet list, turn off numbered list
+    if (newState) {
+      setOrderedListActive(false);
+      
+      // Insert a bullet point at the cursor position if not already in a list
+      if (textareaRef.current) {
+        const start = textareaRef.current.selectionStart;
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const currentLine = value.substring(lineStart, start);
+        
+        if (!currentLine.startsWith("- ")) {
+          const newText = value.substring(0, lineStart) + "- " + value.substring(lineStart);
+          onChange(newText);
+          
+          setTimeout(() => {
+            if (textareaRef.current) {
+              textareaRef.current.focus();
+              const newCursorPos = lineStart + 2;
+              textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+            }
+          }, 0);
+        }
+      }
+    }
+  };
+  
+  const handleNumberedList = () => {
+    // Toggle numbered list mode
+    const newState = !orderedListActive;
+    setOrderedListActive(newState);
+    setCurrentListItemNumber(1);  // Reset counter when toggling
+    
+    // If turning on numbered list, turn off bullet list
+    if (newState) {
+      setBulletListActive(false);
+      
+      // Insert a numbered list item at the cursor position if not already in a list
+      if (textareaRef.current) {
+        const start = textareaRef.current.selectionStart;
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const currentLine = value.substring(lineStart, start);
+        
+        if (!currentLine.match(/^\d+\. /)) {
+          const newText = value.substring(0, lineStart) + "1. " + value.substring(lineStart);
+          onChange(newText);
+          
+          setTimeout(() => {
+            if (textareaRef.current) {
+              textareaRef.current.focus();
+              const newCursorPos = lineStart + 3;
+              textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+            }
+          }, 0);
+        }
+      }
+    }
+  };
+  
   const handleQuote = () => insertFormatting("\n> ", "\n");
   const handleH1 = () => insertFormatting("\n# ", "\n");
   const handleH2 = () => insertFormatting("\n## ", "\n");
   const handleH3 = () => insertFormatting("\n### ", "\n");
 
   const insertLink = () => {
-    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    const textarea = textareaRef.current;
     if (!textarea) return;
     
     const start = textarea.selectionStart;
@@ -143,7 +211,7 @@ export function RichTextEditor({
   const insertImage = () => {
     if (!imageUrl) return;
     
-    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    const textarea = textareaRef.current;
     if (!textarea) return;
     
     const start = textarea.selectionStart;
@@ -165,6 +233,72 @@ export function RichTextEditor({
       const cursorPos = start + imageMarkdown.length;
       textarea.setSelectionRange(cursorPos, cursorPos);
     }, 0);
+  };
+  
+  // Handle key press in the textarea
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    // Handle Enter key for lists
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const start = textarea.selectionStart;
+      const text = value.substring(0, start);
+      const lineStart = text.lastIndexOf('\n') + 1;
+      const currentLine = text.substring(lineStart);
+      
+      // Check if we're in a bullet list
+      if (bulletListActive || currentLine.startsWith('- ')) {
+        e.preventDefault();
+        
+        // If the current line is empty except for the bullet, end the list
+        if (currentLine === '- ') {
+          const newText = text.substring(0, lineStart) + value.substring(start);
+          onChange(newText);
+          setBulletListActive(false);
+        } else {
+          // Add a new bullet point
+          const newText = text + '\n- ' + value.substring(start);
+          onChange(newText);
+          
+          setTimeout(() => {
+            const newCursorPos = start + 3;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+          }, 0);
+        }
+      }
+      // Check if we're in a numbered list
+      else if (orderedListActive || currentLine.match(/^\d+\. /)) {
+        e.preventDefault();
+        
+        const numberedListMatch = currentLine.match(/^(\d+)\. (.*)/);
+        
+        // If the current line is empty except for the number, end the list
+        if (numberedListMatch && numberedListMatch[2].trim() === '') {
+          const newText = text.substring(0, lineStart) + value.substring(start);
+          onChange(newText);
+          setOrderedListActive(false);
+          setCurrentListItemNumber(1);
+        } else {
+          // Get the current item number and increment for the next item
+          let nextNumber = currentListItemNumber + 1;
+          if (numberedListMatch) {
+            nextNumber = parseInt(numberedListMatch[1], 10) + 1;
+          }
+          
+          // Add a new numbered list item
+          const newText = text + '\n' + nextNumber + '. ' + value.substring(start);
+          onChange(newText);
+          setCurrentListItemNumber(nextNumber + 1);
+          
+          setTimeout(() => {
+            const newLinePrefix = nextNumber + '. ';
+            const newCursorPos = start + 1 + newLinePrefix.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+          }, 0);
+        }
+      }
+    }
   };
 
   return (
@@ -299,20 +433,20 @@ export function RichTextEditor({
           <div className="flex items-center gap-1">
             <Button 
               type="button" 
-              variant="ghost" 
+              variant={bulletListActive ? "default" : "ghost"} 
               size="sm" 
               onClick={handleBulletList}
-              className="h-8 w-8 p-0"
+              className={`h-8 w-8 p-0 ${bulletListActive ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}`}
               title="Lista com marcadores"
             >
               <List className="h-4 w-4" />
             </Button>
             <Button 
               type="button" 
-              variant="ghost" 
+              variant={orderedListActive ? "default" : "ghost"} 
               size="sm" 
               onClick={handleNumberedList}
-              className="h-8 w-8 p-0"
+              className={`h-8 w-8 p-0 ${orderedListActive ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}`}
               title="Lista numerada"
             >
               <ListOrdered className="h-4 w-4" />
@@ -446,8 +580,10 @@ export function RichTextEditor({
           
           <TabsContent value="edit" className="mt-0 p-0">
             <Textarea
+              ref={textareaRef}
               value={value}
               onChange={(e) => onChange(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder={placeholder || "Escreva seu conteúdo em Markdown..."}
               className="border-0 rounded-t-none min-h-[300px] font-mono resize-y"
               style={{ minHeight }}
