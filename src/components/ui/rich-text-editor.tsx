@@ -20,7 +20,8 @@ import {
   Edit as EditIcon,
   Code,
   Strikethrough,
-  Underline
+  Underline,
+  AlignJustify
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RichTextEditorProps {
   value: string;
@@ -50,6 +52,7 @@ export function RichTextEditor({
   const [linkText, setLinkText] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
+  const [imageAlignment, setImageAlignment] = useState<"left" | "center" | "right">("center");
   const [renderedHtml, setRenderedHtml] = useState("");
   
   const [bulletListActive, setBulletListActive] = useState(false);
@@ -57,6 +60,7 @@ export function RichTextEditor({
   const [currentListItemNumber, setCurrentListItemNumber] = useState(1);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
   
   // Renderiza o HTML quando o valor muda ou a aba muda
   useEffect(() => {
@@ -116,6 +120,7 @@ export function RichTextEditor({
   const handleAlignLeft = () => insertFormatting("\n<div style='text-align: left'>", "</div>\n");
   const handleAlignCenter = () => insertFormatting("\n<div style='text-align: center'>", "</div>\n");
   const handleAlignRight = () => insertFormatting("\n<div style='text-align: right'>", "</div>\n");
+  const handleAlignJustify = () => insertFormatting("\n<div style='text-align: justify'>", "</div>\n");
   
   const handleBulletList = () => {
     // Toggle bullet list mode
@@ -208,6 +213,21 @@ export function RichTextEditor({
     }, 0);
   };
 
+  const generateImageMarkdown = (url: string, alt: string, alignment: string) => {
+    let imageMarkdown = `![${alt || 'imagem'}](${url})`;
+    
+    // Adicionar alinhamento usando HTML se necessário
+    if (alignment === 'left') {
+      imageMarkdown = `<div style="float: left; margin-right: 10px; margin-bottom: 10px;">${imageMarkdown}</div>`;
+    } else if (alignment === 'right') {
+      imageMarkdown = `<div style="float: right; margin-left: 10px; margin-bottom: 10px;">${imageMarkdown}</div>`;
+    } else if (alignment === 'center') {
+      imageMarkdown = `<div style="text-align: center; margin-bottom: 10px;">${imageMarkdown}</div>`;
+    }
+    
+    return imageMarkdown;
+  };
+
   const insertImage = () => {
     if (!imageUrl) return;
     
@@ -215,7 +235,7 @@ export function RichTextEditor({
     if (!textarea) return;
     
     const start = textarea.selectionStart;
-    const imageMarkdown = `![${imageAlt || 'imagem'}](${imageUrl})`;
+    const imageMarkdown = generateImageMarkdown(imageUrl, imageAlt, imageAlignment);
     
     const newText = value.substring(0, start) + imageMarkdown + value.substring(start);
     onChange(newText);
@@ -298,6 +318,19 @@ export function RichTextEditor({
           }, 0);
         }
       }
+    }
+  };
+
+  // Função para analisar o Markdown e extrair o HTML para visualização em tempo real
+  const renderLivePreview = () => {
+    if (!value) return "";
+    
+    try {
+      const html = marked.parse(value, { async: false }) as string;
+      return DOMPurify.sanitize(html);
+    } catch (error) {
+      console.error("Error parsing markdown:", error);
+      return "";
     }
   };
 
@@ -426,6 +459,16 @@ export function RichTextEditor({
             >
               <AlignRight className="h-4 w-4" />
             </Button>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleAlignJustify}
+              className="h-8 w-8 p-0"
+              title="Justificar"
+            >
+              <AlignJustify className="h-4 w-4" />
+            </Button>
           </div>
           
           <div className="h-4 w-px bg-border mx-1" />
@@ -546,6 +589,39 @@ export function RichTextEditor({
                         placeholder="Descrição da imagem"
                       />
                     </div>
+                    <div>
+                      <Label htmlFor="image-align">Alinhamento</Label>
+                      <Select
+                        value={imageAlignment}
+                        onValueChange={(value) => setImageAlignment(value as "left" | "center" | "right")}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o alinhamento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Esquerda (texto à direita)</SelectItem>
+                          <SelectItem value="center">Centro</SelectItem>
+                          <SelectItem value="right">Direita (texto à esquerda)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {imageUrl && (
+                      <div className="p-2 border rounded-md mt-2">
+                        <p className="text-sm font-medium mb-1">Prévia:</p>
+                        <div className="max-h-40 overflow-auto">
+                          <img 
+                            src={imageUrl} 
+                            alt={imageAlt || "Preview"}
+                            className="max-w-full h-auto"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://via.placeholder.com/150x150?text=Erro+ao+carregar";
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
                     <Button 
                       onClick={insertImage} 
                       disabled={!imageUrl}
@@ -579,15 +655,26 @@ export function RichTextEditor({
           </div>
           
           <TabsContent value="edit" className="mt-0 p-0">
-            <Textarea
-              ref={textareaRef}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder || "Escreva seu conteúdo em Markdown..."}
-              className="border-0 rounded-t-none min-h-[300px] font-mono resize-y"
-              style={{ minHeight }}
-            />
+            <div ref={editorContainerRef} className="relative">
+              <Textarea
+                ref={textareaRef}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder || "Escreva seu conteúdo em Markdown..."}
+                className="border-0 rounded-t-none min-h-[300px] font-mono resize-y"
+                style={{ minHeight }}
+              />
+              {/* Visualização ao vivo de imagens quando no modo de edição */}
+              {activeTab === "edit" && value.includes("![") && (
+                <div 
+                  className="prose prose-slate max-w-none dark:prose-invert p-4 bg-gray-50 border-t"
+                  dangerouslySetInnerHTML={{ 
+                    __html: renderLivePreview() 
+                  }}
+                />
+              )}
+            </div>
           </TabsContent>
           
           <TabsContent value="preview" className="mt-0">
@@ -603,6 +690,7 @@ export function RichTextEditor({
       {/* Editor tips */}
       <div className="text-xs text-gray-500 space-y-1">
         <p>Atalhos: **negrito**, *itálico*, `código`, # título, {">"} citação, - lista</p>
+        <p>Para imagens: ![descrição](url) ou use o botão de imagem para mais opções</p>
       </div>
     </div>
   );

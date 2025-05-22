@@ -66,10 +66,10 @@ const CommentSection = ({
     
     try {
       // Use the likeComment function from the useComments hook
-      likeComment(commentId, currentUser.id);
+      const result = await likeComment(commentId, currentUser.id);
       
       // Toggle the liked state locally for immediate feedback
-      setCommentLiked(commentId, !isCommentLiked(commentId));
+      setCommentLiked(commentId, result);
       
     } catch (error) {
       console.error("Error liking comment:", error);
@@ -82,13 +82,18 @@ const CommentSection = ({
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteComment = () => {
+  const handleDeleteComment = async () => {
     if (!commentToDelete) return;
     
-    // Delete the comment
-    deleteComment(commentToDelete);
-    setDeleteDialogOpen(false);
-    setCommentToDelete(null);
+    try {
+      // Delete the comment with enhanced error handling
+      await deleteComment(commentToDelete);
+      setDeleteDialogOpen(false);
+      setCommentToDelete(null);
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast.error("Erro: Não foi possível excluir o comentário. Tente novamente.");
+    }
   };
 
   // Enhance comments with author information

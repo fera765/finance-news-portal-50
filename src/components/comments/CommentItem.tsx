@@ -64,6 +64,9 @@ export const CommentItem = ({
     setEditingComment(false);
   };
 
+  // Esta função checa se o comentário é uma resposta com base no level ou no parentId
+  const isReply = level > 0 || !!comment.parentId;
+
   return (
     <div key={comment.id} 
       className={`bg-gray-50 p-4 rounded-lg mb-3 ${level > 0 ? 'ml-6 border-l-2 border-gray-200' : ''}`}>
@@ -205,7 +208,7 @@ export const CommentItem = ({
                   level={level + 1}
                   replies={[]}
                   currentUser={currentUser}
-                  isLiked={isLiked}
+                  isLiked={reply.id ? isLiked : false}
                   onLike={onLike}
                   onReply={onReply}
                   onEdit={onEdit}

@@ -103,6 +103,13 @@ export function useDashboardStats() {
 
   // Generate monthly views data
   const calculateMonthlyData = () => {
+    if (viewsQuery.isLoading) {
+      return Array(5).fill(0).map((_, i) => ({
+        name: `Mês ${i+1}`,
+        views: 0
+      }));
+    }
+    
     const currentDate = new Date();
     const lastFiveMonths = Array.from({ length: 5 }, (_, i) => {
       const date = new Date(currentDate);
@@ -134,6 +141,13 @@ export function useDashboardStats() {
 
   // Generate yearly views data
   const calculateYearlyData = () => {
+    if (viewsQuery.isLoading) {
+      return Array(5).fill(0).map((_, i) => ({
+        name: `${new Date().getFullYear() - i}`,
+        views: 0
+      }));
+    }
+    
     const currentYear = new Date().getFullYear();
     const lastFiveYears = Array.from({ length: 5 }, (_, i) => currentYear - i).reverse();
     
@@ -187,7 +201,9 @@ export function useDashboardStats() {
 
   // Calculate top articles by views
   const calculateTopArticlesByViews = () => {
-    if (!articlesQuery.data || articlesQuery.data.length === 0) return [];
+    if (!articlesQuery.data || articlesQuery.data.length === 0 || !viewsQuery.data) {
+      return [];
+    }
     
     const articlesWithViews = articlesQuery.data.map(article => {
       const views = viewsQuery.data
@@ -219,7 +235,9 @@ export function useDashboardStats() {
 
   // Calculate top articles by likes
   const calculateTopArticlesByLikes = () => {
-    if (!articlesQuery.data || articlesQuery.data.length === 0 || !likesQuery.data) return [];
+    if (!articlesQuery.data || articlesQuery.data.length === 0 || !likesQuery.data) {
+      return [];
+    }
     
     const articlesWithLikes = articlesQuery.data.map(article => {
       const views = viewsQuery.data
@@ -251,7 +269,9 @@ export function useDashboardStats() {
 
   // Calculate most saved articles
   const calculateMostSavedArticles = () => {
-    if (!articlesQuery.data || articlesQuery.data.length === 0 || !bookmarksQuery.data) return [];
+    if (!articlesQuery.data || articlesQuery.data.length === 0 || !bookmarksQuery.data) {
+      return [];
+    }
     
     const articlesWithBookmarks = articlesQuery.data.map(article => {
       const views = viewsQuery.data
@@ -309,13 +329,13 @@ export function useDashboardStats() {
   };
 
   const isLoading = 
-    articlesQuery.isLoading || 
-    viewsQuery.isLoading || 
-    likesQuery.isLoading || 
-    bookmarksQuery.isLoading ||
-    categoriesQuery.isLoading ||
-    usersQuery.isLoading ||
-    subscribersQuery.isLoading;
+    articlesQuery.isPending || 
+    viewsQuery.isPending || 
+    likesQuery.isPending || 
+    bookmarksQuery.isPending ||
+    categoriesQuery.isPending ||
+    usersQuery.isPending ||
+    subscribersQuery.isPending;
 
   const isError = 
     articlesQuery.isError || 
