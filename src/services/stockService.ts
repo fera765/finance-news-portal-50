@@ -30,15 +30,22 @@ export const searchYahooStocks = async (query: string): Promise<StockSymbolSearc
   try {
     const results = await yahooFinance.search(query);
     
-    // Filter only equity quotes
-    const stocks = results.quotes
-      .filter(quote => quote.quoteType === 'EQUITY')
-      .map(quote => ({
-        symbol: quote.symbol,
-        name: quote.shortname || quote.longname || quote.symbol,
-        exchange: quote.exchange,
-        type: quote.quoteType
-      }));
+    // Filter and transform results to match our interface
+    const stocks: StockSymbolSearchResult[] = [];
+    
+    results.quotes.forEach(quote => {
+      // Check if it's a valid equity quote with necessary properties
+      if ('typeDisp' in quote && quote.typeDisp === 'Equity' && 'symbol' in quote) {
+        stocks.push({
+          symbol: quote.symbol,
+          name: ('shortname' in quote && quote.shortname) || 
+                ('longname' in quote && quote.longname) || 
+                quote.symbol,
+          exchange: 'exchange' in quote ? quote.exchange : undefined,
+          type: 'Equity'
+        });
+      }
+    });
     
     return stocks.slice(0, 10); // Limit to 10 results
   } catch (error) {
