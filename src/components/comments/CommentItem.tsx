@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -71,7 +70,7 @@ export const CommentItem = ({
       <div className="flex items-start gap-3">
         <Avatar>
           <AvatarImage src={comment.userAvatar} />
-          <AvatarFallback>{getInitials(comment.userName || 'Usuário')}</AvatarFallback>
+          <AvatarFallback>{comment.userName ? getInitials(comment.userName) : 'U'}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
           <div className="flex justify-between items-center mb-1">
@@ -128,7 +127,6 @@ export const CommentItem = ({
               <span className="ml-1 text-sm">{comment.likes || 0}</span>
             </Button>
             
-            {/* Only show reply button for root comments (level 0) */}
             {level === 0 && !isReply && (
               <Button
                 variant="ghost"
@@ -199,7 +197,6 @@ export const CommentItem = ({
             </div>
           )}
           
-          {/* Render replies */}
           {replies.length > 0 && (
             <div className="mt-3 space-y-3">
               {replies.map(reply => (
@@ -209,7 +206,7 @@ export const CommentItem = ({
                   level={level + 1}
                   replies={[]} // No further nested replies
                   currentUser={currentUser}
-                  isLiked={reply.id ? onLike !== undefined && currentUser ? isLiked : false}
+                  isLiked={reply.id ? isLiked : false}
                   onLike={onLike}
                   onReply={onReply}
                   onEdit={onEdit}
