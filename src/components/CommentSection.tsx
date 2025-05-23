@@ -141,6 +141,7 @@ const CommentSection = ({
               onDelete={confirmDeleteComment}
               isUpdatingComment={isUpdatingComment}
               isReplyingToComment={isReplyingToComment}
+              getCommentLikedStatus={isCommentLiked}
             />
           ))
         )}

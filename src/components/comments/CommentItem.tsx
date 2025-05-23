@@ -21,6 +21,7 @@ interface CommentItemProps {
   onDelete: (commentId: string) => void;
   isUpdatingComment: boolean;
   isReplyingToComment: boolean;
+  getCommentLikedStatus: (commentId: string) => boolean;
 }
 
 export const CommentItem = ({
@@ -34,7 +35,8 @@ export const CommentItem = ({
   onEdit,
   onDelete,
   isUpdatingComment,
-  isReplyingToComment
+  isReplyingToComment,
+  getCommentLikedStatus
 }: CommentItemProps) => {
   const [replyingTo, setReplyingTo] = useState<boolean>(false);
   const [editingComment, setEditingComment] = useState<boolean>(false);
@@ -207,13 +209,14 @@ export const CommentItem = ({
                   level={level + 1}
                   replies={[]} // No further nested replies
                   currentUser={currentUser}
-                  isLiked={reply.id ? isLiked : false} // Corrigido: Passamos o status do like específico para cada comentário
+                  isLiked={getCommentLikedStatus(reply.id!)}
                   onLike={onLike}
                   onReply={onReply}
                   onEdit={onEdit}
                   onDelete={onDelete}
                   isUpdatingComment={isUpdatingComment}
                   isReplyingToComment={isReplyingToComment}
+                  getCommentLikedStatus={getCommentLikedStatus}
                 />
               ))}
             </div>
