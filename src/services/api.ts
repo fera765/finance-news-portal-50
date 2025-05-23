@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import { toast } from 'sonner';
 
 // Extend the axios request config type to include our custom properties
 declare module 'axios' {
@@ -11,6 +12,8 @@ declare module 'axios' {
 
 // Get the API URL from environment variable or use a fallback
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+console.log('Using API URL:', API_URL);
 
 // Create axios instance with improved configuration
 export const api = axios.create({
@@ -62,20 +65,24 @@ api.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
     
+    // If no originalRequest (e.g., request wasn't made), create a simplified object for logging
+    const logConfig = originalRequest || { url: 'unknown', method: 'unknown' };
+    
     // Log detailed error information
     console.error('API Error:', {
-      url: originalRequest?.url,
-      method: originalRequest?.method,
+      url: logConfig.url,
+      method: logConfig.method,
       status: error.response?.status,
       message: error.message,
       responseData: error.response?.data,
-      retryCount: originalRequest?._retryCount || 0
+      retryCount: logConfig._retryCount || 0
     });
     
     // If the error is a network error or timeout, retry
     if ((error.message === 'Network Error' || error.code === 'ECONNABORTED') && 
-        originalRequest._retry !== true && 
-        (originalRequest._retryCount || 0) < maxRetries) {
+        logConfig._retry !== true && 
+        (logConfig._retryCount || 0) < maxRetries &&
+        originalRequest) { // Only retry if we have an original request
       
       originalRequest._retry = true;
       originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
@@ -91,6 +98,9 @@ api.interceptors.response.use(
     // User friendly error message based on error type
     if (error.message === 'Network Error') {
       error.userMessage = 'Não foi possível conectar ao servidor. Verifique se o JSON Server está em execução.';
+      
+      // Show a toast notification for network errors
+      toast.error(error.userMessage);
     } else if (error.code === 'ECONNABORTED') {
       error.userMessage = 'A requisição demorou muito tempo. Por favor, tente novamente.';
     } else if (error.response?.status === 401) {
@@ -112,5 +122,17 @@ api.interceptors.request.use((config) => {
   config._retryCount = 0;
   return config;
 });
+
+// Helper function to check if the API is available
+export const checkApiHealth = async (): Promise<boolean> => {
+  try {
+    // Try to fetch a small endpoint to check if API is responding
+    await api.get('/health', { timeout: 5000 });
+    return true;
+  } catch (error) {
+    console.log('API health check failed:', error);
+    return false;
+  }
+};
 
 export default api;

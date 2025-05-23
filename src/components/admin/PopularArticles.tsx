@@ -23,6 +23,8 @@ interface PopularArticlesProps {
   articles: Article[];
   type: "views" | "likes" | "bookmarks";
   icon: LucideIcon;
+  isLoading?: boolean;
+  isError?: boolean;
 }
 
 const PopularArticles = ({
@@ -30,7 +32,9 @@ const PopularArticles = ({
   description,
   articles,
   type,
-  icon: Icon
+  icon: Icon,
+  isLoading = false,
+  isError = false
 }: PopularArticlesProps) => {
   const [isHovering, setIsHovering] = useState<string | null>(null);
 
@@ -64,6 +68,51 @@ const PopularArticles = ({
         return 0;
     }
   };
+
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold">{title}</CardTitle>
+          <p className="text-sm text-gray-500">{description}</p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y">
+            {[...Array(3)].map((_, index) => (
+              <div key={index} className="px-6 py-4">
+                <div className="h-5 bg-gray-200 rounded animate-pulse w-3/4 mb-2"></div>
+                <div className="flex gap-2 mb-1">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Handle error state
+  if (isError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold">{title}</CardTitle>
+          <p className="text-sm text-gray-500">{description}</p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="text-center py-4">
+            <p className="text-red-500 mb-2">Erro ao carregar dados</p>
+            <p className="text-sm text-gray-500">
+              Não foi possível carregar os artigos neste momento.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
