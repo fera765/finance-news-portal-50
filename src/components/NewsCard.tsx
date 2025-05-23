@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -63,18 +64,18 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Link to={categoryUrl}>
-                  <Badge variant="outline" className="bg-gold-100 text-finance-800 hover:bg-gold-200">
+                  <Badge variant="outline" className="bg-finance-100 text-finance-800 hover:bg-finance-200">
                     {news.category}
                   </Badge>
                 </Link>
-                <span className="text-xs text-gray-500">{publishedAgo}</span>
+                <span className="text-xs text-muted-foreground">{publishedAgo}</span>
               </div>
               <Link to={articleUrl}>
                 <h2 className="text-2xl font-bold mb-2 hover:text-finance-700">{news.title}</h2>
               </Link>
-              <p className="text-gray-600 line-clamp-3">{news.summary}</p>
+              <p className="text-muted-foreground line-clamp-3">{news.summary}</p>
             </div>
-            <div className="mt-4 text-sm text-gray-500">
+            <div className="mt-4 text-sm text-muted-foreground">
               Por {news.author}
             </div>
           </CardContent>
@@ -100,15 +101,15 @@ const NewsCard = ({ news, featured = false }: NewsCardProps) => {
               {news.category}
             </Badge>
           </Link>
-          <span className="text-xs text-gray-500">{publishedAgo}</span>
+          <span className="text-xs text-muted-foreground">{publishedAgo}</span>
         </div>
         <Link to={articleUrl}>
           <h3 className="text-lg font-semibold mb-2 line-clamp-2 hover:text-finance-700">
             {news.title}
           </h3>
         </Link>
-        <p className="text-gray-600 text-sm line-clamp-2 mb-2">{news.summary}</p>
-        <div className="text-xs text-gray-500">
+        <p className="text-muted-foreground text-sm line-clamp-2 mb-2">{news.summary}</p>
+        <div className="text-xs text-muted-foreground">
           Por {news.author}
         </div>
       </CardContent>

@@ -24,17 +24,19 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 195 100% 33%;
   --radius: 0.5rem;
-  --finance-50: #F0F9FF;
-  --finance-100: #E0F2FE;
-  --finance-200: #BAE6FD;
-  --finance-300: #7DD3FC;
-  --finance-400: #38BDF8;
-  --finance-500: #0EA5E9;
-  --finance-600: #0284C7;
-  --finance-700: #0369A1;
-  --finance-800: #075985;
-  --finance-900: #0C4A6E;
-  --finance-950: #082F49;
+  
+  /* Finance theme colors - light mode */
+  --finance-50: 204 100% 97%;
+  --finance-100: 204 94% 94%;
+  --finance-200: 201 94% 86%;
+  --finance-300: 199 89% 77%;
+  --finance-400: 198 93% 60%;
+  --finance-500: 199 89% 48%;
+  --finance-600: 200 98% 39%;
+  --finance-700: 201 96% 32%;
+  --finance-800: 201 80% 28%;
+  --finance-900: 206 100% 24%;
+  --finance-950: 205 100% 15%;
 }
 
 .dark {
@@ -44,7 +46,7 @@
   --card-foreground: 210 40% 98%;
   --popover: 222.2 84% 4.9%;
   --popover-foreground: 210 40% 98%;
-  --primary: 195 100% 33%;
+  --primary: 195 100% 50%;
   --primary-foreground: 222.2 47.4% 11.2%;
   --secondary: 217.2 32.6% 17.5%;
   --secondary-foreground: 210 40% 98%;
@@ -56,17 +58,20 @@
   --destructive-foreground: 210 40% 98%;
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
-  --ring: 195 100% 33%;
-  --finance-900: #F0F9FF;
-  --finance-800: #E0F2FE;
-  --finance-700: #BAE6FD;
-  --finance-600: #7DD3FC;
-  --finance-500: #38BDF8;
-  --finance-400: #0EA5E9;
-  --finance-300: #0284C7;
-  --finance-200: #0369A1;
-  --finance-100: #075985;
-  --finance-50: #0C4A6E;
+  --ring: 195 100% 50%;
+  
+  /* Finance theme colors - dark mode (inverted for better contrast) */
+  --finance-950: 204 100% 97%;
+  --finance-900: 204 94% 94%;
+  --finance-800: 201 94% 86%;
+  --finance-700: 199 89% 77%;
+  --finance-600: 198 93% 60%;
+  --finance-500: 199 89% 48%;
+  --finance-400: 200 98% 39%;
+  --finance-300: 201 96% 32%;
+  --finance-200: 201 80% 28%;
+  --finance-100: 206 100% 24%;
+  --finance-50: 205 100% 15%;
 }
 
 @layer base {

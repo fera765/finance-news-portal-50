@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Menu, Search, X, Settings, LogOut, BookMarked, Moon, Sun } from "lucide-react";
+import { Menu, Search, X, Settings, LogOut, BookMarked } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserType } from "./Layout";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@/components/ThemeProvider";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface HeaderProps {
   user?: UserType | null;
@@ -27,7 +27,6 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
@@ -73,14 +72,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
 
           <div className="flex items-center space-x-4">
             {/* Botão de alternância de tema */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="text-foreground hover:text-finance-700"
-            >
-              {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-            </Button>
+            <ThemeToggle />
 
             {/* Campo de busca substituindo as notificações */}
             <form onSubmit={handleSearch} className="relative hidden md:block">
@@ -126,7 +118,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent align="end" className="w-56 bg-popover">
                     <div className="flex items-center justify-start gap-2 p-2">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={user.avatar} alt={user.name} />

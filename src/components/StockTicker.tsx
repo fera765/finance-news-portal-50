@@ -53,7 +53,7 @@ const StockTicker = () => {
   
   if (isLoading) {
     return (
-      <div className="w-full overflow-hidden bg-white py-2 px-4">
+      <div className="w-full overflow-hidden bg-card py-2 px-4">
         <div className="h-6 flex gap-2 items-center">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm text-muted-foreground">Carregando cotações...</span>
@@ -64,7 +64,7 @@ const StockTicker = () => {
   
   if (isError) {
     return (
-      <div className="w-full overflow-hidden bg-white py-2 px-4">
+      <div className="w-full overflow-hidden bg-card py-2 px-4">
         <div className="h-6 flex gap-2 items-center">
           <span className="text-sm text-red-500">Erro ao carregar cotações</span>
         </div>
@@ -74,7 +74,7 @@ const StockTicker = () => {
   
   if (stockData.length === 0) {
     return (
-      <div className="w-full overflow-hidden bg-white py-2 px-4">
+      <div className="w-full overflow-hidden bg-card py-2 px-4">
         <div className="h-6 flex gap-2 items-center">
           <span className="text-sm text-muted-foreground">Nenhuma ação configurada</span>
         </div>
@@ -84,15 +84,15 @@ const StockTicker = () => {
   
   return (
     <div 
-      className="w-full overflow-hidden bg-white py-2 px-4" 
+      className="w-full overflow-hidden bg-card py-2 px-4" 
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       <div ref={tickerRef} className="flex whitespace-nowrap">
         {stockData.map((stock, index) => (
           <div key={`${stock.symbol}-${index}`} className="flex items-center mr-10">
-            <span className="font-medium">{stock.symbol}</span>
-            <span className="mx-2">${stock.price.toFixed(2)}</span>
+            <span className="font-medium text-card-foreground">{stock.symbol}</span>
+            <span className="mx-2 text-card-foreground">${stock.price.toFixed(2)}</span>
             <span 
               className={`flex items-center ${
                 stock.change >= 0 ? "text-green-600" : "text-red-600"

@@ -24,7 +24,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "finance-news-tema",
+  storageKey = "finance-news-theme",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
@@ -67,7 +67,7 @@ export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
 
   if (context === undefined)
-    throw new Error("useTheme deve ser usado dentro de um ThemeProvider");
+    throw new Error("useTheme must be used within a ThemeProvider");
 
   return context;
 };
