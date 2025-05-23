@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,7 +67,7 @@ export const CommentItem = ({
 
   return (
     <div key={comment.id} 
-      className={`bg-gray-50 p-4 rounded-lg mb-3 ${level > 0 ? 'ml-6 border-l-2 border-gray-200' : ''}`}>
+      className={`bg-card p-4 rounded-lg mb-3 ${level > 0 ? 'ml-6 border-l-2 border-border' : ''}`}>
       <div className="flex items-start gap-3">
         <Avatar>
           <AvatarImage src={comment.userAvatar} />
@@ -75,7 +76,7 @@ export const CommentItem = ({
         <div className="flex-1">
           <div className="flex justify-between items-center mb-1">
             <span className="font-medium">{comment.userName || `Usuário ${comment.userId.slice(0, 4)}`}</span>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-muted-foreground">
               {formatDistanceToNow(new Date(comment.createdAt), { 
                 addSuffix: true,
                 locale: ptBR
@@ -110,7 +111,7 @@ export const CommentItem = ({
               </div>
             </div>
           ) : (
-            <p className="text-gray-700">{comment.content}</p>
+            <p className="text-card-foreground">{comment.content}</p>
           )}
           
           <div className="flex items-center gap-4 mt-2 flex-wrap">
@@ -122,7 +123,7 @@ export const CommentItem = ({
             >
               <Heart 
                 size={18} 
-                className={isLiked ? "text-red-500 fill-red-500" : "text-gray-500"} 
+                className={isLiked ? "text-red-500 fill-red-500" : "text-muted-foreground"} 
               />
               <span className="ml-1 text-sm">{comment.likes || 0}</span>
             </Button>

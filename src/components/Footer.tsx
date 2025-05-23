@@ -14,41 +14,41 @@ const Footer = () => {
               <span className="text-gold-500">News</span>
             </h3>
             <p className="text-gray-300 text-sm">
-              Your trusted source for financial news, market updates, and economic insights.
+              Sua fonte confiável para notícias financeiras, atualizações de mercado e análises econômicas.
             </p>
           </div>
           
           <div>
-            <h4 className="text-lg font-semibold mb-4">Sections</h4>
+            <h4 className="text-lg font-semibold mb-4">Seções</h4>
             <ul className="space-y-2 text-gray-300">
-              <li><Link to="/" className="hover:text-gold-400">Home</Link></li>
-              <li><Link to="/markets" className="hover:text-gold-400">Markets</Link></li>
-              <li><Link to="/business" className="hover:text-gold-400">Business</Link></li>
-              <li><Link to="/economy" className="hover:text-gold-400">Economy</Link></li>
+              <li><Link to="/" className="hover:text-gold-400">Início</Link></li>
+              <li><Link to="/markets" className="hover:text-gold-400">Mercados</Link></li>
+              <li><Link to="/business" className="hover:text-gold-400">Negócios</Link></li>
+              <li><Link to="/economy" className="hover:text-gold-400">Economia</Link></li>
             </ul>
           </div>
           
           <div>
-            <h4 className="text-lg font-semibold mb-4">Company</h4>
+            <h4 className="text-lg font-semibold mb-4">Empresa</h4>
             <ul className="space-y-2 text-gray-300">
-              <li><Link to="/about" className="hover:text-gold-400">About Us</Link></li>
-              <li><Link to="/contact" className="hover:text-gold-400">Contact Us</Link></li>
-              <li><Link to="/careers" className="hover:text-gold-400">Careers</Link></li>
+              <li><Link to="/about" className="hover:text-gold-400">Sobre Nós</Link></li>
+              <li><Link to="/contact" className="hover:text-gold-400">Contato</Link></li>
+              <li><Link to="/careers" className="hover:text-gold-400">Carreiras</Link></li>
             </ul>
           </div>
           
           <div>
             <h4 className="text-lg font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-gray-300">
-              <li><Link to="/terms" className="hover:text-gold-400">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="hover:text-gold-400">Privacy Policy</Link></li>
-              <li><Link to="/cookies" className="hover:text-gold-400">Cookie Policy</Link></li>
+              <li><Link to="/terms" className="hover:text-gold-400">Termos de Serviço</Link></li>
+              <li><Link to="/privacy" className="hover:text-gold-400">Política de Privacidade</Link></li>
+              <li><Link to="/cookies" className="hover:text-gold-400">Política de Cookies</Link></li>
             </ul>
           </div>
         </div>
         
         <div className="border-t border-gray-700 mt-8 pt-8 text-sm text-gray-400 flex flex-col md:flex-row justify-between">
-          <p>© {year} Finance News. All rights reserved.</p>
+          <p>© {year} Finance News. Todos os direitos reservados.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <a href="#" className="hover:text-gold-400">Twitter</a>
             <a href="#" className="hover:text-gold-400">LinkedIn</a>

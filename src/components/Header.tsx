@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Menu, Search, X, Settings, LogOut, BookMarked } from "lucide-react";
+import { Menu, Search, X, Settings, LogOut, BookMarked, Moon, Sun } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserType } from "./Layout";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface HeaderProps {
   user?: UserType | null;
@@ -26,6 +27,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
@@ -53,7 +55,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
@@ -62,14 +64,24 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
               <span className="text-2xl font-normal text-gold-500">News</span>
             </Link>
             <nav className="hidden ml-10 space-x-6 md:flex">
-              <Link to="/" className="text-base font-medium text-gray-700 hover:text-finance-700">Home</Link>
-              <Link to="/markets" className="text-base font-medium text-gray-700 hover:text-finance-700">Markets</Link>
-              <Link to="/business" className="text-base font-medium text-gray-700 hover:text-finance-700">Business</Link>
-              <Link to="/economy" className="text-base font-medium text-gray-700 hover:text-finance-700">Economy</Link>
+              <Link to="/" className="text-base font-medium text-foreground hover:text-finance-700">Início</Link>
+              <Link to="/markets" className="text-base font-medium text-foreground hover:text-finance-700">Mercados</Link>
+              <Link to="/business" className="text-base font-medium text-foreground hover:text-finance-700">Negócios</Link>
+              <Link to="/economy" className="text-base font-medium text-foreground hover:text-finance-700">Economia</Link>
             </nav>
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Botão de alternância de tema */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="text-foreground hover:text-finance-700"
+            >
+              {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+            </Button>
+
             {/* Campo de busca substituindo as notificações */}
             <form onSubmit={handleSearch} className="relative hidden md:block">
               <Input 
@@ -84,7 +96,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                 type="submit" 
                 variant="ghost" 
                 size="icon" 
-                className="absolute right-0 top-0 text-gray-700 hover:text-finance-700"
+                className="absolute right-0 top-0 text-foreground hover:text-finance-700"
               >
                 <Search size={18} />
               </Button>
@@ -95,7 +107,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
               variant="ghost" 
               size="icon" 
               onClick={() => navigate('/search')}
-              className="md:hidden text-gray-700 hover:text-finance-700"
+              className="md:hidden text-foreground hover:text-finance-700"
             >
               <Search size={20} />
             </Button>
@@ -122,14 +134,14 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                       </Avatar>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{user.email || "user@example.com"}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user.email || "usuario@exemplo.com"}</p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="flex w-full cursor-pointer items-center">
                         <BookMarked className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
+                        <span>Perfil</span>
                       </Link>
                     </DropdownMenuItem>
                     {user.role === 'admin' && (
@@ -143,14 +155,14 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={onLogout} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
+                      <span>Sair</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
             ) : (
               <Button variant="outline" onClick={onLogin}>
-                Sign In
+                Entrar
               </Button>
             )}
 
@@ -168,7 +180,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t py-4 px-4">
+        <div className="md:hidden bg-background border-t border-border py-4 px-4">
           <nav className="flex flex-col space-y-4">
             {/* Campo de busca mobile */}
             <form onSubmit={handleSearch} className="flex mb-2">
@@ -184,36 +196,36 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
             
             <Link 
               to="/" 
-              className="text-base font-medium text-gray-700 hover:text-finance-700"
+              className="text-base font-medium text-foreground hover:text-finance-700"
               onClick={() => setIsMenuOpen(false)}
             >
-              Home
+              Início
             </Link>
             <Link 
               to="/markets" 
-              className="text-base font-medium text-gray-700 hover:text-finance-700"
+              className="text-base font-medium text-foreground hover:text-finance-700"
               onClick={() => setIsMenuOpen(false)}
             >
-              Markets
+              Mercados
             </Link>
             <Link 
               to="/business" 
-              className="text-base font-medium text-gray-700 hover:text-finance-700"
+              className="text-base font-medium text-foreground hover:text-finance-700"
               onClick={() => setIsMenuOpen(false)}
             >
-              Business
+              Negócios
             </Link>
             <Link 
               to="/economy" 
-              className="text-base font-medium text-gray-700 hover:text-finance-700"
+              className="text-base font-medium text-foreground hover:text-finance-700"
               onClick={() => setIsMenuOpen(false)}
             >
-              Economy
+              Economia
             </Link>
             {user && user.role === 'admin' && (
               <Link 
                 to="/admin" 
-                className="text-base font-medium text-gray-700 hover:text-finance-700"
+                className="text-base font-medium text-foreground hover:text-finance-700"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Admin
@@ -222,10 +234,10 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
             {user && (
               <Link
                 to="/profile"
-                className="text-base font-medium text-gray-700 hover:text-finance-700"
+                className="text-base font-medium text-foreground hover:text-finance-700"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Profile
+                Perfil
               </Link>
             )}
             {!user ? (
@@ -236,7 +248,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                   setIsMenuOpen(false);
                 }}
               >
-                Sign In
+                Entrar
               </Button>
             ) : (
               <Button 
@@ -246,7 +258,7 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
                   setIsMenuOpen(false);
                 }}
               >
-                Log Out
+                Sair
               </Button>
             )}
           </nav>

@@ -37,6 +37,38 @@
   --finance-950: #082F49;
 }
 
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 195 100% 33%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 195 100% 33%;
+  --finance-900: #F0F9FF;
+  --finance-800: #E0F2FE;
+  --finance-700: #BAE6FD;
+  --finance-600: #7DD3FC;
+  --finance-500: #38BDF8;
+  --finance-400: #0EA5E9;
+  --finance-300: #0284C7;
+  --finance-200: #0369A1;
+  --finance-100: #075985;
+  --finance-50: #0C4A6E;
+}
+
 @layer base {
   * {
     @apply border-border;
