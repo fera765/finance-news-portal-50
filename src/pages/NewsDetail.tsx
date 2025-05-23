@@ -121,6 +121,40 @@ const NewsDetail = () => {
     }
   }, [user, pendingAction]);
 
+  // Configurar meta tags para compartilhamento nas redes sociais
+  useEffect(() => {
+    if (article) {
+      // Adicionar ou atualizar Open Graph meta tags
+      const addOrUpdateMetaTag = (property: string, content: string) => {
+        let meta = document.querySelector(`meta[property="${property}"]`);
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute('property', property);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', content);
+      };
+
+      // Definir Open Graph meta tags
+      addOrUpdateMetaTag('og:title', article.title);
+      addOrUpdateMetaTag('og:description', article.summary || '');
+      addOrUpdateMetaTag('og:url', window.location.href);
+      addOrUpdateMetaTag('og:type', 'article');
+      if (article.imageUrl) {
+        addOrUpdateMetaTag('og:image', article.imageUrl);
+      }
+
+      // Limpar meta tags ao desmontar o componente
+      return () => {
+        const metaTags = ['og:title', 'og:description', 'og:url', 'og:type', 'og:image'];
+        metaTags.forEach(tag => {
+          const meta = document.querySelector(`meta[property="${tag}"]`);
+          if (meta) document.head.removeChild(meta);
+        });
+      };
+    }
+  }, [article]);
+
   const handleShare = async () => {
     if (!article) return;
     
@@ -133,7 +167,7 @@ const NewsDetail = () => {
           url: window.location.href,
         });
         
-        toast("Artigo compartilhado com sucesso");
+        toast.success("Artigo compartilhado com sucesso");
         return;
       } catch (error) {
         console.error("Erro ao compartilhar:", error);
@@ -144,11 +178,15 @@ const NewsDetail = () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       
-      toast("Link do artigo copiado para a área de transferência");
+      toast.success("Link copiado para a área de transferência", {
+        description: "Você pode compartilhar este artigo nas redes sociais"
+      });
     } catch (error) {
       console.error("Falha ao copiar:", error);
       
-      toast("Não foi possível copiar o link para a área de transferência");
+      toast.error("Não foi possível copiar o link", {
+        description: "Tente selecionar o URL na barra de endereço"
+      });
     }
   };
   
@@ -285,7 +323,7 @@ const NewsDetail = () => {
           dangerouslySetInnerHTML={{ __html: parsedContent }} 
         />
         
-        {/* Novo Componente: Notícias Relacionadas */}
+        {/* Notícias Relacionadas */}
         <RelatedNewsCarousel articleId={article.id || ''} categoryId={article.category} tags={article.tags} />
         
         <div className="border-t border-gray-200 pt-6 md:pt-10">
