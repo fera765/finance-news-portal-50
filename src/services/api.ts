@@ -35,7 +35,15 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
-    console.log(`API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    
+    // Avoid logging view-related endpoints to reduce console noise
+    const isViewsEndpoint = config.url?.includes('/views') || 
+                           config.url?.includes('/site-views');
+                           
+    if (!isViewsEndpoint || config.method !== 'get') {
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    }
+    
     return config;
   },
   (error) => {
@@ -47,7 +55,13 @@ api.interceptors.request.use(
 // Add a response interceptor to handle common errors
 api.interceptors.response.use(
   response => {
-    console.log(`API Response: ${response.status} ${response.config.url}`, response.data);
+    // Avoid logging view-related responses to reduce console noise
+    const isViewsEndpoint = response.config.url?.includes('/views') || 
+                           response.config.url?.includes('/site-views');
+                           
+    if (!isViewsEndpoint || response.config.method !== 'get') {
+      console.log(`API Response: ${response.status} ${response.config.url}`, response.data);
+    }
     
     // Check if the response is from login or user data and contains a banned status
     if (

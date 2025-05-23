@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -16,6 +17,7 @@ import { useComments } from "@/hooks/useComments";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "@/services/categoryService";
 import { getUsers } from "@/services/userService";
+import { trackArticleView, getArticleViews } from "@/services/viewsService";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 
@@ -25,6 +27,8 @@ const NewsDetail = () => {
   const { user } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [parsedContent, setParsedContent] = useState("");
+  const [viewCount, setViewCount] = useState<number>(0);
+  const [viewTracked, setViewTracked] = useState(false);
 
   // Fetch article data
   const { data: article, isLoading, isError } = useArticleBySlug(slug);
@@ -60,6 +64,27 @@ const NewsDetail = () => {
     comments,
     addComment
   } = useComments(article?.id);
+
+  // Track article view
+  useEffect(() => {
+    const fetchViewCount = async () => {
+      if (article?.id && !viewTracked) {
+        try {
+          // Track the view
+          await trackArticleView(article.id);
+          setViewTracked(true);
+          
+          // Get the updated view count
+          const count = await getArticleViews(article.id);
+          setViewCount(count);
+        } catch (error) {
+          console.error('Error tracking article view:', error);
+        }
+      }
+    };
+    
+    fetchViewCount();
+  }, [article?.id, viewTracked]);
 
   // Parse Markdown content when article loads or changes
   useEffect(() => {
@@ -198,6 +223,10 @@ const NewsDetail = () => {
             <div>
               {article.publishDate && format(new Date(article.publishDate), "d 'de' MMMM 'de' yyyy")}
             </div>
+          </div>
+          <div className="flex items-center">
+            <Eye size={16} className="mr-1 text-gray-500" />
+            <span>{viewCount} visualizações</span>
           </div>
         </div>
         

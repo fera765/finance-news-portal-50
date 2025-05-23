@@ -39,13 +39,13 @@ export function useLikedComments(comments: Comment[], currentUser: User | null) 
       setIsLoading(true);
       const liked: Record<string, boolean> = {};
       
-      // Get all comment IDs including replies
-      const commentIds = getAllCommentIds(comments);
-      const uniqueCommentIds = Array.from(new Set(
-        commentIds.filter(id => id != null) as string[]
-      ));
-      
       try {
+        // Get all comment IDs including replies
+        const commentIds = getAllCommentIds(comments);
+        const uniqueCommentIds = Array.from(new Set(
+          commentIds.filter(id => id != null) as string[]
+        ));
+        
         // Process in batches of 10 to avoid too many simultaneous requests
         const batchSize = 10;
         for (let i = 0; i < uniqueCommentIds.length; i += batchSize) {

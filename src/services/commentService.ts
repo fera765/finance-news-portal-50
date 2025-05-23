@@ -1,3 +1,4 @@
+
 import { api } from './api';
 
 export interface Comment {
@@ -72,6 +73,7 @@ const deleteCommentLikes = async (commentId: string) => {
       );
       
       await Promise.all(deletionPromises);
+      console.log(`Successfully deleted ${commentLikes.length} likes for comment ${commentId}`);
     }
     return true;
   } catch (error) {
@@ -80,8 +82,8 @@ const deleteCommentLikes = async (commentId: string) => {
   }
 };
 
-// Função auxiliar para buscar todas as respostas a um comentário
-const findReplies = async (commentId: string): Promise<string[]> => {
+// Função para encontrar respostas diretas a um comentário
+const findDirectReplies = async (commentId: string): Promise<string[]> => {
   try {
     const { data: replies } = await api.get('/comments', {
       params: { parentId: commentId }
@@ -91,68 +93,44 @@ const findReplies = async (commentId: string): Promise<string[]> => {
       return [];
     }
     
-    // Coletar IDs de todas as respostas e suas respostas recursivamente
-    let replyIds = replies.map((reply: Comment) => reply.id as string);
-    
-    // Para cada resposta, encontrar suas próprias respostas recursivamente
-    const childPromises = replies.map((reply: Comment) => 
-      findReplies(reply.id as string)
-    );
-    
-    // Aguardar todas as promessas e aplainar os resultados
-    const childResults = await Promise.all(childPromises);
-    const childIds = childResults.flat();
-    
-    // Combinar IDs diretos e indiretos
-    return [...replyIds, ...childIds];
+    return replies.map((reply: Comment) => reply.id as string);
   } catch (error) {
     console.error(`Error finding replies for comment ${commentId}:`, error);
     return [];
   }
 };
 
-// Função recursiva para excluir comentários em cascata
-const deleteCommentAndReplies = async (commentId: string) => {
+// Função otimizada para excluir um comentário e suas respostas diretas
+export const deleteComment = async (id: string) => {
   try {
-    console.log(`Starting deletion process for comment ${commentId}`);
+    console.log(`Starting deletion process for comment ${id}`);
     
-    // Primeiro, encontrar todos os IDs de respostas (diretas e indiretas)
-    const replyIds = await findReplies(commentId);
-    console.log(`Found ${replyIds.length} replies to delete for comment ${commentId}`);
+    // 1. Encontrar todas as respostas diretas
+    const replyIds = await findDirectReplies(id);
+    console.log(`Found ${replyIds.length} replies to delete for comment ${id}`);
     
-    // Excluir os likes de todas as respostas (incluindo o comentário original)
-    const allIds = [commentId, ...replyIds];
-    console.log(`Processing likes deletion for ${allIds.length} comments`);
+    // 2. Excluir likes do comentário principal e das respostas
+    await deleteCommentLikes(id);
+    console.log(`Deleted likes for main comment ${id}`);
     
-    for (const id of allIds) {
-      await deleteCommentLikes(id);
-      console.log(`Deleted likes for comment/reply ${id}`);
-    }
-    
-    // Excluir todas as respostas em ordem reversa (das mais profundas para as mais superficiais)
+    // 3. Excluir likes e depois as respostas
     if (replyIds.length > 0) {
-      // Reversed order to delete deepest replies first
-      for (const replyId of [...replyIds].reverse()) {
+      for (const replyId of replyIds) {
+        // Primeiro excluir os likes da resposta
+        await deleteCommentLikes(replyId);
+        console.log(`Deleted likes for reply ${replyId}`);
+        
+        // Depois excluir a resposta
         await api.delete(`/comments/${replyId}`);
         console.log(`Deleted reply ${replyId}`);
       }
     }
     
-    // Por fim, excluir o comentário principal
-    await api.delete(`/comments/${commentId}`);
-    console.log(`Deleted main comment ${commentId}`);
+    // 4. Finalmente, excluir o comentário principal
+    await api.delete(`/comments/${id}`);
+    console.log(`Successfully deleted main comment ${id}`);
     
     return true;
-  } catch (error) {
-    console.error(`Error recursively deleting comment ${commentId}:`, error);
-    throw error;
-  }
-};
-
-export const deleteComment = async (id: string) => {
-  try {
-    // Utiliza a função otimizada para excluir o comentário e todas as suas respostas
-    return await deleteCommentAndReplies(id);
   } catch (error) {
     console.error(`Error deleting comment ${id}:`, error);
     throw error;

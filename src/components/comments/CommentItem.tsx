@@ -42,6 +42,7 @@ export const CommentItem = ({
   const [editText, setEditText] = useState(comment.content);
   
   const isCurrentUserAuthor = currentUser && comment.userId === currentUser.id;
+  const isReply = level > 0 || !!comment.parentId;
   
   const getInitials = (name: string) => {
     return name
@@ -63,9 +64,6 @@ export const CommentItem = ({
     onEdit(comment.id!, editText);
     setEditingComment(false);
   };
-
-  // Esta função checa se o comentário é uma resposta com base no level ou no parentId
-  const isReply = level > 0 || !!comment.parentId;
 
   return (
     <div key={comment.id} 
@@ -130,16 +128,19 @@ export const CommentItem = ({
               <span className="ml-1 text-sm">{comment.likes || 0}</span>
             </Button>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs h-auto p-0"
-              onClick={() => setReplyingTo(!replyingTo)}
-              disabled={!currentUser}
-            >
-              <CornerDownLeft size={18} className="mr-1" />
-              Responder
-            </Button>
+            {/* Only show reply button for root comments (level 0) */}
+            {level === 0 && !isReply && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-auto p-0"
+                onClick={() => setReplyingTo(!replyingTo)}
+                disabled={!currentUser}
+              >
+                <CornerDownLeft size={18} className="mr-1" />
+                Responder
+              </Button>
+            )}
             
             {isCurrentUserAuthor && !editingComment && (
               <>
@@ -169,7 +170,7 @@ export const CommentItem = ({
             )}
           </div>
           
-          {replyingTo && (
+          {replyingTo && !isReply && level === 0 && (
             <div className="mt-3">
               <Textarea
                 placeholder="Escreva uma resposta..."
@@ -198,7 +199,7 @@ export const CommentItem = ({
             </div>
           )}
           
-          {/* Render replies recursively */}
+          {/* Render replies */}
           {replies.length > 0 && (
             <div className="mt-3 space-y-3">
               {replies.map(reply => (
@@ -206,9 +207,9 @@ export const CommentItem = ({
                   key={reply.id}
                   comment={reply}
                   level={level + 1}
-                  replies={[]}
+                  replies={[]} // No further nested replies
                   currentUser={currentUser}
-                  isLiked={reply.id ? isLiked : false}
+                  isLiked={reply.id ? onLike !== undefined && currentUser ? isLiked : false}
                   onLike={onLike}
                   onReply={onReply}
                   onEdit={onEdit}

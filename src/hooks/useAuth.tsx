@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { User } from '@/components/Layout';
 import * as authService from '@/services/authService';
 import { toast } from 'sonner';
+import { trackSiteView } from '@/services/viewsService';
 
 interface AuthContextType {
   user: User | null;
@@ -16,6 +17,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Track site view when app loads
+  useEffect(() => {
+    const trackInitialView = async () => {
+      try {
+        await trackSiteView();
+        console.log("Initial site view tracked");
+      } catch (error) {
+        console.error("Failed to track initial site view:", error);
+      }
+    };
+    
+    trackInitialView();
+  }, []);
 
   // Load user data on mount
   useEffect(() => {
@@ -49,6 +64,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const loggedInUser = await authService.login(email, password);
       setUser(loggedInUser);
       toast.success(`Bem-vindo, ${loggedInUser.name}!`);
+      
+      // Track site view on successful login
+      await trackSiteView();
+      
       return loggedInUser;
     } catch (error: any) {
       toast.error(error.message || 'Falha no login. Verifique suas credenciais.');
@@ -63,6 +82,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     authService.logout();
     setUser(null);
     toast.success('Logout realizado com sucesso');
+    
+    // Track site view on logout
+    trackSiteView().catch(error => {
+      console.error("Failed to track site view on logout:", error);
+    });
   };
 
   return (

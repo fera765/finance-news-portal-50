@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getArticles } from "@/services/articleService";
 import { getCategories } from "@/services/categoryService";
 import { getUsers } from "@/services/userService";
+import { getMostViewedArticles, getDailySiteViews } from "@/services/viewsService";
 import { api } from "@/services/api";
 
 export interface DashboardStats {
@@ -47,6 +48,30 @@ export function useDashboardStats() {
         return [];
       }
     },
+    retry: 1,
+    staleTime: 60000
+  });
+
+  // Query to get site views
+  const siteViewsQuery = useQuery({
+    queryKey: ['dashboard', 'site-views'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/site-views');
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching site views:', error);
+        return [];
+      }
+    },
+    retry: 1,
+    staleTime: 60000
+  });
+
+  // Query to get most viewed articles
+  const mostViewedQuery = useQuery({
+    queryKey: ['dashboard', 'most-viewed'],
+    queryFn: () => getMostViewedArticles(5),
     retry: 1,
     staleTime: 60000
   });
@@ -117,7 +142,7 @@ export function useDashboardStats() {
 
   // Generate monthly views data
   const calculateMonthlyData = () => {
-    if (viewsQuery.isLoading) {
+    if (viewsQuery.isLoading || siteViewsQuery.isLoading) {
       return Array(5).fill(0).map((_, i) => ({
         name: `Mês ${i+1}`,
         views: 0
@@ -137,14 +162,20 @@ export function useDashboardStats() {
     const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     
     return lastFiveMonths.map(({ month, year }) => {
-      // Get views from this month
-      const monthViews = (viewsQuery.data || []).filter((view: any) => {
+      // Get views from this month - combine article views and site views
+      const articleViews = (viewsQuery.data || []).filter((view: any) => {
         if (!view?.timestamp && !view?.lastUpdated) return false;
         const viewDate = new Date(view.timestamp || view.lastUpdated);
         return viewDate.getMonth() === month && viewDate.getFullYear() === year;
-      });
-
-      const totalViews = monthViews?.reduce((sum: number, view: any) => sum + (view.count || 0), 0) || 0;
+      }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
+      
+      const siteViews = (siteViewsQuery.data || []).filter((view: any) => {
+        if (!view?.date) return false;
+        const viewDate = new Date(view.date);
+        return viewDate.getMonth() === month && viewDate.getFullYear() === year;
+      }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
+      
+      const totalViews = articleViews + siteViews || 0;
       
       return {
         name: monthNames[month],
@@ -155,7 +186,7 @@ export function useDashboardStats() {
 
   // Generate yearly views data
   const calculateYearlyData = () => {
-    if (viewsQuery.isLoading) {
+    if (viewsQuery.isLoading || siteViewsQuery.isLoading) {
       return Array(5).fill(0).map((_, i) => ({
         name: `${new Date().getFullYear() - i}`,
         views: 0
@@ -166,14 +197,20 @@ export function useDashboardStats() {
     const lastFiveYears = Array.from({ length: 5 }, (_, i) => currentYear - i).reverse();
     
     return lastFiveYears.map(year => {
-      // Get views from this year
-      const yearViews = (viewsQuery.data || []).filter((view: any) => {
+      // Get views from this year - combine article views and site views
+      const articleViews = (viewsQuery.data || []).filter((view: any) => {
         if (!view?.timestamp && !view?.lastUpdated) return false;
         const viewDate = new Date(view.timestamp || view.lastUpdated);
         return viewDate.getFullYear() === year;
-      });
-
-      const totalViews = yearViews?.reduce((sum: number, view: any) => sum + (view.count || 0), 0) || 0;
+      }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
+      
+      const siteViews = (siteViewsQuery.data || []).filter((view: any) => {
+        if (!view?.date) return false;
+        const viewDate = new Date(view.date);
+        return viewDate.getFullYear() === year;
+      }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
+      
+      const totalViews = articleViews + siteViews || 0;
       
       return {
         name: year.toString(),
@@ -184,12 +221,21 @@ export function useDashboardStats() {
 
   // Calculate total views
   const calculateTotalViews = () => {
-    return (viewsQuery.data || []).reduce((sum: number, view: any) => sum + (view.count || 0), 0) || 0;
+    const articleViews = (viewsQuery.data || [])
+      .reduce((sum: number, view: any) => sum + (view.count || 0), 0);
+      
+    const siteViews = (siteViewsQuery.data || [])
+      .reduce((sum: number, view: any) => sum + (view.count || 0), 0);
+      
+    return articleViews + siteViews;
   };
 
   // Calculate views percent change from previous month
   const calculateViewsChange = () => {
-    if (!viewsQuery.data || viewsQuery.data.length === 0) return 5.2; // Fallback
+    if ((!viewsQuery.data || viewsQuery.data.length === 0) && 
+        (!siteViewsQuery.data || siteViewsQuery.data.length === 0)) {
+      return 5.2; // Fallback
+    }
     
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -197,20 +243,39 @@ export function useDashboardStats() {
     const currentYear = now.getFullYear();
     const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
     
-    const currentMonthViews = (viewsQuery.data || []).filter((view: any) => {
+    // Calculate current month article views
+    const currentMonthArticleViews = (viewsQuery.data || []).filter((view: any) => {
       if (!view?.timestamp && !view?.lastUpdated) return false;
       const date = new Date(view.timestamp || view.lastUpdated);
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
     }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
     
-    const lastMonthViews = (viewsQuery.data || []).filter((view: any) => {
+    // Calculate last month article views
+    const lastMonthArticleViews = (viewsQuery.data || []).filter((view: any) => {
       if (!view?.timestamp && !view?.lastUpdated) return false;
       const date = new Date(view.timestamp || view.lastUpdated);
       return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
     }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
     
-    if (lastMonthViews === 0) return 100;
-    return Number(((currentMonthViews - lastMonthViews) / lastMonthViews * 100).toFixed(1));
+    // Calculate current month site views
+    const currentMonthSiteViews = (siteViewsQuery.data || []).filter((view: any) => {
+      if (!view?.date) return false;
+      const date = new Date(view.date);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
+    
+    // Calculate last month site views
+    const lastMonthSiteViews = (siteViewsQuery.data || []).filter((view: any) => {
+      if (!view?.date) return false;
+      const date = new Date(view.date);
+      return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
+    }).reduce((sum: number, view: any) => sum + (view.count || 0), 0);
+    
+    const currentMonthTotalViews = currentMonthArticleViews + currentMonthSiteViews;
+    const lastMonthTotalViews = lastMonthArticleViews + lastMonthSiteViews;
+    
+    if (lastMonthTotalViews === 0) return 100;
+    return Number(((currentMonthTotalViews - lastMonthTotalViews) / lastMonthTotalViews * 100).toFixed(1));
   };
 
   // Calculate top articles by views
@@ -219,6 +284,41 @@ export function useDashboardStats() {
       return [];
     }
     
+    // Use the most viewed articles query result if available
+    if (mostViewedQuery.data && mostViewedQuery.data.length > 0) {
+      const mostViewedIds = mostViewedQuery.data.map((view: any) => view.articleId);
+      
+      const articlesWithViews = articlesQuery.data
+        .filter(article => mostViewedIds.includes(article.id))
+        .map(article => {
+          const viewData = mostViewedQuery.data.find((view: any) => view.articleId === article.id);
+          const views = viewData ? viewData.count : 0;
+          
+          const likes = (likesQuery.data || [])
+            ?.filter((like: any) => like.articleId === article.id)
+            .length || 0;
+            
+          const bookmarks = (bookmarksQuery.data || [])
+            ?.filter((bookmark: any) => bookmark.articleId === article.id)
+            .length || 0;
+          
+          const categoryName = categoriesQuery.data
+            ?.find((cat: any) => cat.id === article.category)?.name || 'Sem categoria';
+            
+          return {
+            ...article,
+            views,
+            likes,
+            bookmarks,
+            category: categoryName
+          };
+        })
+        .sort((a, b) => b.views - a.views);
+      
+      return articlesWithViews.slice(0, 5);
+    }
+    
+    // Fallback to manual calculation
     const articlesWithViews = articlesQuery.data.map(article => {
       const views = (viewsQuery.data || [])
         ?.filter((view: any) => view.articleId === article.id)
@@ -345,6 +445,8 @@ export function useDashboardStats() {
   const isLoading = 
     articlesQuery.isPending || 
     viewsQuery.isPending || 
+    siteViewsQuery.isPending ||
+    mostViewedQuery.isPending ||
     likesQuery.isPending || 
     bookmarksQuery.isPending ||
     categoriesQuery.isPending ||
@@ -354,6 +456,8 @@ export function useDashboardStats() {
   const isError = 
     articlesQuery.isError || 
     viewsQuery.isError || 
+    siteViewsQuery.isError ||
+    mostViewedQuery.isError ||
     likesQuery.isError || 
     bookmarksQuery.isError ||
     categoriesQuery.isError ||
