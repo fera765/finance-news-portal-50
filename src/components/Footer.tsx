@@ -56,9 +56,9 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-4 text-finance-50">Seções</h4>
             <ul className="space-y-2 text-finance-200">
               <li><Link to="/" className="hover:text-gold-400">Início</Link></li>
-              <li><Link to="/markets" className="hover:text-gold-400">Mercados</Link></li>
-              <li><Link to="/business" className="hover:text-gold-400">Negócios</Link></li>
-              <li><Link to="/economy" className="hover:text-gold-400">Economia</Link></li>
+              <li><Link to="/category/markets" className="hover:text-gold-400">Mercados</Link></li>
+              <li><Link to="/category/business" className="hover:text-gold-400">Negócios</Link></li>
+              <li><Link to="/category/economy" className="hover:text-gold-400">Economia</Link></li>
             </ul>
           </div>
           

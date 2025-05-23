@@ -53,10 +53,10 @@ const App: React.FC = () => {
                   <Route path="/cookies" element={<CookiesPage />} />
                   <Route path="/contact" element={<ContactPage />} />
 
-                  {/* Adicionar rotas específicas para categorias padrão */}
-                  <Route path="/markets" element={<CategoryPage />} />
-                  <Route path="/business" element={<CategoryPage />} />
-                  <Route path="/economy" element={<CategoryPage />} />
+                  {/* Redirects para categorias antigas (compatibilidade) */}
+                  <Route path="/markets" element={<Navigate to="/category/markets" replace />} />
+                  <Route path="/business" element={<Navigate to="/category/business" replace />} />
+                  <Route path="/economy" element={<Navigate to="/category/economy" replace />} />
                   
                   {/* Rotas Admin protegidas */}
                   <Route path="/admin" element={

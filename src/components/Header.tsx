@@ -80,19 +80,19 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
         Início
       </Link>
       <Link 
-        to="/markets" 
+        to="/category/markets" 
         className="text-base font-medium text-foreground hover:text-finance-700"
       >
         Mercados
       </Link>
       <Link 
-        to="/business" 
+        to="/category/business" 
         className="text-base font-medium text-foreground hover:text-finance-700"
       >
         Negócios
       </Link>
       <Link 
-        to="/economy" 
+        to="/category/economy" 
         className="text-base font-medium text-foreground hover:text-finance-700"
       >
         Economia
@@ -159,9 +159,9 @@ export const Header = ({ user, onLogin, onLogout }: HeaderProps) => {
             {/* Links de navegação */}
             <nav className="flex space-x-6">
               <Link to="/" className="text-base font-medium text-foreground hover:text-finance-700">Início</Link>
-              <Link to="/markets" className="text-base font-medium text-foreground hover:text-finance-700">Mercados</Link>
-              <Link to="/business" className="text-base font-medium text-foreground hover:text-finance-700">Negócios</Link>
-              <Link to="/economy" className="text-base font-medium text-foreground hover:text-finance-700">Economia</Link>
+              <Link to="/category/markets" className="text-base font-medium text-foreground hover:text-finance-700">Mercados</Link>
+              <Link to="/category/business" className="text-base font-medium text-foreground hover:text-finance-700">Negócios</Link>
+              <Link to="/category/economy" className="text-base font-medium text-foreground hover:text-finance-700">Economia</Link>
             </nav>
 
             {/* Barra de pesquisa, tema e perfil */}
