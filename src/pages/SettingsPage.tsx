@@ -389,20 +389,6 @@ const SettingsPage = () => {
     return stock || { price: 0, change: 0 };
   };
 
-  // Page content update mutation
-  const updatePageContentMutation = useMutation({
-    mutationFn: updatePageContent,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['page-contents'] });
-      toast.success("Conteúdo da página salvo com sucesso!");
-      setSelectedPageContent(null);
-    },
-    onError: (error) => {
-      console.error("Error saving page content:", error);
-      toast.error("Erro ao salvar conteúdo da página. Tente novamente.");
-    }
-  });
-
   // Handle page content save
   const handleSavePageContent = async () => {
     if (!selectedPageContent) return;
