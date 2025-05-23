@@ -18,6 +18,19 @@ export const getCategoryById = async (id: string) => {
   return data;
 };
 
+export const getCategoryBySlug = async (slug: string) => {
+  try {
+    const { data } = await api.get('/categories', { params: { slug } });
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0];
+    }
+    throw new Error(`Categoria com slug ${slug} não encontrada`);
+  } catch (error) {
+    console.error(`Erro ao buscar categoria com slug ${slug}:`, error);
+    throw error;
+  }
+};
+
 export const createCategory = async (category: Category) => {
   const { data } = await api.post('/categories', category);
   return data;

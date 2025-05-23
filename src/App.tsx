@@ -40,6 +40,11 @@ const App: React.FC = () => {
                   <Route path="/news/:id/:slug" element={<NewsDetail />} />
                   <Route path="/category/:slug" element={<CategoryPage />} />
                   <Route path="/search" element={<SearchPage />} />
+
+                  {/* Adicionar rotas específicas para categorias padrão */}
+                  <Route path="/markets" element={<CategoryPage />} />
+                  <Route path="/business" element={<CategoryPage />} />
+                  <Route path="/economy" element={<CategoryPage />} />
                   
                   {/* Rotas Admin protegidas */}
                   <Route path="/admin" element={

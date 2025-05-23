@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -21,6 +20,7 @@ import { getUsers } from "@/services/userService";
 import { trackArticleView, getArticleViews } from "@/services/viewsService";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
+import RelatedNewsCarousel from "@/components/RelatedNewsCarousel";
 
 const NewsDetail = () => {
   const { id, slug } = useParams<{ id: string, slug: string }>();
@@ -285,33 +285,8 @@ const NewsDetail = () => {
           dangerouslySetInnerHTML={{ __html: parsedContent }} 
         />
         
-        {related.length > 0 && (
-          <div className="mb-8 md:mb-10">
-            <h3 className="text-xl font-bold mb-4">Artigos Relacionados</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {related.map((article) => (
-                <div key={article.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                  <Link to={`/news/${article.id}/${article.slug}`} className="flex h-32">
-                    <div className="w-1/3">
-                      <img 
-                        src={article.imageUrl} 
-                        alt={article.title} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="w-2/3 p-3">
-                      <Badge className="mb-2 text-xs" variant="outline">{article.category}</Badge>
-                      <h4 className="font-semibold text-sm line-clamp-2 mb-1">{article.title}</h4>
-                      <p className="text-gray-500 text-xs">
-                        {format(new Date(article.publishedDate), "d MMM, yyyy", { locale: ptBR })}
-                      </p>
-                    </div>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Novo Componente: Notícias Relacionadas */}
+        <RelatedNewsCarousel articleId={article.id || ''} categoryId={article.category} tags={article.tags} />
         
         <div className="border-t border-gray-200 pt-6 md:pt-10">
           <CommentSection 

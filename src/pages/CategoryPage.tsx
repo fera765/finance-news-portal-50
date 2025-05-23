@@ -24,7 +24,9 @@ const mapArticleToNewsItem = (article: Article, categoryName: string, authorName
     category: categoryName,
     publishedDate: typeof article.publishDate === "string" ? article.publishDate : new Date().toISOString(),
     author: authorName,
-    slug: article.slug
+    slug: article.slug,
+    categoryId: article.category,
+    categorySlug: categoryName.toLowerCase().replace(/\s+/g, '-')
   };
 };
 
@@ -34,11 +36,17 @@ const CategoryPage = () => {
   const [page, setPage] = useState(1);
   const [allArticles, setAllArticles] = useState<Article[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const { ref, inView } = useInView();
   
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
+    // Reset state when slug changes
+    setAllArticles([]);
+    setPage(1);
+    setHasMore(true);
+    setIsFirstLoad(true);
   }, [slug]);
 
   // Fetch categories to get the current category info
@@ -63,10 +71,11 @@ const CategoryPage = () => {
       _page: page, 
       _limit: ARTICLES_PER_PAGE,
       _sort: "publishDate",
-      _order: "desc"
+      _order: "desc",
+      status: "published"
     }),
     enabled: !!currentCategory?.id,
-    placeholderData: previousData => previousData // This replaces keepPreviousData
+    placeholderData: previousData => previousData
   });
   
   // Append new articles to our collection when they arrive
@@ -87,10 +96,18 @@ const CategoryPage = () => {
       if (articles.length < ARTICLES_PER_PAGE) {
         setHasMore(false);
       }
-    } else if (articles && articles.length === 0 && page > 1) {
+      
+      // First load completed
+      if (isFirstLoad) {
+        setIsFirstLoad(false);
+      }
+    } else if (articles && articles.length === 0) {
       setHasMore(false);
+      if (isFirstLoad) {
+        setIsFirstLoad(false);
+      }
     }
-  }, [articles, page]);
+  }, [articles, page, allArticles]);
 
   // Load more when the sentinel comes into view
   useEffect(() => {
@@ -106,7 +123,7 @@ const CategoryPage = () => {
     return mapArticleToNewsItem(article, categoryName, authorName);
   });
 
-  if (isLoading && page === 1) {
+  if (isLoading && isFirstLoad) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -155,7 +172,7 @@ const CategoryPage = () => {
           <p className="text-gray-600 mb-8 md:mb-10">{currentCategory.description}</p>
         )}
         
-        {newsItems.length === 0 ? (
+        {!isLoading && !isFirstLoad && newsItems.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
             <h3 className="text-xl font-medium mb-2">Nenhum artigo disponível</h3>
             <p className="text-gray-500">Esta categoria ainda não possui artigos publicados.</p>
