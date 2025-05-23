@@ -1,8 +1,42 @@
 
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getSettings } from "@/services/settingsService";
+import { Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
 
 const Footer = () => {
   const year = new Date().getFullYear();
+  
+  // Fetch settings to get social media links
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: getSettings
+  });
+
+  // Function to render social media icon if URL exists
+  const renderSocialIcon = (platform: string, url: string | undefined) => {
+    if (!url) return null;
+    
+    const iconProps = {
+      size: 20,
+      className: "hover:text-gold-400 transition-colors"
+    };
+    
+    switch (platform) {
+      case "facebook":
+        return <a href={url} target="_blank" rel="noopener noreferrer" aria-label="Facebook"><Facebook {...iconProps} /></a>;
+      case "instagram":
+        return <a href={url} target="_blank" rel="noopener noreferrer" aria-label="Instagram"><Instagram {...iconProps} /></a>;
+      case "twitter":
+        return <a href={url} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter {...iconProps} /></a>;
+      case "linkedin":
+        return <a href={url} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin {...iconProps} /></a>;
+      case "youtube":
+        return <a href={url} target="_blank" rel="noopener noreferrer" aria-label="YouTube"><Youtube {...iconProps} /></a>;
+      default:
+        return null;
+    }
+  };
 
   return (
     <footer className="bg-finance-900 py-10">
@@ -50,9 +84,15 @@ const Footer = () => {
         <div className="border-t border-finance-800 mt-8 pt-8 text-sm text-finance-300 flex flex-col md:flex-row justify-between">
           <p>© {year} Finance News. Todos os direitos reservados.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
-            <a href="#" className="hover:text-gold-400">Twitter</a>
-            <a href="#" className="hover:text-gold-400">LinkedIn</a>
-            <a href="#" className="hover:text-gold-400">Facebook</a>
+            {settings?.social && (
+              <>
+                {renderSocialIcon("twitter", settings.social.twitter)}
+                {renderSocialIcon("linkedin", settings.social.linkedin)}
+                {renderSocialIcon("facebook", settings.social.facebook)}
+                {renderSocialIcon("instagram", settings.social.instagram)}
+                {renderSocialIcon("youtube", settings.social.youtube)}
+              </>
+            )}
           </div>
         </div>
       </div>

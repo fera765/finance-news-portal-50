@@ -17,6 +17,12 @@ import UserManagement from "./pages/UserManagement";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
+import AboutPage from "./pages/AboutPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import CookiesPage from "./pages/CookiesPage";
+import ContactPage from "./pages/ContactPage";
+import CareersPage from "./pages/CareersPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ScrollToTop from "./components/ScrollToTop";
@@ -40,6 +46,14 @@ const App: React.FC = () => {
                   <Route path="/news/:id/:slug" element={<NewsDetail />} />
                   <Route path="/category/:slug" element={<CategoryPage />} />
                   <Route path="/search" element={<SearchPage />} />
+
+                  {/* Static Pages */}
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/cookies" element={<CookiesPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/careers" element={<CareersPage />} />
 
                   {/* Adicionar rotas específicas para categorias padrão */}
                   <Route path="/markets" element={<CategoryPage />} />

@@ -245,11 +245,6 @@ const NewsDetail = () => {
           <Link to={`/category/${categories.find(cat => cat.id === article.category)?.slug || ''}`}>
             <Badge className="bg-finance-700 hover:bg-finance-800 cursor-pointer">{categoryName}</Badge>
           </Link>
-          {article.tags?.map((tag) => (
-            <Badge key={tag} variant="outline" className="bg-gray-100">
-              {tag}
-            </Badge>
-          ))}
         </div>
         
         <h1 className="text-2xl md:text-4xl font-bold mb-4">{article.title}</h1>

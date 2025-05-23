@@ -89,7 +89,7 @@ const RelatedNewsCarousel = ({ articleId, categoryId, tags }: RelatedNewsCarouse
               <CarouselItem key={article.id} className="basis-full sm:basis-1/2 md:basis-1/3">
                 <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow h-full">
                   <Link to={`/news/${article.id}/${article.slug}`} className="flex flex-col h-full">
-                    <div className="w-full h-32 sm:h-36">
+                    <div className="w-full h-24 sm:h-28">
                       <img 
                         src={article.imageUrl || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d'} 
                         alt={article.title}
@@ -104,11 +104,11 @@ const RelatedNewsCarousel = ({ articleId, categoryId, tags }: RelatedNewsCarouse
                       <Link to={`/category/${categorySlug}`} className="mb-1">
                         <Badge className="bg-finance-100 text-finance-800 hover:bg-finance-200 text-xs">{categoryName}</Badge>
                       </Link>
-                      <h4 className="font-semibold text-xs sm:text-sm line-clamp-2 mb-1">{article.title}</h4>
-                      <p className="text-gray-500 text-[10px] sm:text-xs mt-auto">
+                      <h4 className="font-semibold text-xs line-clamp-1 mb-1">{article.title}</h4>
+                      <p className="text-gray-500 text-[10px] mt-auto">
                         {article.publishDate && formatPublishDate(article.publishDate.toString())}
                       </p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">
+                      <p className="text-[10px] text-muted-foreground">
                         Por {authorName}
                       </p>
                     </div>
@@ -118,8 +118,8 @@ const RelatedNewsCarousel = ({ articleId, categoryId, tags }: RelatedNewsCarouse
             );
           })}
         </CarouselContent>
-        <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-7" />
-        <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 h-7 w-7" />
+        <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-6" />
+        <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6" />
       </Carousel>
     </div>
   );
