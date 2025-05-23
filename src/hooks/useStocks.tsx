@@ -10,12 +10,14 @@ export function useStockSymbols() {
     queryKey: ['stockSymbols'],
     queryFn: getStocks,
     staleTime: 60000, // 1 minute
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 
 // Hook to fetch real-time stock data from Yahoo Finance
 export function useStockData() {
-  const { data: symbols = [] } = useStockSymbols();
+  const { data: symbols = [], isError } = useStockSymbols();
   
   return useQuery({
     queryKey: ['stocks', symbols],
@@ -23,8 +25,9 @@ export function useStockData() {
     staleTime: 60000, // 1 minute
     refetchInterval: 60000, // Refetch every minute
     refetchOnWindowFocus: true,
-    enabled: symbols.length > 0,
+    enabled: symbols.length > 0 && !isError,
     retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 
@@ -74,6 +77,7 @@ export function useToggleStockEnabled() {
       toggleStockEnabled(symbol, enabled),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stockSymbols'] });
+      toast.success("Status da ação atualizado com sucesso");
     },
     onError: () => {
       toast.error("Erro ao atualizar status da ação");

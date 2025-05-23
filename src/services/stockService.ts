@@ -84,7 +84,20 @@ export const getYahooStockData = async (symbols: string[]): Promise<Stock[]> => 
   try {
     console.log('Fetching Yahoo Finance data for:', symbols);
     
-    // In a real implementation, we would call the Yahoo Finance API
+    // Try to get stock data from the API first
+    try {
+      const { data } = await api.get('/stocks', {
+        params: { symbols: symbols.join(',') }
+      });
+      
+      if (data && Array.isArray(data) && data.length > 0) {
+        return data;
+      }
+    } catch (apiError) {
+      console.error('Error fetching stocks from API:', apiError);
+      // Fall through to mock data if API fails
+    }
+    
     // For now, we'll return mock data based on the provided symbols
     const stockData: Stock[] = symbols.map(symbol => {
       const mockStock = MOCK_STOCKS.find(stock => stock.symbol === symbol);
@@ -290,6 +303,20 @@ export const searchYahooStocks = async (query: string): Promise<{ symbol: string
     }
     
     console.log('Searching Yahoo Finance for:', query);
+    
+    // Try to get search results from the API first
+    try {
+      const { data } = await api.get(`/stocks/search`, {
+        params: { query: query.trim() }
+      });
+      
+      if (data && Array.isArray(data) && data.length > 0) {
+        return data;
+      }
+    } catch (apiError) {
+      console.error('Error searching stocks from API:', apiError);
+      // Fall through to mock data if API fails
+    }
     
     // In a real implementation, we would call the Yahoo Finance Search API
     // For now, we'll filter the mock stocks based on the query

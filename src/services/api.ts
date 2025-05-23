@@ -10,8 +10,8 @@ declare module 'axios' {
   }
 }
 
-// Get the API URL from environment variable or use a fallback
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Get the API URL from environment variable or use the remote API as fallback
+const API_URL = import.meta.env.VITE_API_URL || 'http://38.9.119.167:3000';
 
 console.log('Using API URL:', API_URL);
 
@@ -21,12 +21,12 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000, // Increased timeout to 15 seconds
+  timeout: 20000, // Increased timeout to 20 seconds for potentially slower remote API
 });
 
 // Custom retry configuration (stored outside axios config)
 const maxRetries = 3;
-const retryDelay = 1500; // Increased delay between retries
+const retryDelay = 2000; // Increased delay between retries for remote API
 
 // Add a request interceptor to include auth token if available
 api.interceptors.request.use(
@@ -97,7 +97,7 @@ api.interceptors.response.use(
     
     // User friendly error message based on error type
     if (error.message === 'Network Error') {
-      error.userMessage = 'Não foi possível conectar ao servidor. Verifique se o JSON Server está em execução.';
+      error.userMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet ou tente novamente mais tarde.';
       
       // Show a toast notification for network errors
       toast.error(error.userMessage);
@@ -131,7 +131,14 @@ export const checkApiHealth = async (): Promise<boolean> => {
     return true;
   } catch (error) {
     console.log('API health check failed:', error);
-    return false;
+    // Try an alternative endpoint if health check fails
+    try {
+      await api.get('/users?_limit=1', { timeout: 5000 });
+      return true;
+    } catch (e) {
+      console.log('Alternative API health check failed:', e);
+      return false;
+    }
   }
 };
 

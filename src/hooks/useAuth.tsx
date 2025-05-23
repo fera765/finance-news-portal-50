@@ -34,7 +34,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
 
-    loadUser();
+    // Add a small delay to avoid immediate API calls on page load
+    const timer = setTimeout(() => {
+      loadUser();
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Login method

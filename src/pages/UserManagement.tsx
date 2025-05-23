@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getUsers, deleteUser, updateUser, banUser, unbanUser, ExtendedUser } from "@/services/userService";
 import { toast } from "sonner";
-import { MoreVertical, Plus, Ban, Trash, CircleCheck, Loader2 } from "lucide-react";
+import { MoreVertical, Plus, Ban, Trash, CircleCheck, Loader2, AlertCircle } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import UserEditor from "@/components/admin/UserEditor";
 import {
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const UserManagement = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -40,9 +42,11 @@ const UserManagement = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [], isLoading, isError, error } = useQuery({
     queryKey: ["users"],
     queryFn: getUsers,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   const deleteUserMutation = useMutation({
@@ -139,7 +143,7 @@ const UserManagement = () => {
     <AdminLayout activeTab="users">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Gerenciamento de Usuários</h1>
+          <h1 className="text-3xl font-bold mb-2">Gerenciamento de Usuários</h1>
           <p className="text-gray-500 mt-1">
             Gerencie os usuários da plataforma
           </p>
@@ -149,6 +153,19 @@ const UserManagement = () => {
           Novo Usuário
         </Button>
       </div>
+
+      {isError && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro</AlertTitle>
+          <AlertDescription>
+            Houve um erro ao carregar os dados dos usuários. Por favor, tente novamente.
+            {error instanceof Error && (
+              <div className="mt-2 text-xs">{error.message}</div>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="bg-white rounded-lg shadow">
         {isLoading ? (
@@ -171,7 +188,7 @@ const UserManagement = () => {
               {users.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                    Nenhum usuário encontrado
+                    {isError ? "Erro ao carregar usuários" : "Nenhum usuário encontrado"}
                   </TableCell>
                 </TableRow>
               ) : (
