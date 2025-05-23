@@ -22,7 +22,6 @@ import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import CookiesPage from "./pages/CookiesPage";
 import ContactPage from "./pages/ContactPage";
-import CareersPage from "./pages/CareersPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import ScrollToTop from "./components/ScrollToTop";
@@ -53,7 +52,6 @@ const App: React.FC = () => {
                   <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="/cookies" element={<CookiesPage />} />
                   <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/careers" element={<CareersPage />} />
 
                   {/* Adicionar rotas específicas para categorias padrão */}
                   <Route path="/markets" element={<CategoryPage />} />

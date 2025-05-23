@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -15,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import StockSearch, { StockSearchResult } from "@/components/StockSearch";
-import { X, ArrowUpIcon, ArrowDownIcon, Loader2 } from "lucide-react";
+import { X, ArrowUpIcon, ArrowDownIcon, Loader2, FileText, Eye, Save } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   getSettings, 
@@ -30,6 +29,8 @@ import {
 } from "@/services/settingsService";
 import { useAddStock, useRemoveStock, useToggleStockEnabled } from "@/hooks/useStocks";
 import { getYahooStockData } from "@/services/stockService";
+import { getPageContents, updatePageContent, type PageContent } from "@/services/pageContentService";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 // Form schemas
 const seoSchema = z.object({
@@ -72,6 +73,9 @@ const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("seo");
   const [stockSymbols, setStockSymbols] = useState<StockSymbol[]>([]);
   const [saving, setSaving] = useState(false);
+  const [selectedPageContent, setSelectedPageContent] = useState<PageContent | null>(null);
+  const [pageContentPreview, setPageContentPreview] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
   const queryClient = useQueryClient();
   
   // Custom hooks for stock operations
@@ -83,6 +87,12 @@ const SettingsPage = () => {
   const { data: settings, isLoading, error } = useQuery({
     queryKey: ['settings'],
     queryFn: getSettings
+  });
+
+  // Fetch page contents
+  const { data: pageContents = [], isLoading: loadingPageContents } = useQuery({
+    queryKey: ['page-contents'],
+    queryFn: getPageContents
   });
   
   // Get real-time stock data for selected symbols
@@ -232,6 +242,20 @@ const SettingsPage = () => {
     }
   });
   
+  // Mutation for updating page content
+  const updatePageContentMutation = useMutation({
+    mutationFn: updatePageContent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['page-contents'] });
+      toast.success("Conteúdo da página salvo com sucesso!");
+      setSelectedPageContent(null);
+    },
+    onError: (error) => {
+      console.error("Error saving page content:", error);
+      toast.error("Erro ao salvar conteúdo da página. Tente novamente.");
+    }
+  });
+
   // Save SEO settings
   const onSaveSeo = async (data: z.infer<typeof seoSchema>) => {
     try {
@@ -365,6 +389,42 @@ const SettingsPage = () => {
     return stock || { price: 0, change: 0 };
   };
 
+  // Page content update mutation
+  const updatePageContentMutation = useMutation({
+    mutationFn: updatePageContent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['page-contents'] });
+      toast.success("Conteúdo da página salvo com sucesso!");
+      setSelectedPageContent(null);
+    },
+    onError: (error) => {
+      console.error("Error saving page content:", error);
+      toast.error("Erro ao salvar conteúdo da página. Tente novamente.");
+    }
+  });
+
+  // Handle page content save
+  const handleSavePageContent = async () => {
+    if (!selectedPageContent) return;
+    
+    try {
+      setSaving(true);
+      await updatePageContentMutation.mutateAsync({
+        ...selectedPageContent,
+        content: pageContentPreview
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handle page content selection
+  const handleSelectPageContent = (pageContent: PageContent) => {
+    setSelectedPageContent(pageContent);
+    setPageContentPreview(pageContent.content);
+    setShowPreview(false);
+  };
+
   if (isLoading) {
     return (
       <AdminLayout activeTab="settings">
@@ -403,6 +463,7 @@ const SettingsPage = () => {
             <TabsTrigger value="social">Social Media</TabsTrigger>
             <TabsTrigger value="tracking">Tracking & Analytics</TabsTrigger>
             <TabsTrigger value="ticker">Stock Ticker</TabsTrigger>
+            <TabsTrigger value="pages">Páginas</TabsTrigger>
           </TabsList>
           
           <TabsContent value="seo">
@@ -830,6 +891,140 @@ const SettingsPage = () => {
                 </Form>
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="pages">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Page List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Páginas Disponíveis
+                  </CardTitle>
+                  <CardDescription>
+                    Selecione uma página para editar seu conteúdo.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loadingPageContents ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {pageContents.map((page) => (
+                        <div
+                          key={page.id}
+                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                            selectedPageContent?.id === page.id
+                              ? 'border-finance-500 bg-finance-50'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                          onClick={() => handleSelectPageContent(page)}
+                        >
+                          <h4 className="font-medium">{page.title}</h4>
+                          <p className="text-sm text-gray-500">/{page.slug}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Última atualização: {new Date(page.lastUpdated).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Page Editor */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Editor de Conteúdo</span>
+                    {selectedPageContent && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowPreview(!showPreview)}
+                          className="flex items-center gap-1"
+                        >
+                          <Eye className="h-4 w-4" />
+                          {showPreview ? 'Editor' : 'Preview'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSavePageContent}
+                          disabled={saving || updatePageContentMutation.isPending}
+                          className="flex items-center gap-1"
+                        >
+                          {saving || updatePageContentMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                          Salvar
+                        </Button>
+                      </div>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    {selectedPageContent
+                      ? `Editando: ${selectedPageContent.title}`
+                      : 'Selecione uma página para começar a editar.'
+                    }
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {selectedPageContent ? (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="page-title">Título da Página</Label>
+                        <Input
+                          id="page-title"
+                          value={selectedPageContent.title}
+                          onChange={(e) => setSelectedPageContent({
+                            ...selectedPageContent,
+                            title: e.target.value
+                          })}
+                          className="mt-1"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="page-slug">URL (Slug)</Label>
+                        <Input
+                          id="page-slug"
+                          value={selectedPageContent.slug}
+                          onChange={(e) => setSelectedPageContent({
+                            ...selectedPageContent,
+                            slug: e.target.value
+                          })}
+                          className="mt-1"
+                          placeholder="exemplo: about, contact, privacy"
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Conteúdo da Página</Label>
+                        <div className="mt-2">
+                          <RichTextEditor
+                            value={pageContentPreview}
+                            onChange={setPageContentPreview}
+                            placeholder="Digite o conteúdo da página usando Markdown..."
+                            minHeight="400px"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>Selecione uma página da lista ao lado para começar a editar.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

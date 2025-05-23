@@ -518,5 +518,28 @@
       "stockSymbol": "GOOGL",
       "favorite": true
     }
+  ],
+  "page-contents": [
+    {
+      "id": "about",
+      "slug": "about",
+      "title": "Sobre a Finance News",
+      "content": "# Sobre a Finance News\n\n## Nossa Missão\n\nNa Finance News, nossa missão é fornecer informações financeiras precisas, oportunas e acessíveis para ajudar nossos leitores a tomar decisões financeiras informadas. Acreditamos que o conhecimento financeiro deve estar ao alcance de todos, não apenas de especialistas do mercado.\n\n## Nossa História\n\nFundada em 2015 por um grupo de jornalistas financeiros e analistas de mercado, a Finance News surgiu da necessidade de uma cobertura financeira que fosse ao mesmo tempo detalhada e compreensível para o público geral. Começamos como um pequeno blog e rapidamente crescemos para nos tornarmos uma das fontes mais confiáveis de notícias financeiras no Brasil.\n\n## Nossa Equipe\n\nNossa equipe é composta por jornalistas especializados em finanças, analistas de mercado, economistas e especialistas do setor financeiro. Cada membro traz uma perspectiva única e valiosa, garantindo uma cobertura abrangente e diversificada do mundo das finanças.\n\n### Nossos Valores\n\n- **Integridade**: Mantemos os mais altos padrões éticos em nosso jornalismo.\n- **Precisão**: Verificamos rigorosamente todas as informações antes de publicar.\n- **Independência**: Nosso conteúdo é livre de influências externas.\n- **Inovação**: Buscamos continuamente melhorar nossa cobertura e plataforma.\n- **Acessibilidade**: Tornamos informações financeiras complexas compreensíveis para todos.\n\n## Entre em Contato\n\nTemos o prazer de ouvir dos nossos leitores. Se você tiver dúvidas, feedback ou sugestões, não hesite em entrar em contato conosco através da nossa página de [Contato](/contact).",
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    },
+    {
+      "id": "contact",
+      "slug": "contact",
+      "title": "Entre em Contato",
+      "content": "# Entre em Contato\n\nEstamos sempre prontos para ouvir nossos leitores. Entre em contato conosco através dos canais abaixo:\n\n## Informações de Contato\n\n### Redação\n- **Email**: redacao@financenews.com\n- **Telefone**: (11) 3456-7890\n- **Horário**: Segunda a Sexta, 9h às 18h\n\n### Comercial\n- **Email**: comercial@financenews.com\n- **Telefone**: (11) 3456-7891\n\n### Suporte Técnico\n- **Email**: suporte@financenews.com\n- **Telefone**: (11) 3456-7892\n\n## Nosso Endereço\n\n**Finance News**  \nAvenida Paulista, 1000 - Conjunto 101  \nBela Vista, São Paulo - SP  \nCEP: 01310-100\n\n## Redes Sociais\n\nSiga-nos em nossas redes sociais para ficar por dentro das últimas notícias financeiras:\n\n- [Facebook](https://facebook.com/financenews)\n- [Twitter](https://twitter.com/financenews)\n- [LinkedIn](https://linkedin.com/company/financenews)\n- [Instagram](https://instagram.com/financenews)\n- [YouTube](https://youtube.com/financenews)\n\n## Dicas e Sugestões\n\nTem uma sugestão de pauta ou quer compartilhar uma dica? Envie um email para **pautas@financenews.com**. Valorizamos muito o feedback de nossos leitores!",
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    },
+    {
+      "id": "privacy",
+      "slug": "privacy",
+      "title": "Política de Privacidade",
+      "content": "# Política de Privacidade\n\n*Última atualização: 03 de novembro de 2023*\n\n## 1. Informações que Coletamos\n\nNa Finance News, respeitamos sua privacidade e estamos comprometidos em proteger suas informações pessoais. Esta política descreve como coletamos, usamos e protegemos seus dados.\n\n### 1.1 Informações fornecidas voluntariamente\n- Nome e endereço de email ao se inscrever em nossa newsletter\n- Comentários e feedback em nossos artigos\n- Informações de contato quando você nos envia mensagens\n\n### 1.2 Informações coletadas automaticamente\n- Endereço IP e dados de localização\n- Tipo de navegador e dispositivo\n- Páginas visitadas e tempo de permanência\n- Cookies e tecnologias similares\n\n## 2. Como Usamos suas Informações\n\n### 2.1 Finalidades do uso\n- Envio de newsletter e atualizações sobre nosso conteúdo\n- Personalização da experiência de navegação\n- Análise de tráfego e comportamento dos usuários\n- Resposta a suas perguntas e comentários\n- Melhoria de nossos serviços\n\n## 3. Compartilhamento de Dados\n\nNão vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros, exceto:\n\n- Quando necessário para cumprir obrigações legais\n- Para proteger nossos direitos e segurança\n- Com prestadores de serviços que nos ajudam a operar o site\n- Com seu consentimento explícito\n\n## 4. Cookies\n\nUtilizamos cookies para:\n- Melhorar a funcionalidade do site\n- Analisar o tráfego e uso do site\n- Personalizar conteúdo e anúncios\n- Lembrar suas preferências\n\nVocê pode desabilitar os cookies nas configurações do seu navegador.\n\n## 5. Segurança\n\nImplementamos medidas de segurança técnicas e organizacionais para proteger suas informações contra acesso não autorizado, alteração, divulgação ou destruição.\n\n## 6. Seus Direitos\n\nVocê tem o direito de:\n- Acessar suas informações pessoais\n- Corrigir dados incorretos\n- Solicitar a exclusão de seus dados\n- Cancelar a inscrição em nossa newsletter\n- Portabilidade de dados\n\n## 7. Alterações na Política\n\nPodemos atualizar esta política periodicamente. Notificaremos sobre mudanças significativas através do nosso site ou por email.\n\n## 8. Contato\n\nPara questões sobre privacidade, entre em contato:\n- **Email**: privacidade@financenews.com\n- **Telefone**: (11) 3456-7893",
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
+    }
   ]
 }

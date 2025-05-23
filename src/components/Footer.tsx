@@ -67,7 +67,6 @@ const Footer = () => {
             <ul className="space-y-2 text-finance-200">
               <li><Link to="/about" className="hover:text-gold-400">Sobre Nós</Link></li>
               <li><Link to="/contact" className="hover:text-gold-400">Contato</Link></li>
-              <li><Link to="/careers" className="hover:text-gold-400">Carreiras</Link></li>
             </ul>
           </div>
           
