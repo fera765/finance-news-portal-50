@@ -6,18 +6,18 @@ import { trackSiteView } from '@/services/viewsService';
 export function useSiteViews() {
   const location = useLocation();
 
-  // Track a site view when location changes
+  // Rastrear uma visualização do site quando a localização muda
   useEffect(() => {
     const trackView = async () => {
       try {
         await trackSiteView();
-        console.log('Site view tracked');
+        console.log('Visualização do site registrada');
       } catch (error) {
-        console.error('Failed to track site view:', error);
+        console.error('Falha ao registrar visualização do site:', error);
       }
     };
 
-    // Add a small delay to avoid tracking during page transitions
+    // Adicionar um pequeno atraso para evitar rastreamento durante transições de página
     const timeoutId = setTimeout(() => {
       trackView();
     }, 1000);

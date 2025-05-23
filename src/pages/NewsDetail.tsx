@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import Layout from "@/components/Layout";
 import CommentSection from "@/components/CommentSection";
 import { Button } from "@/components/ui/button";
@@ -30,10 +31,10 @@ const NewsDetail = () => {
   const [viewCount, setViewCount] = useState<number>(0);
   const [viewTracked, setViewTracked] = useState(false);
 
-  // Fetch article data
+  // Buscar dados do artigo
   const { data: article, isLoading, isError } = useArticleBySlug(slug);
   
-  // Fetch categories and users to get names instead of IDs
+  // Buscar categorias e usuários para obter nomes em vez de IDs
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: getCategories
@@ -44,11 +45,11 @@ const NewsDetail = () => {
     queryFn: getUsers
   });
   
-  // Find category and author names based on their IDs
+  // Encontrar nomes de categoria e autor com base em seus IDs
   const categoryName = categories.find(cat => cat.id === article?.category)?.name || "Sem categoria";
   const authorName = authors.find(auth => auth.id === article?.author)?.name || "Autor desconhecido";
   
-  // Handle article interactions (likes, bookmarks, views)
+  // Gerenciar interações do artigo (curtidas, favoritos, visualizações)
   const { 
     isLiked, 
     isBookmarked, 
@@ -59,26 +60,26 @@ const NewsDetail = () => {
     pendingAction
   } = useArticleInteractions(article?.id);
   
-  // Handle comments
+  // Gerenciar comentários
   const {
     comments,
     addComment
   } = useComments(article?.id);
 
-  // Track article view
+  // Rastrear visualização do artigo
   useEffect(() => {
     const fetchViewCount = async () => {
       if (article?.id && !viewTracked) {
         try {
-          // Track the view
+          // Rastrear a visualização
           await trackArticleView(article.id);
           setViewTracked(true);
           
-          // Get the updated view count
+          // Obter a contagem de visualizações atualizada
           const count = await getArticleViews(article.id);
           setViewCount(count);
         } catch (error) {
-          console.error('Error tracking article view:', error);
+          console.error('Erro ao rastrear visualização do artigo:', error);
         }
       }
     };
@@ -86,18 +87,18 @@ const NewsDetail = () => {
     fetchViewCount();
   }, [article?.id, viewTracked]);
 
-  // Parse Markdown content when article loads or changes
+  // Analisar conteúdo de Markdown quando o artigo carrega ou muda
   useEffect(() => {
     if (article?.content) {
       try {
-        // Fix: Use marked.parse directly with the content string
+        // Fix: Usar marked.parse diretamente com a string de conteúdo
         const rawHtml = marked.parse(article.content, { async: false }) as string;
-        // Sanitize the HTML to prevent XSS attacks
+        // Limpar o HTML para evitar ataques XSS
         const sanitizedHtml = DOMPurify.sanitize(rawHtml);
         setParsedContent(sanitizedHtml);
       } catch (error) {
-        console.error("Error parsing markdown content:", error);
-        // Fallback to raw content if parsing fails
+        console.error("Erro ao analisar conteúdo markdown:", error);
+        // Voltar ao conteúdo bruto se a análise falhar
         setParsedContent(article.content);
       }
     } else {
@@ -105,25 +106,25 @@ const NewsDetail = () => {
     }
   }, [article]);
 
-  // Redirect if slug doesn't match the article
+  // Redirecionar se o slug não corresponder ao artigo
   useEffect(() => {
     if (article && article.id && article.slug !== slug) {
       navigate(`/news/${article.id}/${article.slug}`, { replace: true });
     }
   }, [article, slug, navigate]);
 
-  // Process any pending interactions after login
+  // Processar interações pendentes após login
   useEffect(() => {
     if (user && pendingAction) {
-      console.log("Processing pending action:", pendingAction);
-      // The hooks will handle this automatically
+      console.log("Processando ação pendente:", pendingAction);
+      // Os hooks processarão isso automaticamente
     }
   }, [user, pendingAction]);
 
   const handleShare = async () => {
     if (!article) return;
     
-    // Try to use the Web Share API if available
+    // Tentar usar a API Web Share se disponível
     if (navigator.share) {
       try {
         await navigator.share({
@@ -132,22 +133,22 @@ const NewsDetail = () => {
           url: window.location.href,
         });
         
-        toast("Article shared successfully");
+        toast("Artigo compartilhado com sucesso");
         return;
       } catch (error) {
-        console.error("Error sharing:", error);
+        console.error("Erro ao compartilhar:", error);
       }
     }
     
-    // Fallback to clipboard if Web Share API is not available
+    // Voltar para a área de transferência se a API Web Share não estiver disponível
     try {
       await navigator.clipboard.writeText(window.location.href);
       
-      toast("Article link copied to clipboard");
+      toast("Link do artigo copiado para a área de transferência");
     } catch (error) {
-      console.error("Failed to copy:", error);
+      console.error("Falha ao copiar:", error);
       
-      toast("Could not copy the link to clipboard");
+      toast("Não foi possível copiar o link para a área de transferência");
     }
   };
   
@@ -180,12 +181,12 @@ const NewsDetail = () => {
     );
   }
 
-  // Map related articles (would need additional API support)
-  const related: NewsItem[] = []; // In a real app, you'd fetch related articles
+  // Mapear artigos relacionados (precisaria de suporte adicional de API)
+  const related: NewsItem[] = []; // Em um aplicativo real, você buscaria artigos relacionados
 
   return (
     <Layout openAuthModal={isAuthModalOpen}>
-      {/* Stock Ticker */}
+      {/* Ticker de Ações */}
       <div className="w-full border-b border-gray-200 mb-4">
         <div className="container mx-auto">
           <StockTicker />
@@ -221,7 +222,7 @@ const NewsDetail = () => {
               Por <span className="font-medium text-gray-700">{authorName}</span>
             </div>
             <div>
-              {article.publishDate && format(new Date(article.publishDate), "d 'de' MMMM 'de' yyyy")}
+              {article.publishDate && format(new Date(article.publishDate), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </div>
           </div>
           <div className="flex items-center">
@@ -302,7 +303,7 @@ const NewsDetail = () => {
                       <Badge className="mb-2 text-xs" variant="outline">{article.category}</Badge>
                       <h4 className="font-semibold text-sm line-clamp-2 mb-1">{article.title}</h4>
                       <p className="text-gray-500 text-xs">
-                        {format(new Date(article.publishedDate), "d MMM, yyyy")}
+                        {format(new Date(article.publishedDate), "d MMM, yyyy", { locale: ptBR })}
                       </p>
                     </div>
                   </Link>

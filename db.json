@@ -127,7 +127,7 @@
       "id": "1",
       "articleId": "1",
       "userId": "4",
-      "content": "Great analysis! I'm curious how this will affect mortgage rates in the long term.",
+      "content": "Ótima análise! Estou curioso como isso afetará as taxas de hipoteca a longo prazo.",
       "createdAt": "2023-11-02T16:30:00.000Z",
       "likes": 2,
       "parentId": null
@@ -136,7 +136,7 @@
       "id": "2",
       "articleId": "1",
       "userId": "3",
-      "content": "I think the Fed is being too cautious. Inflation data suggests they could be more aggressive with cuts.",
+      "content": "Acho que o Fed está sendo muito cauteloso. Os dados de inflação sugerem que eles poderiam ser mais agressivos com os cortes.",
       "createdAt": "2023-11-02T17:15:00.000Z",
       "likes": 0,
       "parentId": null
@@ -145,7 +145,7 @@
       "id": "3",
       "articleId": "1",
       "userId": "4",
-      "content": "I disagree. Given the uncertainty in global markets, this cautious approach seems prudent.",
+      "content": "Discordo. Dada a incerteza nos mercados globais, essa abordagem cautelosa parece prudente.",
       "createdAt": "2023-11-02T17:45:00.000Z",
       "likes": 1,
       "parentId": "2"
@@ -154,7 +154,7 @@
       "id": "4",
       "articleId": "2",
       "userId": "2",
-      "content": "This regulation is long overdue. The tech giants have been operating without proper oversight for too long.",
+      "content": "Essa regulamentação é há muito esperada. Os gigantes da tecnologia têm operado sem supervisão adequada por muito tempo.",
       "createdAt": "2023-11-01T12:30:00.000Z",
       "likes": 1,
       "parentId": null
@@ -163,7 +163,7 @@
       "id": "5",
       "articleId": "2",
       "userId": "5",
-      "content": "I worry that excessive regulation could stifle innovation. There needs to be a balance.",
+      "content": "Me preocupa que a regulamentação excessiva possa sufocar a inovação. Precisa haver um equilíbrio.",
       "createdAt": "2023-11-01T13:45:00.000Z",
       "likes": 2,
       "parentId": null
@@ -172,7 +172,7 @@
       "id": "6",
       "articleId": "3",
       "userId": "1",
-      "content": "Interesting to see traditional financial institutions embracing crypto. The landscape has really changed.",
+      "content": "Interessante ver instituições financeiras tradicionais abraçando o cripto. O cenário realmente mudou.",
       "createdAt": "2023-10-30T14:15:00.000Z",
       "likes": 3,
       "parentId": null
@@ -337,6 +337,38 @@
       "bookmarks": 2,
       "comments": 1,
       "lastUpdated": "2023-10-31T10:30:00.000Z"
+    }
+  ],
+  "site-views": [
+    {
+      "id": "1",
+      "date": "2023-10-30",
+      "count": 3245,
+      "lastUpdated": "2023-10-30T23:59:59.000Z"
+    },
+    {
+      "id": "2",
+      "date": "2023-10-31",
+      "count": 2876,
+      "lastUpdated": "2023-10-31T23:59:59.000Z"
+    },
+    {
+      "id": "3",
+      "date": "2023-11-01",
+      "count": 3102,
+      "lastUpdated": "2023-11-01T23:59:59.000Z"
+    },
+    {
+      "id": "4",
+      "date": "2023-11-02",
+      "count": 3561,
+      "lastUpdated": "2023-11-02T23:59:59.000Z"
+    },
+    {
+      "id": "5",
+      "date": "2023-11-03",
+      "count": 1243,
+      "lastUpdated": "2023-11-03T14:30:00.000Z"
     }
   ],
   "newsletter-subscriptions": [

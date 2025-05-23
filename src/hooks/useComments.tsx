@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getComments, addComment, deleteComment, Comment, updateComment as updateCommentService, likeComment as likeCommentService } from '@/services/commentService';
 import { toast } from 'sonner';
@@ -7,7 +8,7 @@ export function useComments(articleId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch comments
+  // Buscar comentários
   const {
     data: comments = [],
     isLoading,
@@ -17,17 +18,17 @@ export function useComments(articleId: string | undefined) {
     queryKey: ['comments', articleId],
     queryFn: () => articleId ? getComments(articleId) : [],
     enabled: !!articleId,
-    staleTime: 60000, // 1 minute
+    staleTime: 60000, // 1 minuto
     retry: 2,
     meta: {
       onError: (error: Error) => {
-        console.error('Error fetching comments:', error);
+        console.error('Erro ao buscar comentários:', error);
         toast.error('Não foi possível carregar os comentários. Tente novamente mais tarde.');
       }
     }
   });
 
-  // Mutation to add comment
+  // Mutação para adicionar comentário
   const addCommentMutation = useMutation({
     mutationFn: (content: string) => {
       if (!user || !articleId) throw new Error('Não é possível adicionar comentário');
@@ -42,12 +43,12 @@ export function useComments(articleId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
     },
     onError: (error) => {
-      console.error('Error adding comment:', error);
+      console.error('Erro ao adicionar comentário:', error);
       toast.error('Falha ao adicionar comentário. Tente novamente.');
     }
   });
 
-  // Mutation to delete comment
+  // Mutação para excluir comentário
   const deleteCommentMutation = useMutation({
     mutationFn: (commentId: string) => deleteComment(commentId),
     onSuccess: () => {
@@ -55,12 +56,12 @@ export function useComments(articleId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
     },
     onError: (error) => {
-      console.error('Error deleting comment:', error);
+      console.error('Erro ao excluir comentário:', error);
       toast.error('Falha ao excluir comentário. Tente novamente.');
     }
   });
 
-  // Mutation to reply to a comment
+  // Mutação para responder a um comentário
   const replyToCommentMutation = useMutation({
     mutationFn: ({ commentId, content }: { commentId: string, content: string }) => {
       if (!user || !articleId) throw new Error('Não é possível adicionar resposta');
@@ -76,12 +77,12 @@ export function useComments(articleId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
     },
     onError: (error) => {
-      console.error('Error adding reply:', error);
+      console.error('Erro ao adicionar resposta:', error);
       toast.error('Falha ao adicionar resposta. Tente novamente.');
     }
   });
 
-  // Mutation to update a comment
+  // Mutação para atualizar um comentário
   const updateCommentMutation = useMutation({
     mutationFn: ({ commentId, content }: { commentId: string, content: string }) => {
       if (!user) throw new Error('Não é possível editar o comentário');
@@ -92,18 +93,18 @@ export function useComments(articleId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
     },
     onError: (error) => {
-      console.error('Error updating comment:', error);
+      console.error('Erro ao atualizar comentário:', error);
       toast.error('Falha ao atualizar comentário. Tente novamente.');
     }
   });
 
-  // Mutation to like/unlike a comment
+  // Mutação para curtir/descurtir um comentário
   const likeCommentMutation = useMutation({
     mutationFn: ({ commentId, userId }: { commentId: string, userId: string }) => {
       return likeCommentService(commentId, userId);
     },
     onSuccess: (isLiked, { commentId }) => {
-      // Update local state immediately
+      // Atualizar o estado local imediatamente
       queryClient.setQueryData(['comments', articleId], (oldData: Comment[] | undefined) => {
         if (!oldData) return [];
         return oldData.map(comment => {
@@ -117,18 +118,18 @@ export function useComments(articleId: string | undefined) {
         });
       });
       
-      // Also invalidate to make sure data stays consistent
+      // Também invalidar para garantir que os dados permaneçam consistentes
       queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
       
       toast.success(isLiked ? 'Comentário curtido' : 'Curtida removida');
     },
     onError: (error) => {
-      console.error('Error liking/unliking comment:', error);
+      console.error('Erro ao curtir/descurtir comentário:', error);
       toast.error('Falha ao processar curtida. Tente novamente.');
     }
   });
 
-  // Update comments list manually
+  // Atualizar lista de comentários manualmente
   const refreshComments = () => {
     return refetch();
   };
@@ -147,7 +148,7 @@ export function useComments(articleId: string | undefined) {
         const result = await likeCommentMutation.mutateAsync({ commentId, userId });
         return result;
       } catch (error) {
-        console.error('Error liking/unliking comment:', error);
+        console.error('Erro ao curtir/descurtir comentário:', error);
         return false;
       }
     },

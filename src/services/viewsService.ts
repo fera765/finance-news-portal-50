@@ -15,10 +15,10 @@ export interface SiteView {
   lastUpdated: string;
 }
 
-// Track article view
+// Rastrear visualização de artigo
 export const trackArticleView = async (articleId: string) => {
   try {
-    // Check if there's already a view entry for this article
+    // Verificar se já existe uma entrada de visualização para este artigo
     const { data: existingViews } = await api.get('/views', {
       params: { articleId },
     });
@@ -26,7 +26,7 @@ export const trackArticleView = async (articleId: string) => {
     const now = new Date().toISOString();
 
     if (Array.isArray(existingViews) && existingViews.length > 0) {
-      // Update existing view count
+      // Atualizar contagem de visualização existente
       const viewEntry = existingViews[0];
       const updatedCount = (viewEntry.count || 0) + 1;
       
@@ -42,7 +42,7 @@ export const trackArticleView = async (articleId: string) => {
         lastUpdated: now
       };
     } else {
-      // Create new view entry
+      // Criar nova entrada de visualização
       const newViewEntry = {
         articleId,
         count: 1,
@@ -53,19 +53,19 @@ export const trackArticleView = async (articleId: string) => {
       return data;
     }
   } catch (error) {
-    console.error(`Error tracking view for article ${articleId}:`, error);
-    // Don't throw as this is a non-critical operation
+    console.error(`Erro ao rastrear visualização para artigo ${articleId}:`, error);
+    // Não lançar pois esta é uma operação não crítica
     return null;
   }
 };
 
-// Track site view
+// Rastrear visualização do site
 export const trackSiteView = async () => {
   try {
-    // Get today's date in YYYY-MM-DD format
+    // Obter a data de hoje no formato YYYY-MM-DD
     const today = new Date().toISOString().split('T')[0];
     
-    // Check if there's already a view entry for today
+    // Verificar se já existe uma entrada de visualização para hoje
     const { data: existingViews } = await api.get('/site-views', {
       params: { date: today },
     });
@@ -73,7 +73,7 @@ export const trackSiteView = async () => {
     const now = new Date().toISOString();
 
     if (Array.isArray(existingViews) && existingViews.length > 0) {
-      // Update existing view count for today
+      // Atualizar contagem de visualização existente para hoje
       const viewEntry = existingViews[0];
       const updatedCount = (viewEntry.count || 0) + 1;
       
@@ -89,7 +89,7 @@ export const trackSiteView = async () => {
         lastUpdated: now
       };
     } else {
-      // Create new view entry for today
+      // Criar nova entrada de visualização para hoje
       const newViewEntry = {
         date: today,
         count: 1,
@@ -100,13 +100,13 @@ export const trackSiteView = async () => {
       return data;
     }
   } catch (error) {
-    console.error('Error tracking site view:', error);
-    // Don't throw as this is a non-critical operation
+    console.error('Erro ao rastrear visualização do site:', error);
+    // Não lançar pois esta é uma operação não crítica
     return null;
   }
 };
 
-// Get total site views
+// Obter total de visualizações do site
 export const getTotalSiteViews = async () => {
   try {
     const { data: siteViews } = await api.get('/site-views');
@@ -117,15 +117,15 @@ export const getTotalSiteViews = async () => {
     
     return siteViews.reduce((total, view) => total + (view.count || 0), 0);
   } catch (error) {
-    console.error('Error getting total site views:', error);
+    console.error('Erro ao obter total de visualizações do site:', error);
     return 0;
   }
 };
 
-// Get daily site views for a date range
+// Obter visualizações diárias do site para um intervalo de datas
 export const getDailySiteViews = async (startDate: string, endDate: string) => {
   try {
-    // Query for site views within the date range
+    // Consultar visualizações do site dentro do intervalo de datas
     const { data: siteViews } = await api.get('/site-views', {
       params: {
         date_gte: startDate,
@@ -137,12 +137,12 @@ export const getDailySiteViews = async (startDate: string, endDate: string) => {
     
     return Array.isArray(siteViews) ? siteViews : [];
   } catch (error) {
-    console.error('Error getting daily site views:', error);
+    console.error('Erro ao obter visualizações diárias do site:', error);
     return [];
   }
 };
 
-// Get article views for a specific article
+// Obter visualizações de artigos para um artigo específico
 export const getArticleViews = async (articleId: string) => {
   try {
     const { data: views } = await api.get('/views', {
@@ -155,12 +155,12 @@ export const getArticleViews = async (articleId: string) => {
     
     return 0;
   } catch (error) {
-    console.error(`Error getting views for article ${articleId}:`, error);
+    console.error(`Erro ao obter visualizações para artigo ${articleId}:`, error);
     return 0;
   }
 };
 
-// Get most viewed articles
+// Obter artigos mais visualizados
 export const getMostViewedArticles = async (limit = 5) => {
   try {
     const { data: views } = await api.get('/views', {
@@ -173,7 +173,7 @@ export const getMostViewedArticles = async (limit = 5) => {
     
     return Array.isArray(views) ? views : [];
   } catch (error) {
-    console.error('Error getting most viewed articles:', error);
+    console.error('Erro ao obter artigos mais visualizados:', error);
     return [];
   }
 };

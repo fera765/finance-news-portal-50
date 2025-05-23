@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { useSiteViews } from "@/hooks/useSiteViews";
 
 export interface User {
   id: string;
@@ -25,6 +26,9 @@ const Layout = ({ children, openAuthModal = false }: LayoutProps) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(openAuthModal);
   const navigate = useNavigate();
   
+  // Usar o hook personalizado para rastrear visualizações do site
+  useSiteViews();
+  
   const handleLogin = () => {
     setIsAuthModalOpen(true);
   };
@@ -40,7 +44,7 @@ const Layout = ({ children, openAuthModal = false }: LayoutProps) => {
       await login(userData.email, userData.password);
       setIsAuthModalOpen(false);
     } catch (error) {
-      console.error("Authentication failed:", error);
+      console.error("Falha na autenticação:", error);
     }
   };
 

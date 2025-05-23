@@ -7,18 +7,18 @@ export function useLikedComments(comments: Comment[], currentUser: User | null) 
   const [likedComments, setLikedComments] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   
-  // Function to extract all comment IDs, including replies
+  // Função para extrair todos os IDs de comentários, incluindo respostas
   const getAllCommentIds = (comments: Comment[]) => {
     const ids: string[] = [];
     
-    // Recursive function to collect all IDs
+    // Função recursiva para coletar todos os IDs
     const collectIds = (commentList: Comment[]) => {
       for (const comment of commentList) {
         if (comment.id) {
           ids.push(comment.id);
         }
         
-        // Check if the comment has replies and they are an array before processing
+        // Verificar se o comentário tem respostas e se são um array antes de processar
         if (comment.replies && Array.isArray(comment.replies)) {
           collectIds(comment.replies);
         }
@@ -40,13 +40,13 @@ export function useLikedComments(comments: Comment[], currentUser: User | null) 
       const liked: Record<string, boolean> = {};
       
       try {
-        // Get all comment IDs including replies
+        // Obter todos os IDs de comentários, incluindo respostas
         const commentIds = getAllCommentIds(comments);
         const uniqueCommentIds = Array.from(new Set(
           commentIds.filter(id => id != null) as string[]
         ));
         
-        // Process in batches of 10 to avoid too many simultaneous requests
+        // Processar em lotes de 10 para evitar muitas solicitações simultâneas
         const batchSize = 10;
         for (let i = 0; i < uniqueCommentIds.length; i += batchSize) {
           const batch = uniqueCommentIds.slice(i, i + batchSize);
@@ -57,7 +57,7 @@ export function useLikedComments(comments: Comment[], currentUser: User | null) 
                 const isLiked = await isCommentLiked(commentId, currentUser.id);
                 return { id: commentId, isLiked };
               } catch (error) {
-                console.error(`Error checking if comment ${commentId} is liked:`, error);
+                console.error(`Erro ao verificar se o comentário ${commentId} foi curtido:`, error);
                 return { id: commentId, isLiked: false };
               }
             })
@@ -70,7 +70,7 @@ export function useLikedComments(comments: Comment[], currentUser: User | null) 
           });
         }
       } catch (error) {
-        console.error('Error checking liked comments:', error);
+        console.error('Erro ao verificar comentários curtidos:', error);
       } finally {
         setLikedComments(liked);
         setIsLoading(false);

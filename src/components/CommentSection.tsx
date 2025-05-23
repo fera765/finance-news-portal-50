@@ -27,12 +27,12 @@ const CommentSection = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   
-  // Use our custom hooks
+  // Usar nossos hooks personalizados
   const { rootComments, getReplies } = useCommentStructure(comments);
   const { commentAuthors, getAuthorInfo } = useCommentAuthors(comments);
   const { likedComments, isCommentLiked, setCommentLiked } = useLikedComments(comments, currentUser);
   
-  // Use our comments hook for CRUD operations
+  // Usar nosso hook de comentários para operações CRUD
   const { 
     addComment, 
     replyToComment, 
@@ -61,21 +61,21 @@ const CommentSection = ({
   const handleLikeComment = async (commentId: string) => {
     if (!currentUser) {
       onLogin();
-      return false; // Return false when user is not logged in
+      return false; // Retornar false quando o usuário não estiver logado
     }
     
     try {
-      // Use the likeComment function from the useComments hook
+      // Usar a função likeComment do hook useComments
       const result = await likeComment(commentId, currentUser.id);
       
-      // Toggle the liked state locally for immediate feedback
+      // Alternar o estado do like localmente para feedback imediato
       setCommentLiked(commentId, result);
       
-      return true; // Return true on successful like operation
+      return true; // Retornar true em operação de like bem-sucedida
     } catch (error) {
-      console.error("Error liking comment:", error);
+      console.error("Erro ao curtir comentário:", error);
       toast.error("Erro: Não foi possível processar sua solicitação");
-      return false; // Return false on error
+      return false; // Retornar false em erro
     }
   };
 
@@ -88,17 +88,17 @@ const CommentSection = ({
     if (!commentToDelete) return;
     
     try {
-      // Delete the comment with enhanced error handling
+      // Excluir o comentário com tratamento de erro aprimorado
       await deleteComment(commentToDelete);
       setDeleteDialogOpen(false);
       setCommentToDelete(null);
     } catch (error) {
-      console.error("Error deleting comment:", error);
+      console.error("Erro ao excluir comentário:", error);
       toast.error("Erro: Não foi possível excluir o comentário. Tente novamente.");
     }
   };
 
-  // Enhance comments with author information
+  // Melhorar comentários com informações do autor
   const enhanceComment = (comment: Comment) => {
     const author = getAuthorInfo(comment.userId);
     return {
@@ -129,7 +129,10 @@ const CommentSection = ({
             <CommentItem
               key={comment.id}
               comment={enhanceComment(comment)}
-              replies={getReplies(comment.id!).map(enhanceComment)}
+              replies={getReplies(comment.id!).map(reply => {
+                const enhancedReply = enhanceComment(reply);
+                return enhancedReply;
+              })}
               currentUser={currentUser}
               isLiked={isCommentLiked(comment.id!)}
               onLike={handleLikeComment}
@@ -143,7 +146,7 @@ const CommentSection = ({
         )}
       </div>
       
-      {/* Delete Confirmation Dialog */}
+      {/* Diálogo de Confirmação de Exclusão */}
       <DeleteCommentDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
