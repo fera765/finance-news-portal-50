@@ -31,7 +31,7 @@ export function useNewsletter() {
         toast.info(error.message);
       } else {
         toast.error('Ocorreu um erro ao realizar a inscrição. Tente novamente.');
-        console.error('Newsletter subscription error:', error);
+        console.error('Erro na inscrição da newsletter:', error);
       }
     } finally {
       setIsLoading(false);

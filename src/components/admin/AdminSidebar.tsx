@@ -38,11 +38,11 @@ type SidebarItem = {
 
 const allSidebarItems: SidebarItem[] = [
   { name: "Dashboard", icon: LayoutDashboard, path: "/admin", adminOnly: true },
-  { name: "Articles", icon: FileText, path: "/admin/articles", editorAccess: true },
-  { name: "Categories", icon: TagIcon, path: "/admin/categories", adminOnly: true },
-  { name: "Users", icon: Users, path: "/admin/users", adminOnly: true },
+  { name: "Artigos", icon: FileText, path: "/admin/articles", editorAccess: true },
+  { name: "Categorias", icon: TagIcon, path: "/admin/categories", adminOnly: true },
+  { name: "Usuários", icon: Users, path: "/admin/users", adminOnly: true },
   { name: "Newsletter", icon: Mail, path: "/admin/newsletter", adminOnly: true },
-  { name: "Settings", icon: Settings, path: "/admin/settings", adminOnly: true },
+  { name: "Configurações", icon: Settings, path: "/admin/settings", adminOnly: true },
 ];
 
 interface AdminSidebarProps {
@@ -87,6 +87,11 @@ const AdminSidebar = ({
   
   const handleNavigate = (path: string) => {
     navigate(path);
+    // Auto-collapse sidebar on mobile and tablet after navigation
+    if (window.innerWidth < 1024) {
+      setOpen(false);
+      setCollapsed(true);
+    }
   };
   
   const handleLogout = () => {
@@ -133,7 +138,7 @@ const AdminSidebar = ({
       <SidebarContent className="px-2 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-3 mb-1">
-            Main
+            Principal
           </SidebarGroupLabel>
           <SidebarMenu>
             {sidebarItems.map((item) => (
@@ -167,7 +172,7 @@ const AdminSidebar = ({
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5" />
-            {open && <span className="ml-2">Logout</span>}
+            {open && <span className="ml-2">Sair</span>}
           </Button>
         </div>
       </SidebarFooter>

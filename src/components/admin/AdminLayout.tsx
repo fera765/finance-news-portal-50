@@ -155,7 +155,13 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
               "text-lg md:text-xl font-semibold transition-all text-slate-900 dark:text-white truncate",
               collapsed ? "ml-0" : "ml-0 md:ml-2"
             )}>
-              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+              {activeTab === 'dashboard' && 'Dashboard'}
+              {activeTab === 'articles' && 'Artigos'}
+              {activeTab === 'categories' && 'Categorias'}
+              {activeTab === 'users' && 'Usuários'}
+              {activeTab === 'newsletter' && 'Newsletter'}
+              {activeTab === 'settings' && 'Configurações'}
+              {!['dashboard', 'articles', 'categories', 'users', 'newsletter', 'settings'].includes(activeTab) && activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
             </h1>
           </div>
           
@@ -257,7 +263,7 @@ const AdminLayout = ({ children, activeTab }: AdminLayoutProps) => {
                       {user ? getInitials(user.name) : "UN"}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:inline text-slate-900 dark:text-white">{user?.name || "Admin User"}</span>
+                  <span className="hidden md:inline text-slate-900 dark:text-white">{user?.name || "Usuário Admin"}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">

@@ -19,7 +19,7 @@ const PrivacyPage = () => {
       const rawHtml = marked.parse(content, { async: false }) as string;
       return DOMPurify.sanitize(rawHtml);
     } catch (error) {
-      console.error("Error parsing markdown content:", error);
+      console.error("Erro ao processar conteúdo markdown:", error);
       return content;
     }
   };
