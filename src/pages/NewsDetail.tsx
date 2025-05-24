@@ -158,34 +158,63 @@ const NewsDetail = () => {
   const handleShare = async () => {
     if (!article) return;
     
-    // Tentar usar a API Web Share se disponível
-    if (navigator.share) {
+    const shareData = {
+      title: article.title,
+      text: article.summary || '',
+      url: window.location.href,
+    };
+    
+    // Verificar se o navegador suporta Web Share API
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
-        await navigator.share({
-          title: article.title,
-          text: article.summary || '',
-          url: window.location.href,
-        });
-        
-        toast.success("Artigo compartilhado com sucesso");
+        await navigator.share(shareData);
+        toast.success("Artigo compartilhado com sucesso!");
         return;
-      } catch (error) {
-        console.error("Erro ao compartilhar:", error);
+      } catch (error: any) {
+        // Se o usuário cancelou o compartilhamento, não mostrar erro
+        if (error.name === 'AbortError') {
+          return;
+        }
+        console.log("Web Share API falhou, tentando clipboard:", error);
       }
     }
     
-    // Voltar para a área de transferência se a API Web Share não estiver disponível
+    // Fallback para clipboard
     try {
-      await navigator.clipboard.writeText(window.location.href);
-      
-      toast.success("Link copiado para a área de transferência", {
-        description: "Você pode compartilhar este artigo nas redes sociais"
-      });
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copiado para a área de transferência!", {
+          description: "Você pode compartilhar este artigo nas redes sociais"
+        });
+      } else {
+        // Fallback manual para navegadores mais antigos
+        const textArea = document.createElement('textarea');
+        textArea.value = window.location.href;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+          toast.success("Link copiado para a área de transferência!", {
+            description: "Você pode compartilhar este artigo nas redes sociais"
+          });
+        } catch (err) {
+          console.error("Falha ao copiar usando execCommand:", err);
+          toast.error("Não foi possível copiar o link automaticamente", {
+            description: "Copie manualmente o URL da barra de endereço"
+          });
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
     } catch (error) {
-      console.error("Falha ao copiar:", error);
-      
-      toast.error("Não foi possível copiar o link", {
-        description: "Tente selecionar o URL na barra de endereço"
+      console.error("Falha ao acessar clipboard:", error);
+      toast.error("Não foi possível copiar o link automaticamente", {
+        description: "Copie manualmente o URL da barra de endereço"
       });
     }
   };
