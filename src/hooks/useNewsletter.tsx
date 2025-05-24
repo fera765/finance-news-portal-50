@@ -4,10 +4,16 @@ import { subscribeToNewsletter } from '@/services/newsletterService';
 import { toast } from 'sonner';
 
 export function useNewsletter() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const handleSubscribe = async () => {
+    if (!name.trim()) {
+      toast.error('Por favor, informe seu nome');
+      return;
+    }
+    
     if (!email || !email.includes('@')) {
       toast.error('Por favor, informe um email válido');
       return;
@@ -16,9 +22,10 @@ export function useNewsletter() {
     setIsLoading(true);
     
     try {
-      await subscribeToNewsletter(email);
+      await subscribeToNewsletter(email, name.trim());
       toast.success('Inscrição realizada com sucesso!');
       setEmail('');
+      setName('');
     } catch (error: any) {
       if (error.message === 'Este email já está inscrito na newsletter') {
         toast.info(error.message);
@@ -32,6 +39,8 @@ export function useNewsletter() {
   };
   
   return {
+    name,
+    setName,
     email,
     setEmail,
     isLoading,

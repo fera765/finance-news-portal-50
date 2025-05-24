@@ -406,6 +406,41 @@
       "name": "Robert Brown",
       "status": "active",
       "createdAt": "2023-10-25T16:30:00.000Z"
+    },
+    {
+      "id": "6",
+      "email": "sarah.davis@example.com",
+      "name": "Sarah Davis",
+      "status": "active",
+      "createdAt": "2023-10-27T12:45:00.000Z"
+    },
+    {
+      "id": "7",
+      "email": "michael.garcia@example.com",
+      "name": "Michael Garcia",
+      "status": "active",
+      "createdAt": "2023-10-29T10:20:00.000Z"
+    },
+    {
+      "id": "8",
+      "email": "lisa.martinez@example.com",
+      "name": "Lisa Martinez",
+      "status": "active",
+      "createdAt": "2023-11-01T15:30:00.000Z"
+    },
+    {
+      "id": "9",
+      "email": "david.lopez@example.com",
+      "name": "David Lopez",
+      "status": "active",
+      "createdAt": "2023-11-03T09:45:00.000Z"
+    },
+    {
+      "id": "10",
+      "email": "amanda.taylor@example.com",
+      "name": "Amanda Taylor",
+      "status": "active",
+      "createdAt": "2023-11-05T14:15:00.000Z"
     }
   ],
   "settings": [

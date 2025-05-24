@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CategoryManagement from "./pages/CategoryManagement";
 import ArticleManagement from "./pages/ArticleManagement";
 import UserManagement from "./pages/UserManagement";
+import NewsletterManagement from "./pages/NewsletterManagement";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
@@ -72,6 +73,11 @@ const App: React.FC = () => {
                   <Route path="/admin/users" element={
                     <ProtectedRoute adminOnly={true}>
                       <UserManagement />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/newsletter" element={
+                    <ProtectedRoute adminOnly={true}>
+                      <NewsletterManagement />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/settings" element={

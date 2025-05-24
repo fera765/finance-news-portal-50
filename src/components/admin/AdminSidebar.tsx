@@ -7,7 +7,8 @@ import {
   TagIcon,
   LogOut,
   X,
-  Settings
+  Settings,
+  Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +41,7 @@ const allSidebarItems: SidebarItem[] = [
   { name: "Articles", icon: FileText, path: "/admin/articles", editorAccess: true },
   { name: "Categories", icon: TagIcon, path: "/admin/categories", adminOnly: true },
   { name: "Users", icon: Users, path: "/admin/users", adminOnly: true },
+  { name: "Newsletter", icon: Mail, path: "/admin/newsletter", adminOnly: true },
   { name: "Settings", icon: Settings, path: "/admin/settings", adminOnly: true },
 ];
 

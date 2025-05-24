@@ -54,7 +54,7 @@ const Index = () => {
   const { ref, inView } = useInView();
   
   // Newsletter state com hook
-  const { email, setEmail, isLoading: isNewsletterLoading, handleSubscribe } = useNewsletter();
+  const { name, setName, email, setEmail, isLoading: isNewsletterLoading, handleSubscribe } = useNewsletter();
   
   // Buscar categorias e autores para exibir nomes em vez de IDs
   const { data: categories = [] } = useQuery({
@@ -169,16 +169,25 @@ const Index = () => {
             <p className="text-gray-600 mb-4 md:mb-6">
               Assine nossa newsletter para receber diariamente insights financeiros e atualizações do mercado.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Input 
-                placeholder="Seu endereço de email" 
-                className="flex-grow"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <Button onClick={handleSubscribe} disabled={isNewsletterLoading}>
-                {isNewsletterLoading ? "Processando..." : "Assinar"}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input 
+                  placeholder="Seu nome completo" 
+                  className="flex-grow"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <Input 
+                  placeholder="Seu endereço de email" 
+                  className="flex-grow"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <Button onClick={handleSubscribe} disabled={isNewsletterLoading} className="w-full sm:w-auto">
+                {isNewsletterLoading ? "Processando..." : "Assinar Newsletter"}
               </Button>
             </div>
           </div>
