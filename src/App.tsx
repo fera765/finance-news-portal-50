@@ -58,30 +58,32 @@ const App: React.FC = () => {
                   <Route path="/business" element={<Navigate to="/category/business" replace />} />
                   <Route path="/economy" element={<Navigate to="/category/economy" replace />} />
                   
-                  {/* Rotas Admin protegidas */}
+                  {/* Rotas Admin - Apenas para administradores */}
                   <Route path="/admin" element={
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute adminOnly={true}>
                       <AdminDashboard />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/categories" element={
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute adminOnly={true}>
                       <CategoryManagement />
                     </ProtectedRoute>
                   } />
-                  <Route path="/admin/articles" element={
-                    <ProtectedRoute allowedRoles={["admin"]}>
-                      <ArticleManagement />
-                    </ProtectedRoute>
-                  } />
                   <Route path="/admin/users" element={
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute adminOnly={true}>
                       <UserManagement />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/settings" element={
-                    <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProtectedRoute adminOnly={true}>
                       <SettingsPage />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Rota de artigos - Para admin e editor */}
+                  <Route path="/admin/articles" element={
+                    <ProtectedRoute editorAccess={true}>
+                      <ArticleManagement />
                     </ProtectedRoute>
                   } />
                   

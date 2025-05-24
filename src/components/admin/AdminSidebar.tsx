@@ -31,14 +31,16 @@ type SidebarItem = {
   name: string;
   icon: React.ElementType;
   path: string;
+  adminOnly?: boolean;
+  editorAccess?: boolean;
 };
 
-const sidebarItems: SidebarItem[] = [
-  { name: "Dashboard", icon: LayoutDashboard, path: "/admin" },
-  { name: "Articles", icon: FileText, path: "/admin/articles" },
-  { name: "Categories", icon: TagIcon, path: "/admin/categories" },
-  { name: "Users", icon: Users, path: "/admin/users" },
-  { name: "Settings", icon: Settings, path: "/admin/settings" },
+const allSidebarItems: SidebarItem[] = [
+  { name: "Dashboard", icon: LayoutDashboard, path: "/admin", adminOnly: true },
+  { name: "Articles", icon: FileText, path: "/admin/articles", editorAccess: true },
+  { name: "Categories", icon: TagIcon, path: "/admin/categories", adminOnly: true },
+  { name: "Users", icon: Users, path: "/admin/users", adminOnly: true },
+  { name: "Settings", icon: Settings, path: "/admin/settings", adminOnly: true },
 ];
 
 interface AdminSidebarProps {
@@ -54,7 +56,22 @@ const AdminSidebar = ({
 }: AdminSidebarProps) => {
   const navigate = useNavigate();
   const { open, setOpen } = useSidebar();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  
+  // Filtrar itens baseado no role do usuário
+  const sidebarItems = allSidebarItems.filter(item => {
+    const userRole = user?.role || 'user';
+    
+    if (item.adminOnly && userRole !== 'admin') {
+      return false;
+    }
+    
+    if (item.editorAccess && !['admin', 'editor'].includes(userRole)) {
+      return false;
+    }
+    
+    return true;
+  });
   
   // Synchronize the local state with the sidebar context
   useEffect(() => {

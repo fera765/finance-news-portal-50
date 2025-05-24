@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Article } from "@/services/articleService";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Category {
   id: string;
@@ -42,6 +42,7 @@ const ArticleEditor = ({
   categories,
   authors
 }: ArticleEditorProps) => {
+  const { user } = useAuth();
   const isEditing = !!article?.id;
   
   const [formData, setFormData] = useState<Article>(article || {
@@ -49,7 +50,7 @@ const ArticleEditor = ({
     slug: "",
     content: "",
     category: "",
-    author: "",
+    author: user?.id || "", // Definir usuário logado como padrão
     status: 'draft',
     isDetach: false
   });
@@ -87,7 +88,7 @@ const ArticleEditor = ({
         slug: "",
         content: "",
         category: "",
-        author: "",
+        author: user?.id || "", // Sempre definir o usuário logado como padrão
         status: 'draft',
         isDetach: false
       });
@@ -95,7 +96,7 @@ const ArticleEditor = ({
       setValidationErrors([]);
       setShowValidationAlert(false);
     }
-  }, [article, isOpen]);
+  }, [article, isOpen, user?.id]);
   
   const generateSlug = (title: string) => {
     return title
@@ -303,6 +304,7 @@ const ArticleEditor = ({
                   {authors.map((author) => (
                     <SelectItem key={author.id} value={author.id}>
                       {author.name} ({author.role})
+                      {author.id === user?.id && " - Você"}
                     </SelectItem>
                   ))}
                 </SelectContent>
